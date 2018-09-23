@@ -1,0 +1,120 @@
+local paramsutil = require "paramsutil"
+local func = require "uus/func"
+local coor = require "uus/coor"
+local line = require "uus/coorline"
+local trackEdge = require "uus/trackedge"
+local station = require "uus/stationlib"
+local quat = require "uus/quaternion"
+local pipe = require "uus/pipe"
+local uus = require "uus"
+local uuse = require "uus_entries"
+local uusm = require "uus_menu"
+local dump = require "datadumper"
+local ma = math
+
+local abs = ma.abs
+local ceil = ma.ceil
+local floor = ma.floor
+local pi = ma.pi
+local atan = ma.atan
+local pow = ma.pow
+local cos = ma.cos
+local sin = ma.sin
+local min = ma.min
+local e = ma.exp(1)
+local log = ma.log
+local log10 = log(10)
+
+local prefixM = "uus/1990/"
+local models = uus.models(prefixM)
+
+local function params()
+    local sp = "·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·\n"
+    return
+    {
+
+    }
+end
+
+local updateFn = function(params)
+    local st = pipe.new 
+    * game.interface.getEntities({pos = {0, 0}, radius = 900000})
+    * pipe.map(game.interface.getEntity)
+    * pipe.filter(function(data) return data.fileName and data.fileName == "station/rail/uus.con" end)
+    * pipe.interlace({"l", "r"})
+    * pipe.map(function(st)
+        local cov = function(m)
+            return func.seqMap({0, 3}, function(r)
+                return func.seqMap({1, 4}, function(c)
+                    return m[r * 4 + c]
+                end)
+            end)
+        end
+        local vecL, rotL, _ = coor.decomposite(st.l.transf)
+        local vecR, rotR, _ = coor.decomposite(st.r.transf)
+        local iRot = coor.inv(cov(rotL))
+        local mx = iRot * rotR * coor.trans((vecR - vecL) .. iRot)
+        return function()
+            game.interface.upgradeConstruction(
+                st.l.id,
+                st.l.fileName,
+                pipe.exec * function()
+                    local params = {}
+                    for key,value in pairs(st.l.params) do
+                        if (key ~= "seed") then
+                            params[key] = value
+                        end
+                    end
+                    params.extra = {
+                        {
+                            params = st.r.params, 
+                            m = mx,
+                            id = st.r.id
+                        }
+                    }
+                    return params
+                end
+            )
+        end
+    end)
+    * pipe.forEach(function(f) f() end)
+    
+    local result = {
+        models = {
+            {          
+                id = "uus/1990/building/main_building_size1.mdl",
+                transf = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}
+            }
+        },
+        cost = 10,
+        bulldozeCost = 10,
+        maintenanceCost = 0,
+        terrainAlignmentLists = {
+            {
+                type = "EQUAL",
+                faces = {}
+            }
+        }
+    }
+
+    return result
+end
+
+function data()
+    return {
+        type = "ASSET_DEFAULT",
+        buildMode = "MULTI",
+        categories = {"tree"},
+        availability = {
+            yearFrom = 0,
+            yearTo = 0
+        },
+        description = {
+            name = _("title"),
+            description = _("description")
+        },
+        order = 5011,
+        params = params(),
+        updateFn = updateFn
+    }
+end
