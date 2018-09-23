@@ -322,17 +322,28 @@ local function updateFn()
             end
         end) or nil
 
+        local edges = pipe.new * {edge * station.mergeEdges} * station.prepareEdges
         return
             pipe.new
             * {
                 edgeLists = pipe.new
-                / (pipe.new * {edge * station.mergeEdges} * station.prepareEdges * trackBuilder.tunnel("railroad_old.lua"))
+                / (edges * trackBuilder.tunnel("railroad_old.lua"))
                 + (extra and extra * pipe.map(pipe.select("edgeLists")) * pipe.flatten() or {})
                 ,
                 -- + streetEdge,
-                models = terminals + models
-                + (extra and extra * pipe.map(pipe.select("models")) * pipe.flatten() or {}),
-                terminalGroups = terminalsGroup,
+                models = terminals
+                    + (extra and extra * pipe.map(pipe.select("models")) * pipe.flatten() or {})
+                    + models,
+                terminalGroups = terminalsGroup
+                    + (extra and extra 
+                    * pipe.map(pipe.select("terminalGroups")) 
+                    * pipe.flatten() 
+                    * pipe.map(function(t) return 
+                        {
+                            terminals = t.terminals * pipe.map(function(t) dump(t); return {t[1] + #terminals, t[2]} end),
+                            vehicleNodeOverride = t.vehicleNodeOverride + #edges.edges
+                        } 
+                    end) or {}),
                 terrainAlignmentLists = station.mergePoly(table.unpack(terrain))()
                 + (extra and extra * pipe.map(pipe.select("terrainAlignmentLists")) * pipe.flatten() or {})
             }

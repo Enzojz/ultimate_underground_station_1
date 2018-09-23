@@ -223,7 +223,7 @@ function coor.decomposite(m)
         m[9] / sz, m[10]/ sz, m[11]/ sz, 0,
         0,         0,         0,         1
     }
-    return coor.trans(vecTrans), coor.I() * mRot, coor.xyz(sx, sy, sz)
+    return vecTrans, coor.I() * mRot, coor.xyz(sx, sy, sz)
 end
 
 function coor.apply(vec, trans)
