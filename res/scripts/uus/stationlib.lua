@@ -205,4 +205,37 @@ stationlib.mergePoly = function(...)
         end
 end
 
+stationlib.mergeResults = function(...)
+    local function merge(edgeLists, models, terminalGroups, terrainAlignmentLists, r, ...)
+        if (r) then
+            local count = {
+                terminal = #models,
+                edges = func.fold(edgeLists, 0, function(c, e) return c + #e.edges end)
+            }
+            return merge(
+                edgeLists + r.edgeLists,
+                models + r.models,
+                terminalGroups + 
+                    r.terminalGroups
+                    * pipe.map(function(t)
+                        return { 
+                            terminals = t.terminals * pipe.map(function(t) return {t[1] + count.terminal, t[2]} end),
+                            vehicleNodeOverride = t.vehicleNodeOverride + count.edges
+                        }
+                    end),
+                terrainAlignmentLists + r.terrainAlignmentLists,
+                ...
+            )
+        else
+            return {
+                edgeLists = edgeLists,
+                models = models,
+                terminalGroups = terminalGroups,
+                terrainAlignmentLists = terrainAlignmentLists
+            }
+        end
+    end
+    return merge(pipe.new, pipe.new, pipe.new, pipe.new, ...)
+end
+
 return stationlib

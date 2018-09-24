@@ -5,7 +5,7 @@ function data()
 	t.desc = _("Mock tracks for underground station")
 
 	t.yearFrom = 1800
-	t.yearTo = 1800
+	t.yearTo = 0
 
 	t.shapeWidth = 4.0
 	t.shapeStep = 4.0
@@ -31,7 +31,7 @@ function data()
 
 	t.trackDistance = 5.0
 
-	t.speedLimit = 120.0 / 3.6
+	t.speedLimit = 5.0 / 3.6
 	t.speedCoeffs = { .85, 30.0, .6 }		-- curve speed limit = a * (radius + b) ^ c
 
 	t.ballastMaterial = "track/ballast.mtl"
@@ -42,12 +42,12 @@ function data()
 	t.tunnelWallMaterial = "track/transparent.mtl"
 	t.tunnelHullMaterial = "track/transparent.mtl"
 
-	t.catenaryPoleModel = "railroad/power_pole_2.mdl"
-	t.catenaryMultiPoleModel = "railroad/power_pole_1.mdl"
-	t.catenaryMultiGirderModel = "railroad/power_pole_1a.mdl"
+	t.catenaryPoleModel = "uus/void.mdl"
+	t.catenaryMultiPoleModel = "uus/void.mdl"
+	t.catenaryMultiGirderModel = "uus/void.mdl"
 	t.catenaryMultiInnerPoleModel = "railroad/power_pole_1b.mdl"
 
-	t.bumperModel = "station/train/passenger/multi_level_underground/multi_level_underground_end_wall.mdl"
+	t.bumperModel = "uus/void.mdl"
 	t.switchSignalModel = "railroad/switch_box.mdl"
 
 	t.fillGroundTex = "ballast_fill"

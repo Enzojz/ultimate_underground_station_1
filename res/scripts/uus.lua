@@ -5,6 +5,7 @@ local line = require "uus/coorline"
 local quat = require "uus/quaternion"
 local station = require "uus/stationlib"
 local pipe = require "uus/pipe"
+dump = require "datadumper"
 local uus = {}
 
 local math = math
