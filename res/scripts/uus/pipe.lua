@@ -186,7 +186,9 @@ function pipe.with(newValues)
 end
 
 function pipe.sort(fn)
+    dump(fn)
     return function(ls)
+        dump(ls)
         local result = pipe.with({})(ls)
         table.sort(result, fn)
         return result

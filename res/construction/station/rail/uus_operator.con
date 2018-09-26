@@ -1,0 +1,206 @@
+local paramsutil = require "paramsutil"
+local func = require "uus/func"
+local coor = require "uus/coor"
+local line = require "uus/coorline"
+local trackEdge = require "uus/trackedge"
+local station = require "uus/stationlib"
+local quat = require "uus/quaternion"
+local pipe = require "uus/pipe"
+local uus = require "uus"
+local uuse = require "uus_entries"
+local uusm = require "uus_menu"
+local ma = math
+
+local abs = ma.abs
+local ceil = ma.ceil
+local floor = ma.floor
+local pi = ma.pi
+local atan = ma.atan
+local pow = ma.pow
+local cos = ma.cos
+local sin = ma.sin
+local min = ma.min
+local e = ma.exp(1)
+local log = ma.log
+local log10 = log(10)
+
+local prefixM = "uus/1990/"
+local models = uus.models(prefixM)
+
+local radiusList = {50, 100, 200, 300, 400}
+
+local pure = function(pa)
+    local params = {}
+    for key,value in pairs(pa) do
+        if (key ~= "seed") then
+            params[key] = value
+        end
+    end
+    return params
+end
+
+local function params()
+    local sp = "·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·\n"
+    return
+    {
+        {
+            key = "mode",
+            name = _("Function"),
+            values = {_("Place Entry"), _("Mark Station"), _("Assembly"), _("Reset")},
+        },
+        {
+            key = "radius",
+            name = _("Effective radius"),
+            values = func.map(radiusList, tostring)
+        }
+    }
+end
+
+local findMarkers = function()
+    return pipe.new 
+    * game.interface.getEntities({pos = {0, 0}, radius = 900000})
+    * pipe.map(game.interface.getEntity)
+    * pipe.filter(function(data) return data.fileName and string.match(data.fileName, "station/rail/uus_operator.con") end)
+    * pipe.sort(function(x, y) return x.id < y.id end)
+end
+
+local placeMarker = function()
+    return {
+        models = {
+            {          
+                id = "uus/placeMarker.mdl",
+                transf = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}
+            }
+        },
+        cost = 0,
+        bulldozeCost = 0,
+        maintenanceCost = 0,
+        terrainAlignmentLists = {
+            {
+                type = "EQUAL",
+                faces = {}
+            }
+        }
+    }
+end
+
+local reset = function()
+    func.forEach(findMarkers(), function(m)
+        game.interface.setZone(tostring(m.id), nil)
+        game.interface.bulldoze(m.id)
+    end)
+    return placeMarker()
+end
+
+local placeEntry = function()
+    return {
+        models = {
+            {          
+                id = "uus/1990/building/main_building_size1.mdl",
+                transf = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}
+            }
+        },
+        cost = 10,
+        bulldozeCost = 10,
+        maintenanceCost = 0,
+        terrainAlignmentLists = {
+            {
+                type = "EQUAL",
+                faces = {}
+            }
+        }
+    }
+end
+
+local searchStation = function(m)
+    local r = radiusList[m.params.radius + 1]
+    local pos = coor.tuple2Vec(m.position)
+    return pipe.new 
+        * game.interface.getEntities({pos = m.position, radius = r})
+        * pipe.map(game.interface.getEntity)
+        * pipe.filter(function(data) return data.fileName and string.match(data.fileName, "station/rail/uus.con") end)
+        * pipe.sort(function(l, r) return (coor.tuple2Vec(l.position) - pos):length() < (coor.tuple2Vec(r.position) - pos):length() end), r
+end
+
+local cov = function(m)
+    return func.seqMap({0, 3}, function(r)
+        return func.seqMap({1, 4}, function(c)
+            return m[r * 4 + c]
+        end)
+    end)
+end
+
+local assembly = function(params)
+    local m = findMarkers()
+    local st = m * pipe.map(function(m) return game.interface.getEntities({pos = m.position, radius = radiusList[m.params.radius + 1]}) end)
+    * pipe.flatten()
+    * pipe.fold(pipe.new, function(r, s) return func.contains(r, s) and r or r / s end)
+    * pipe.map(game.interface.getEntity)
+    * pipe.filter(function(data) return data.fileName and string.match(data.fileName, "station/rail/uus.con") end)
+
+    if (#st > 1) then
+        local ref = st[1]
+        local vecRef, rotRef, _ = coor.decomposite(ref.transf)
+        local iRot = coor.inv(cov(rotRef))
+        local rest = st 
+        * pipe.range(2, #st)
+        * pipe.map(function(st)
+            local vec, rot, _ = coor.decomposite(st.transf)
+            return {
+                params = st.params,
+                id = st.id,
+                fileName = st.fileName,
+                m = iRot * rot * coor.trans((vec - vecRef) .. iRot)
+            }
+        end)
+        game.interface.upgradeConstruction(
+            ref.id,
+            ref.fileName,
+            func.with(pure(ref.params), {extra = rest} )
+        )
+    end
+
+    return reset()
+end
+
+local updateFn = function(params)
+    if (params.mode == 1) then
+        local allMarkers = findMarkers() * pipe.filter(function(m) return m.params.mode ~= 0 end)
+
+        func.forEach(allMarkers, function(m)
+            local st, r = searchStation(m)
+            if (#st > 0) then
+                game.interface.setZone(tostring(m.id), {
+                    polygon = func.seqMap({1, 19}, 
+                        function(i) 
+                            local rad = i * pi / 10; 
+                            return {sin(rad) * r + m.position[1], cos(rad) * r + m.position[2]}
+                        end
+                    ),
+                    draw = true,
+                    drawColor = {0.3, 0.3, 1, 1}
+                })
+            end
+        end)
+    end
+    
+    return ({placeEntry, placeMarker, assembly, reset})[params.mode + 1](params)
+end
+
+function data()
+    return {
+        type = "RAIL_STATION",
+        buildMode = "MULTI",
+        availability = {
+            yearFrom = 0,
+            yearTo = 0
+        },
+        description = {
+            name = _("title"),
+            description = _("description")
+        },
+        order = 5011,
+        params = params(),
+        updateFn = updateFn
+    }
+end

@@ -1,0 +1,45 @@
+function data()
+    return {
+        collider = {
+            params = {halfExtents = {0, 0, 0}},
+            transf = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1},
+            type = "BOX"
+        },
+        lods = {
+            {
+                animations = {
+                
+                },
+                children = {
+                    {
+                        id = "uus/placeMarker.msh",
+                        transf = {
+                            1, 0, 0, 0, 
+                            0, 1, 0, 0, 
+                            0, 0, 1, 0, 
+                            0, 0, 0, 1,
+                        },
+                        type = "MESH",
+                    },
+                
+                },
+                events = {
+                
+                },
+                matConfigs = {
+                    {
+                        0, 0, 0,
+                    },
+                },
+                static = true,
+                visibleFrom = 0,
+                visibleTo = 2000,
+            
+            },
+        },
+        metadata = {
+        }
+    
+    
+    }
+end

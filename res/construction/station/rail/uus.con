@@ -9,7 +9,6 @@ local pipe = require "uus/pipe"
 local uus = require "uus"
 local uuse = require "uus_entries"
 local uusm = require "uus_menu"
-local dump = require "datadumper"
 
 local ma = math
 local abs = ma.abs
@@ -315,7 +314,7 @@ local function updateFn()
         * params.extra
         * pipe.map(function(data)
             game.interface.bulldoze(data.id)
-            return updateFn()(data.params) 
+            return game.config.construction[data.fileName](data.params)
             * station.setTransform(data.m)
             * function(r)
                 return func.with(r, {models = pipe.new * r.models / uus.unitLane(coffset, coffset .. data.m)})
