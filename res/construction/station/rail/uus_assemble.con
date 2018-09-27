@@ -73,11 +73,11 @@ end
 
 local updateFn = function(params)
     if (params.mode == 1) then return dissassemble(params) end
-    local result = game.config.construction[params.major.fileName](params.major.params)
+    local result = game.config.construction[params.major.fileName](func.with(params.major.params, {state = params.state}))
     local children = func.map(params.children, function(data)
         game.interface.bulldoze(data.id)
         return pipe.new 
-        * game.config.construction[data.fileName](data.params)
+        * game.config.construction[data.fileName](func.with(data.params, {state = params.state}))
         * station.setTransform(data.m)
     end)
     return station.mergeResults(result, table.unpack(children))

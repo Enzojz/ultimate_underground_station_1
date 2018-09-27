@@ -65,7 +65,7 @@ local applyResult = function(mpt, mvec, mirrored)
             return func.with(edgeList, {edges = func.map(edgeList.edges, coor.applyEdge(mpt, mvec))})
         end
         
-        local mapModel = function(model) return func.with(model, {transf = model.transf * mpt}) end
+        local mapModel = function(model) return func.with(model, {transf = coor.I() * model.transf * mpt}) end
         
         local mapTerrainList = function(ta)
             local mapTerrain = function(t) return (coor.tuple2Vec(t) .. mpt):toTuple() end
@@ -216,13 +216,15 @@ stationlib.mergeResults = function(...)
                 edgeLists + r.edgeLists,
                 models + r.models,
                 terminalGroups + 
-                    r.terminalGroups
-                    * pipe.map(function(t)
-                        return { 
-                            terminals = t.terminals * pipe.map(function(t) return {t[1] + count.terminal, t[2]} end),
-                            vehicleNodeOverride = t.vehicleNodeOverride + count.edges
-                        }
-                    end),
+                    func.map(
+                        r.terminalGroups,
+                        function(t)
+                            return { 
+                                terminals = func.map(t.terminals, function(t) return {t[1] + count.terminal, t[2]} end),
+                                vehicleNodeOverride = t.vehicleNodeOverride + count.edges
+                            }
+                        end
+                    ),
                 terrainAlignmentLists + r.terrainAlignmentLists,
                 ...
             )

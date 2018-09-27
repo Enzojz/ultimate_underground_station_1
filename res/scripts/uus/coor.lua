@@ -127,7 +127,7 @@ function coor.xyz(x, y, z)
     local result = {
         x = x,
         y = y,
-        z = z,
+        z = z or 0,
         length = vecXyzLength,
         length2 = vecXyzLength2,
         normalized = vecXyzNormalized,
