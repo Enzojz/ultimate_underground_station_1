@@ -310,16 +310,16 @@ local function updateFn()
         )
         local coffset = coor.xyz(-4.3, 0, hPlatform + 0.53)
 
-        local extra = params.extra and pipe.new
-        * params.extra
-        * pipe.map(function(data)
-            game.interface.bulldoze(data.id)
-            return game.config.construction[data.fileName](data.params)
-            * station.setTransform(data.m)
-            * function(r)
-                return func.with(r, {models = pipe.new * r.models / uus.unitLane(coffset, coffset .. data.m)})
-            end
-        end) or nil
+        -- local extra = params.extra and pipe.new
+        -- * params.extra
+        -- * pipe.map(function(data)
+        --     game.interface.bulldoze(data.id)
+        --     return game.config.construction[data.fileName](data.params)
+        --     * station.setTransform(data.m)
+        --     * function(r)
+        --         return func.with(r, {models = pipe.new * r.models / uus.unitLane(coffset, coffset .. data.m)})
+        --     end
+        -- end) or nil
 
         local result = 
             pipe.new
@@ -329,7 +329,7 @@ local function updateFn()
                 terminalGroups = terminalsGroup,
                 terrainAlignmentLists = station.mergePoly(table.unpack(terrain))()
             }
-        return extra and station.mergeResults(result, table.unpack(extra)) or result
+        return result --extra and station.mergeResults(result, table.unpack(extra)) or result
     end)
 end
 

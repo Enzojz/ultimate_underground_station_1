@@ -29,6 +29,8 @@ local models = uus.models(prefixM)
 
 local radiusList = {50, 100, 200, 300, 400}
 
+justReset = justReset or false
+
 local pure = function(pa)
     local params = {}
     for key,value in pairs(pa) do
@@ -46,7 +48,7 @@ local function params()
         {
             key = "mode",
             name = _("Function"),
-            values = {_("Place Entry"), _("Mark Station"), _("Assembly"), _("Reset")},
+            values = {_("Mark Station"), _("Assembly"), _("Reset")},
         },
         {
             key = "radius",
@@ -56,12 +58,12 @@ local function params()
     }
 end
 
-local findMarkers = function()
-    return pipe.new 
-    * game.interface.getEntities({pos = {0, 0}, radius = 900000})
-    * pipe.map(game.interface.getEntity)
-    * pipe.filter(function(data) return data.fileName and string.match(data.fileName, "station/rail/uus_operator.con") end)
-    * pipe.sort(function(x, y) return x.id < y.id end)
+local function findMarkers()
+    return pipe.new
+        * game.interface.getEntities({pos = {0, 0}, radius = 900000})
+        * pipe.map(game.interface.getEntity)
+        * pipe.filter(function(data) return data.fileName and string.match(data.fileName, "station/rail/uus_operator.con") end)
+        * pipe.sort(function(x, y) return x.id < y.id end)
 end
 
 local placeMarker = function()
@@ -85,31 +87,15 @@ local placeMarker = function()
 end
 
 local reset = function()
-    func.forEach(findMarkers(), function(m)
-        game.interface.setZone(tostring(m.id), nil)
-        game.interface.bulldoze(m.id)
-    end)
+    if (not justReset) then
+        local markers = findMarkers()
+        func.forEach(findMarkers(), function(m)
+            game.interface.setZone(tostring(m.id), nil)
+            game.interface.bulldoze(m.id)
+        end)
+        justReset = true
+    end
     return placeMarker()
-end
-
-local placeEntry = function()
-    return {
-        models = {
-            {          
-                id = "uus/1990/building/main_building_size1.mdl",
-                transf = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}
-            }
-        },
-        cost = 10,
-        bulldozeCost = 10,
-        maintenanceCost = 0,
-        terrainAlignmentLists = {
-            {
-                type = "EQUAL",
-                faces = {}
-            }
-        }
-    }
 end
 
 local searchStation = function(m)
@@ -130,13 +116,13 @@ local cov = function(m)
     end)
 end
 
-local assembly = function(params)
+local assembly = function()
     local m = findMarkers()
     local st = m * pipe.map(function(m) return game.interface.getEntities({pos = m.position, radius = radiusList[m.params.radius + 1]}) end)
     * pipe.flatten()
-    * pipe.fold(pipe.new, function(r, s) return func.contains(r, s) and r or r / s end)
+    * pipe.fold(pipe.new * {}, function(r, s) return func.contains(r, s) and r or r / s end)
     * pipe.map(game.interface.getEntity)
-    * pipe.filter(function(data) return data.fileName and string.match(data.fileName, "station/rail/uus.con") end)
+    * pipe.filter(function(data) return data.fileName and string.match(data.fileName, "station/rail/") and data.fileName ~= "station/rail/uus_operator.con" end)
 
     if (#st > 1) then
         local ref = st[1]
@@ -150,22 +136,34 @@ local assembly = function(params)
                 params = st.params,
                 id = st.id,
                 fileName = st.fileName,
-                m = iRot * rot * coor.trans((vec - vecRef) .. iRot)
+                m = iRot * rot * coor.trans((vec - vecRef) .. iRot),
+                transf = st.transf,
+                name = st.name,
             }
         end)
         game.interface.upgradeConstruction(
             ref.id,
-            ref.fileName,
-            func.with(pure(ref.params), {extra = rest} )
+            "station/rail/uus_assemble.con",
+            {
+                mode = 0,
+                major = {
+                    name = ref.name,
+                    fileName = ref.fileName,
+                    params = ref.params,
+                    transf = ref.transf
+                },
+                children = rest
+            }
         )
+        return reset()
     end
 
-    return reset()
+    return placeMarker()
 end
 
 local updateFn = function(params)
-    if (params.mode == 1) then
-        local allMarkers = findMarkers() * pipe.filter(function(m) return m.params.mode ~= 0 end)
+    if (params.mode == 0) then
+        local allMarkers = findMarkers()
 
         func.forEach(allMarkers, function(m)
             local st, r = searchStation(m)
@@ -183,8 +181,8 @@ local updateFn = function(params)
             end
         end)
     end
-    
-    return ({placeEntry, placeMarker, assembly, reset})[params.mode + 1](params)
+    justReset = justReset and params.mode == 2
+    return ({placeMarker, assembly, reset})[params.mode + 1](params)
 end
 
 function data()

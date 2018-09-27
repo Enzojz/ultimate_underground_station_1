@@ -1,0 +1,102 @@
+local paramsutil = require "paramsutil"
+local func = require "uus/func"
+local coor = require "uus/coor"
+local line = require "uus/coorline"
+local trackEdge = require "uus/trackedge"
+local station = require "uus/stationlib"
+local quat = require "uus/quaternion"
+local pipe = require "uus/pipe"
+local uus = require "uus"
+local uuse = require "uus_entries"
+local uusm = require "uus_menu"
+local ma = math
+
+local abs = ma.abs
+local ceil = ma.ceil
+local floor = ma.floor
+local pi = ma.pi
+local atan = ma.atan
+local pow = ma.pow
+local cos = ma.cos
+local sin = ma.sin
+local min = ma.min
+local e = ma.exp(1)
+local log = ma.log
+local log10 = log(10)
+
+local function params()
+    return
+    {
+        {
+            key = "mode",
+            name = _("Function"),
+            values = {_("Keep"), _("Disassemble")},
+            defaultIndex = 0
+        },
+    }
+end
+
+local pure = function(pa)
+    local params = {}
+    for key,value in pairs(pa) do
+        if (key ~= "seed") then
+            params[key] = value
+        end
+    end
+    return params
+end
+
+local function dissassemble(params)
+    local pa = pipe.new
+    * game.interface.getEntities({pos = {0, 0}, radius = 900000}, {type = "CONSTRUCTION", includeData = true})
+    * pipe.values()
+    * pipe.filter(function(data) return data.params.seed == params.seed end)
+    assert(#pa == 1)
+    local params = pa[1].params
+    local player = game.interface.getPlayer()
+    func.forEach(params.children, function(data)
+        local id = game.interface.buildConstruction(
+            data.fileName,
+            pure(data.params),
+            data.transf
+        )
+        game.interface.setPlayer(id, player)
+        game.interface.setName(id, data.name)
+    end)
+    game.interface.upgradeConstruction(
+        pa[1].id,
+        params.major.fileName,
+        pure(params.major.params)
+    )
+    return game.config.construction[params.major.fileName](params.major.params)
+end
+
+local updateFn = function(params)
+    if (params.mode == 1) then return dissassemble(params) end
+    local result = game.config.construction[params.major.fileName](params.major.params)
+    local children = func.map(params.children, function(data)
+        game.interface.bulldoze(data.id)
+        return pipe.new 
+        * game.config.construction[data.fileName](data.params)
+        * station.setTransform(data.m)
+    end)
+    return station.mergeResults(result, table.unpack(children))
+end
+
+function data()
+    return {
+        type = "RAIL_STATION",
+        buildMode = "SINGLE",
+        availability = {
+            yearFrom = 0,
+            yearTo = 0
+        },
+        description = {
+            name = _("Assembler"),
+            description = _("description")
+        },
+        order = 5011,
+        params = params(),
+        updateFn = updateFn
+    }
+end

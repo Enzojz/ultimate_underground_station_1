@@ -57,6 +57,13 @@ function pipe.mapi(fun)
     end
 end
 
+function pipe.values()
+    return function(ls)
+        local result = {}
+        for i, e in pairs(ls) do result[#result + 1] = e end
+        return result
+    end
+end
 
 function pipe.mapValues(fun)
     return function(ls)
@@ -186,9 +193,7 @@ function pipe.with(newValues)
 end
 
 function pipe.sort(fn)
-    dump(fn)
     return function(ls)
-        dump(ls)
         local result = pipe.with({})(ls)
         table.sort(result, fn)
         return result
