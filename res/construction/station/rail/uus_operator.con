@@ -104,7 +104,7 @@ local searchStation = function(m)
     return pipe.new 
         * game.interface.getEntities({pos = m.position, radius = r})
         * pipe.map(game.interface.getEntity)
-        * pipe.filter(function(data) return data.fileName and string.match(data.fileName, "station/rail/uus.con") end)
+        * pipe.filter(function(data) return data.fileName and string.match(data.fileName, "station/rail/") and data.fileName ~= "station/rail/uus_operator.con" end)
         * pipe.sort(function(l, r) return (coor.tuple2Vec(l.position) - pos):length() < (coor.tuple2Vec(r.position) - pos):length() end), r
 end
 
@@ -117,8 +117,8 @@ local cov = function(m)
 end
 
 local assembly = function()
-    local m = findMarkers()
-    local st = m * pipe.map(function(m) return game.interface.getEntities({pos = m.position, radius = radiusList[m.params.radius + 1]}) end)
+    local st = findMarkers()
+    * pipe.map(function(m) return game.interface.getEntities({pos = m.position, radius = radiusList[m.params.radius + 1]}) end)
     * pipe.flatten()
     * pipe.fold(pipe.new * {}, function(r, s) return func.contains(r, s) and r or r / s end)
     * pipe.map(game.interface.getEntity)

@@ -45,7 +45,7 @@ function data()
 	t.catenaryPoleModel = "uus/void.mdl"
 	t.catenaryMultiPoleModel = "uus/void.mdl"
 	t.catenaryMultiGirderModel = "uus/void.mdl"
-	t.catenaryMultiInnerPoleModel = "railroad/power_pole_1b.mdl"
+	t.catenaryMultiInnerPoleModel = "uus/void.mdl"
 
 	t.bumperModel = "uus/void.mdl"
 	t.switchSignalModel = "railroad/switch_box.mdl"

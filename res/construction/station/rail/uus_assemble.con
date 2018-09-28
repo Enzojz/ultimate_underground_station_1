@@ -48,16 +48,16 @@ end
 
 local function dissassemble(params)
     local pa = pipe.new
-    * game.interface.getEntities({pos = {0, 0}, radius = 900000}, {type = "CONSTRUCTION", includeData = true})
-    * pipe.values()
-    * pipe.filter(function(data) return data.params.seed == params.seed end)
+        * game.interface.getEntities({pos = {0, 0}, radius = 900000}, {type = "CONSTRUCTION", includeData = true})
+        * pipe.values()
+        * pipe.filter(function(data) return data.params.seed == params.seed end)
     assert(#pa == 1)
     local params = pa[1].params
     local player = game.interface.getPlayer()
     func.forEach(params.children, function(data)
         local id = game.interface.buildConstruction(
             data.fileName,
-            pure(data.params),
+            func.with(pure(data.params), {state = params.state}),
             data.transf
         )
         game.interface.setPlayer(id, player)
@@ -66,9 +66,9 @@ local function dissassemble(params)
     game.interface.upgradeConstruction(
         pa[1].id,
         params.major.fileName,
-        pure(params.major.params)
+        func.with(pure(params.major.params), {state = params.state})
     )
-    return game.config.construction[params.major.fileName](params.major.params)
+    return { models={} }
 end
 
 local updateFn = function(params)
