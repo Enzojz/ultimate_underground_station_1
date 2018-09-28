@@ -7,7 +7,6 @@ local station = require "uus/stationlib"
 local quat = require "uus/quaternion"
 local pipe = require "uus/pipe"
 local uus = require "uus"
-local uuse = require "uus_entries"
 local uusm = require "uus_menu"
 local ma = math
 
@@ -87,14 +86,14 @@ local placeMarker = function()
 end
 
 local reset = function()
-    -- if (not justReset) then
+    if (not justReset) then
         local markers = findMarkers()
         func.forEach(findMarkers(), function(m)
             game.interface.setZone(tostring(m.id), nil)
             game.interface.bulldoze(m.id)
         end)
         justReset = true
-    -- end
+    end
     return placeMarker()
 end
 

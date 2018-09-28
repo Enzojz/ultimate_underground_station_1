@@ -7,7 +7,6 @@ local station = require "uus/stationlib"
 local quat = require "uus/quaternion"
 local pipe = require "uus/pipe"
 local uus = require "uus"
-local uuse = require "uus_entries"
 local uusm = require "uus_menu"
 local ma = math
 

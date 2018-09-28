@@ -7,7 +7,6 @@ local station = require "uus/stationlib"
 local quat = require "uus/quaternion"
 local pipe = require "uus/pipe"
 local uus = require "uus"
-local uuse = require "uus_entries"
 local uusm = require "uus_menu"
 
 local ma = math
@@ -73,8 +72,6 @@ local function params()
         + uusm.exclu("hasMiddlePlatform", "convAngle")(uusm.platform)
         + uusm.var
         + uusm.slope
-        + uusm.entry
-        + uusm.fence
         + uusm.alt
 end
 
@@ -215,15 +212,10 @@ local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreL
     * uus.allArcs(config)
     
     local arcCoords = allArcs * pipe.filter(function(a) return a.isPlatform end)
-    local entryConfig = uus.entryConfig(config, allArcs, arcCoords)
     
     local build = uus.build(
         config,
-        fitModel,
-        pipe.new
-        / uuse.buildEntry(config, entryConfig)
-        / uuse.buildUndergroundEntry(config, entryConfig)
-        / uuse.buildSecondEntrySlope(config, entryConfig)
+        fitModel
     )
     return build(pipe.new, pipe.new, pipe.new, pipe.new, pipe.new, uus.trackGrouping(pipe.new, table.unpack(allArcs)))
 end
@@ -238,10 +230,6 @@ local function updateFn()
         local hPlatform = uusm.hPlatformList[params.hPlatform + 1] * 0.001
         local wPlatform = uusm.wPlatformList[params.wPlatform + 1]
         local roofLength = uusm.roofLengthList[params.roofLength + 1] * 0.01
-        local mainBuilding = params.entrySize > 0 and buildingList[params.entrySize]
-        local fencesLength = uusm.fencesLengthList[params.fencesStyle + 1]
-        local fencesModel = uus.fencesGen(params.fencesColor + 1, params.fencesStyle + 1)
-        
         
         local nbTracks = uusm.trackNumberList[params.nbTracks + 1]
         local radius = (uusm.rList[params.radius + 1] * 1000) * (params.sign == 0 and 1 or -1)
@@ -249,35 +237,7 @@ local function updateFn()
         
         local length = min(uusm.trackLengths[params.length + 1], abs(radius * pi * 1.5))
         
-        local entryConfig = {
-            main = {
-                pos = mainBuilding and (params.entryPos - 1),
-                isLeft = params.entrySide == 0,
-                model = mainBuilding,
-            },
-            street = {
-                pipe.mapn(
-                    {params.entryAType == 1, params.entryBType == 1, params.entryCType == 1},
-                    {params.entryASide < 2, params.entryBSide < 2, params.entryCSide < 2}
-                )(function(t, v) return t and v end),
-                pipe.mapn(
-                    {params.entryAType == 1, params.entryBType == 1, params.entryCType == 1},
-                    {params.entryASide > 0, params.entryBSide > 0, params.entryCSide > 0}
-                )(function(t, v) return t and v end)
-            },
-            underground = {
-                pipe.mapn(
-                    {params.entryAType == 0, params.entryBType == 0, params.entryCType == 0},
-                    {params.entryASide < 2, params.entryBSide < 2, params.entryCSide < 2}
-                )(function(t, v) return t and v end),
-                pipe.mapn(
-                    {params.entryAType == 0, params.entryBType == 0, params.entryCType == 0},
-                    {params.entryASide > 0, params.entryBSide > 0, params.entryCSide > 0}
-                )(function(t, v) return t and v end)
-            }
-        }
-        
-        local edge, streetEdge, terminals, terminalsGroup, models, terrain =
+        local edge, terminals, terminalsGroup, models, terrain =
             buildStation(nbTracks,
                 uus.arcPacker(length, slope),
                 {
@@ -296,13 +256,7 @@ local function updateFn()
                     varModelWidth = params.varModelWidth + 1,
                     wTrack = trackWidth,
                     roofLength = roofLength,
-                    buildingParams = buildingParamsList[params.entrySize],
                     slope = slope,
-                    fencesModel = fencesModel,
-                    fencesLength = fencesLength,
-                    leftFences = params.fencesPos == 1 or params.fencesPos == 3,
-                    rightFences = params.fencesPos == 2 or params.fencesPos == 3,
-                    entries = entryConfig,
                     models = models
                 },
                 params.hasLeftPlatform == 0,
