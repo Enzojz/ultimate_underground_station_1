@@ -87,14 +87,14 @@ local placeMarker = function()
 end
 
 local reset = function()
-    if (not justReset) then
+    -- if (not justReset) then
         local markers = findMarkers()
         func.forEach(findMarkers(), function(m)
             game.interface.setZone(tostring(m.id), nil)
             game.interface.bulldoze(m.id)
         end)
         justReset = true
-    end
+    -- end
     return placeMarker()
 end
 
