@@ -327,6 +327,29 @@ uus.generateEdges = function(edges, isLeft, arcPacker)
         }
 end
 
+uus.generateMockEdges = function(config)
+    local offsets = 
+    ({
+        [5] = {0},
+        [10] = {-2.5, 2.5},
+        [15] = {-5, 0, 5}
+    })[config.wPlatform]
+    return function(mockEdges, arcPacker)
+        return mockEdges + func.map(offsets, function(o)
+            local arcs = arcPacker()()(o)
+            local eInf, eSup = table.unpack(arcs * pipe.map2({pipe.noop(), arc.rev}, function(a, op) return op(a) end) * pipe.map(uus.generateArc))
+            eInf[1] = eInf[1]:avg(eSup[2])
+            eSup[2] = eInf[1]
+            eInf[3] = eInf[3]:avg(eSup[4])
+            eSup[4] = eInf[3]
+            return {
+                edge = pipe.new / eInf / eSup, -- + arcs * pipe.mapFlatten(uus.generateArcExt) * function(ls) return {ls[2], ls[4]} end,
+                snap = pipe.new / {false, false} / {false, false}-- / {false, false} / {false, true}
+            }
+        end)
+    end
+end
+
 uus.generateTerminals = function(config)
     local platformZ = config.hPlatform + 0.53
     return function(edges, terminals, terminalsGroup, arcs, enablers)
@@ -631,43 +654,6 @@ uus.generateTrackTerrain = function(config)
     end
 end
 
-uus.coordIntersection = function(coordL, coordR)
-    local seqL = func.mapi(il(coordL), function(s, i) return {s = s.s, i = s.i, l = line.byPtPt(s.s, s.i), index = i} end)
-    local seqR = func.mapi(il(coordR), function(s, i) return {s = s.s, i = s.i, l = line.byPtPt(s.s, s.i), index = i} end)
-    
-    local r = func.fold(seqL, false, function(result, l)
-        if result then return result
-        else
-            local r = func.fold(seqR, false,
-                function(result, r)
-                    if result then return result
-                    else
-                        local x = l.l - r.l
-                        return (x - l.s):dot(x - l.i) <= 0 and (x - r.s):dot(x - r.i) <= 0 and (r.index + 1)
-                    end
-                end)
-            return r and {(l.index + 1), r}
-        end
-    end)
-    or
-    pipe.exec * function()
-        l = seqL[1]
-        r = seqR[1]
-        local x = l.l - r.l
-        return ((l.s - x):dot(l.s - l.i) <= 0 and (r.s - x):dot(r.s - r.i) <= 0) and {2, 2}
-    end
-    or
-    pipe.exec * function()
-        l = seqL[2]
-        r = seqR[2]
-        local x = l.l - r.l
-        return ((l.s - x):dot(l.s - l.i) <= 0 and (r.s - x):dot(r.s - r.i) <= 0) and {2, 2}
-    end
-    or {#seqL, #seqR}
-    
-    return table.unpack(r)
-end
-
 local arcGen = function(p, o) return {
     l = p.l(o),
     r = p.r(-o)
@@ -679,8 +665,8 @@ uus.allArcs = function(config)
     local refZ = config.hPlatform + 0.53
     
     return pipe.map(function(p)
-        if (#p == 2) then
-            local arcL, arcR = table.unpack(p)
+        if (#p == 3) then
+            local arcL, arcR, arcRef = table.unpack(p)
             
             local lane = {
                 l = arcL(refZ)(function(l) return l - 3 end),
@@ -704,7 +690,6 @@ uus.allArcs = function(config)
                 laneEdge = arcGen(lane, -0.5),
                 edge = arcGen(general, -0.5),
                 surface = arcGen(general, 0.3),
-                access = arcGen(general, -4.25),
                 roof = {
                     edge = arcGen(roof, -0.5),
                     surface = arcGen(roof, 0.5)
@@ -713,17 +698,17 @@ uus.allArcs = function(config)
             }
             
             local lc, rc, lec, rec, c = uus.bitLatCoords(5)(arcs.lane.l, arcs.lane.r, arcs.laneEdge.l, arcs.laneEdge.r)
-            local lsc, rsc, lac, rac, lsuc, rsuc, ltc, rtc, sc = uus.bitLatCoords(5)(arcs.edge.l, arcs.edge.r, arcs.access.l, arcs.access.r, arcs.surface.l, arcs.surface.r, arcs.terrain.l, arcs.terrain.r)
+            local lsc, rsc, lsuc, rsuc, ltc, rtc, sc = uus.bitLatCoords(5)(arcs.edge.l, arcs.edge.r, arcs.surface.l, arcs.surface.r, arcs.terrain.l, arcs.terrain.r)
             local lcc, rcc, cc = uus.bitLatCoords(10)(arcs.edge.l, arcs.edge.r)
             local lpc, rpc, lpic, rpic, pc = uus.bitLatCoords(5)(arcs.roof.edge.l, arcs.roof.edge.r, arcs.roof.surface.l, arcs.roof.surface.r)
             local lppc, rppc, ppc = uus.bitLatCoords(10)(arcs.roof.edge.l, arcs.roof.edge.r)
             return {
                 [1] = arcL,
                 [2] = arcR,
+                [3] = arcRef,
                 lane = func.with(arcs.lane, {lc = lc, rc = rc, mc = mc(lc, rc), c = c}),
                 laneEdge = func.with(arcs.laneEdge, {lc = lec, rc = rec, mc = mc(lec, rec), c = c}),
                 platform = func.with(arcs.edge, {lc = lsc, rc = rsc, mc = mc(lsc, rsc), c = sc}),
-                access = func.with(arcs.access, {lc = lac, rc = rac, mc = mc(lac, rac), c = sc}),
                 surface = func.with(arcs.surface, {lc = lsuc, rc = rsuc, mc = mc(lsuc, rsuc), c = sc}),
                 chair = func.with(arcs.edge, {lc = lcc, rc = rcc, mc = mc(lcc, rcc), c = cc}),
                 roof = {
@@ -774,219 +759,14 @@ uus.allArcs = function(config)
     end)
 end
 
-uus.buildTerminalModels = function(fitModel, config)
-    local tZ = coor.transZ(config.hPlatform - 1.4)
-    local platformZ = config.hPlatform + 0.53
-    local retriveModels = retriveModels(fitModel, platformZ, tZ)
-    local fExt = function(pt) return pipe.new / pt / (pt + coor.xyz(0, -5, 5 * config.slope)) / (pt + coor.xyz(0, -10, 10 * config.slope)) end
-    
-    local platformModels = function(isLeftmost, isRightmost)
-        return function(arcs)
-            local platformSurface = {config.models.surface, config.models.extremity}
-            local platformEdgeO = {config.models.edgeSurfaceCorner, config.models.edgeSurfaceExtreme}
-            local platformEdgeL = isLeftmost and {config.models.edge, config.models.corner} or platformEdgeO
-            local platformEdgeR = isRightmost and {config.models.edge, config.models.corner} or platformEdgeO
-            
-            local roofSurface = {config.models.roofTop, config.models.roofExtremity}
-            local roofEdge = {config.models.roofEdgeTopCorner, config.models.roofEdgeTopExtreme}
-            local roofEdgeL = isLeftmost and {config.models.roofEdge, config.models.roofCorner} or roofEdge
-            local roofEdgeR = isRightmost and {config.models.roofEdge, config.models.roofCorner} or roofEdge
-            
-            return pipe.new
-                / pipe.mapn(
-                    {1, 2},
-                    platformEdgeL,
-                    platformEdgeR,
-                    platformSurface,
-                    platformSurface,
-                    il(fExt(arcs.platform.lc[#arcs.platform.lc])),
-                    il(fExt(arcs.platform.rc[#arcs.platform.rc])),
-                    il(fExt(arcs.surface.lc[#arcs.surface.lc])),
-                    il(fExt(arcs.surface.rc[#arcs.surface.rc]))
-                )(retriveModels(2, 2, 2, 0.8))
-                / (
-                config.roofLength == 0 and {} or pipe.mapn(
-                    {1, 2},
-                    roofEdgeL,
-                    roofEdgeR,
-                    roofSurface,
-                    roofSurface,
-                    il(fExt(arcs.roof.edge.lc[#arcs.roof.edge.lc])),
-                    il(fExt(arcs.roof.edge.rc[#arcs.roof.edge.rc])),
-                    il(fExt(arcs.roof.surface.lc[#arcs.roof.surface.lc])),
-                    il(fExt(arcs.roof.surface.rc[#arcs.roof.surface.rc]))
-                )(retriveModels(2, 2, 2, 1))
-                )
-                * pipe.flatten()
-                * pipe.flatten()
-        end
-    end
-    
-    local trackModels = function(isLeftmost, isRightmost)
-        return function(arcs)
-            local platformSurface = {config.models.extremity, config.models.extremity}
-            local platformEdgeO = {config.models.edgeSurfaceExtreme, config.models.edgeSurfaceExtreme}
-            local platformEdgeL = isLeftmost and {config.models.corner, config.models.corner} or platformEdgeO
-            local platformEdgeR = isRightmost and {config.models.corner, config.models.corner} or platformEdgeO
-            
-            local roofSurface = {config.models.roofExtremity, config.models.roofExtremity}
-            local roofEdge = {config.models.roofEdgeTopExtreme, config.models.roofEdgeTopExtreme}
-            local roofEdgeL = isLeftmost and {config.models.roofCorner, config.models.roofCorner} or roofEdge
-            local roofEdgeR = isRightmost and {config.models.roofCorner, config.models.roofCorner} or roofEdge
-            
-            return pipe.new
-                / pipe.mapn(
-                    {1, 2},
-                    platformEdgeL,
-                    platformEdgeR,
-                    platformSurface,
-                    platformSurface,
-                    il(fExt(arcs[1].platform.lc[#arcs[1].platform.lc])),
-                    il(fExt(arcs[#arcs].platform.rc[#arcs[#arcs].platform.rc])),
-                    il(fExt(arcs[1].surface.lc[#arcs[1].surface.lc])),
-                    il(fExt(arcs[#arcs].surface.rc[#arcs[#arcs].surface.rc]))
-                )(retriveModels(2, 2, 2, 0.8))
-                / (
-                config.roofLength == 0 and {} or pipe.mapn(
-                    {1, 2},
-                    roofEdgeL,
-                    roofEdgeR,
-                    roofSurface,
-                    roofSurface,
-                    il(fExt(arcs[1].roof.edge.lc[#arcs[1].roof.edge.lc])),
-                    il(fExt(arcs[#arcs].roof.edge.rc[#arcs[#arcs].roof.edge.rc])),
-                    il(fExt(arcs[1].roof.surface.lc[#arcs[1].roof.surface.lc])),
-                    il(fExt(arcs[#arcs].roof.surface.rc[#arcs[#arcs].roof.surface.rc]))
-                )(retriveModels(2, 2, 2, 1))
-                )
-                * pipe.flatten()
-                * pipe.flatten()
-        end
-    end
-    
-    return function(arcs)
-        return pipe.new
-            * arcs
-            * pipe.fold({}, function(r, a)
-                if (#r == 0) then return pipe.new / (pipe.new / a)
-                elseif (r[#r][1].isPlatform and a.isPlatform) then return r * pipe.range(1, #r - 1) / (r[#r] / a)
-                elseif (r[#r][1].isTrack and a.isTrack) then return r * pipe.range(1, #r - 1) / (r[#r] / a)
-                else return r / (pipe.new / a) end
-            end)
-            * function(arcs)
-                local function build(models, g, ...)
-                    local isLeftmost = #models == 0
-                    local isRightmost = #{...} == 0
-                    if (g == nil) then
-                        return models
-                    elseif (g[1].isPlatform) then
-                        return build(models + g * pipe.map(platformModels(isLeftmost, isRightmost)) * pipe.flatten(), ...)
-                    else
-                        return build(models + trackModels(isLeftmost, isRightmost)(g), ...)
-                    end
-                end
-                return build(pipe.new, table.unpack(arcs))
-            end,
-            arcs
-            * pipe.map(
-                function(a)
-                    if (a.platform) then
-                        return {lc = a.platform.lc, rc = a.platform.rc}
-                    else
-                        local ar = a[1](platformZ)()
-                        local lc, rc, _ = uus.bitLatCoords(5)(
-                            ar(-config.wTrack * 0.5 + 0.5),
-                            ar(config.wTrack * 0.5 - 0.5)
-                        )
-                        return {lc = lc, rc = rc}
-                    end
-                end)
-            * pipe.map(function(c)
-                local vec = coor.xyz(0, -10, 10 * config.slope)
-                local lc = c.lc[#c.lc] - coor.xyz(0, 0, platformZ)
-                local rc = c.rc[#c.rc] - coor.xyz(0, 0, platformZ)
-                local size = assembleSize({s = lc, i = lc + vec}, {s = rc, i = rc + vec})
-                return pipe.new / size.lt / size.lb / size.rb / size.rt * station.finalizePoly
-            end)
-            * function(r) return pipe.new / {equal = r} end
-    
-    end
-end
-
-uus.buildTerminal = function(fitModel, config)
-    local refZ = config.hPlatform + 0.53
-    local tZ = coor.transZ(config.hPlatform - 1.4)
-    local buildModels = uus.buildTerminalModels(fitModel, config)
-    return function(groups)
-        local m, t = buildModels(func.flatten(groups))
-        return
-            (
-            config.roofLength == 0 and pipe.new or pipe.new
-            * func.flatten(groups)
-            * pipe.map(function(g)
-                return {
-                    g.roof.surface.lc[#g.roof.surface.lc],
-                    g.roof.surface.rc[#g.roof.surface.rc],
-                }
-            end)
-            * pipe.flatten()
-            * function(pts) return {pts[1], pts[#pts]} end
-            * pipe.map(function(pt) return {pt + coor.xyz(0, -1, 1 * config.slope), pt + coor.xyz(0, -6, 6 * config.slope)} end)
-            * function(pts) return {{pts[1][1], pts[2][1]}, {pts[1][2], pts[2][2]}} end
-            * pipe.map(function(pts)
-                local ptL, ptR = table.unpack(pts)
-                local dist = (ptR - ptL):length()
-                local n = (function(n) return n < 2 and 2 or n end)(floor((dist + 5) / 10))
-                local length = dist / n
-                local vecNor = (ptR - ptL):normalized() * length
-                local seqT = pipe.new / coor.flipY()
-                    + pipe.new * pipe.rep(n - 2)(coor.I())
-                    / coor.I()
-                
-                return pipe.new
-                    * pipe.mapn(func.seq(1, n), seqT)(function(i, t)
-                        return station.newModel(config.models.roofPole .. ".mdl", tZ, t,
-                            coor.scaleY(length / 10),
-                            coor.rotZ(pi * 0.5),
-                            coor.trans(ptL + vecNor * (i - 0.5)),
-                            coor.transZ(-refZ)
-                    )
-                    end)
-            end)
-            * pipe.flatten()
-            )
-            +
-            pipe.new
-            * func.mapFlatten(groups, pipe.filter(function(g) return g.isPlatform end))
-            * pipe.map(function(g)
-                local ptl, ptr = g.lane.lc[#g.lane.lc], g.lane.rc[#g.lane.rc]
-                local ptc = func.with(g.lane.mc[#g.lane.mc], {y = -5})
-                return {l = ptl, r = ptr, c = ptc}
-            end)
-            * function(gr)
-                return gr * pipe.map(function(g)
-                    return {
-                        station.newModel("uus/standard_lane.mdl", uus.mRot(g.c - g.l), coor.trans(g.l)),
-                        station.newModel("uus/standard_lane.mdl", uus.mRot(g.c - g.r), coor.trans(g.r))
-                    }
-                end)
-                * pipe.flatten()
-                + gr
-                * pipe.map(pipe.select("c"))
-                * il
-                * pipe.map(function(g) return station.newModel("uus/standard_lane.mdl", uus.mRot(g.s - g.i), coor.trans(g.s)) end)
-            end
-            + m, t
-    end
-end
-
 uus.build = function(config, fitModel, generateEdges)
     local generateEdges = uus.generateEdges
+    local generateMockEdges = uus.generateMockEdges(config)
     local generateModels = uus.generateModels(fitModel, config)
     local generateTerminals = uus.generateTerminals(config)
     local generateTerrain = uus.generateTerrain(config)
     local generateTrackTerrain = uus.generateTrackTerrain(config)
-    local buildTerminal = uus.buildTerminal(fitModel, config)
+    
     local function build(edges, mockEdges, terminals, terminalsGroup, models, terrain, gr, ...)
         local isLeftmost = #models == 0
         local isRightmost = #{...} == 0
@@ -998,6 +778,7 @@ uus.build = function(config, fitModel, generateEdges)
         elseif (#gr == 3 and gr[1].isTrack and gr[2].isPlatform and gr[3].isTrack) then
             local edges = generateEdges(edges, true, gr[1][1])
             local edges = generateEdges(edges, false, gr[3][1])
+            local mockEdges = generateMockEdges(mockEdges, gr[2][3])
             local terminals, terminalsGroup = generateTerminals(edges, terminals, terminalsGroup, gr[2], {true, true})
             return build(
                 edges,
@@ -1009,6 +790,7 @@ uus.build = function(config, fitModel, generateEdges)
                 ...)
         elseif (#gr == 2 and gr[1].isTrack and gr[2].isPlatform) then
             local edges = generateEdges(edges, true, gr[1][1])
+            local mockEdges = generateMockEdges(mockEdges, gr[2][3])
             local terminals, terminalsGroup = generateTerminals(edges, terminals, terminalsGroup, gr[2], {true, false})
             return build(
                 edges,
@@ -1020,6 +802,7 @@ uus.build = function(config, fitModel, generateEdges)
                 ...)
         elseif (#gr == 2 and gr[1].isPlatform and gr[2].isTrack) then
             local edges = generateEdges(edges, false, gr[2][1])
+            local mockEdges = generateMockEdges(mockEdges, gr[1][3])
             local terminals, terminalsGroup = generateTerminals(edges, terminals, terminalsGroup, gr[1], {false, true})
             return build(
                 edges,
@@ -1031,6 +814,7 @@ uus.build = function(config, fitModel, generateEdges)
                 ...)
         elseif (#gr == 1 and gr[1].isPlatform) then
             local terminals, terminalsGroup = generateTerminals(edges, terminals, terminalsGroup, gr[1], {false, false})
+            local mockEdges = generateMockEdges(mockEdges, gr[1][3])
             return build(
                 edges,
                 mockEdges,
@@ -1052,53 +836,6 @@ uus.build = function(config, fitModel, generateEdges)
         end
     end
     return build
-end
-
-local platformArcGenParam = function(la, ra, rInner, pWe)
-    local mlpt = la:pt(la.inf)
-    local mrpt = ra:pt(ra.inf)
-    
-    local mvec = (mrpt - mlpt):normalized()
-    local f = mvec:dot(mlpt - la.o) > 0 and 1 or -1
-    
-    mvec = (mlpt - la.o):normalized()
-    
-    local elpt = la:pt(la.sup)
-    local erpt = (elpt - la.o):normalized() * f * pWe + elpt
-    
-    local mln = line.byVecPt(mvec, mrpt)
-    local pln = line.byVecPt(mvec .. coor.rotZ(pi * 0.5), erpt)
-    local xpt = (mln - pln):withZ(0)
-    
-    local rvec = (xpt - mrpt):dot(xpt - la.o) * rInner
-    local cvec = (elpt - la.o):dot(mlpt - la.o)
-    
-    local lenP2 = (xpt - erpt):length2()
-    local lenT = (xpt - mrpt):length()
-    local r = (lenP2 / lenT + lenT) * 0.5 * (rvec < 0 and 1 or -1) * (cvec > 0 and 1 or -1)
-    
-    local o = mrpt + (xpt - mrpt):normalized() * abs(r)
-    
-    return r, o
-end
-
-uus.platformArcGen = function(tW, pW)
-    return function(arcPacker)
-        return function(r, o, lPct, oPct, isRight)
-            local rInner = r - (isRight and 1 or -1) * (0.5 * tW)
-            local rOuter = r - (isRight and 1 or -1) * (0.5 * tW + pW)
-            local inner = arcPacker(rInner, o, lPct, oPct)
-            local li, ls = table.unpack(inner()()()())
-            local ri, rs = table.unpack(arcPacker(rOuter, o, lPct * abs(rOuter - rInner) / rOuter, oPct)()()()())
-            
-            local r, o = platformArcGenParam(li, ri, rInner, pW)
-            
-            return r + 0.5 * tW * (isRight and 1 or -1), o, {
-                isRight and inner or arcPacker(r, o, lPct, oPct),
-                isRight and arcPacker(r, o, lPct, oPct) or inner
-            }
-        end
-    end
 end
 
 local function trackGrouping(result, ar1, ar2, ar3, ar4, ...)
@@ -1140,192 +877,18 @@ uus.models = function(prefixM)
         extremity = prefixM("platform/platform_extremity"),
         corner = prefixM("platform/platform_corner"),
         edge = prefixM("platform/platform_edge"),
-        edgeSurface = prefixM("platform/platform_edge_surface"),
-        edgeSurfaceCorner = prefixM("platform/platform_edge_surface_corner"),
-        edgeSurfaceExtreme = prefixM("platform/platform_edge_surface_extreme"),
-        edgeOpen = prefixM("platform/platform_edge_open"),
         roofTop = prefixM("platform/platform_roof_top"),
         roofExtremity = prefixM("platform/platform_roof_extremity"),
         roofEdge = prefixM("platform/platform_roof_edge"),
-        roofEdgeTop = prefixM("platform/platform_roof_edge_top"),
-        roofEdgeTopCorner = prefixM("platform/platform_roof_edge_top_corner"),
-        roofEdgeTopExtreme = prefixM("platform/platform_roof_edge_top_extreme"),
         roofCorner = prefixM("platform/platform_roof_corner"),
         roofPole = prefixM("platform/platform_roof_pole"),
         roofPoleExtreme = prefixM("platform/platform_roof_pole_extreme_1"),
         stair = prefixM("platform/platform_stair"),
         trash = prefixM("platform/platform_trash"),
         chair = prefixM("platform/platform_chair"),
-        access = prefixM("platform/platform_access_t"),
         underground = prefixM("underground_entry.mdl")
     }
 end
-
-uus.findIntersections = function(config)
-    local refZ = config.hPlatform + 0.53
-    return function(allArcs)
-        for i = 1, #allArcs - 1 do
-            if allArcs[i].isPlatform and allArcs[i + 1].isPlatform then
-                local arcsL, arcsR = allArcs[i], allArcs[i + 1]
-
-                do
-                    local arcsLL, arcsRR = arcsL[1], arcsR[2]
-                    local lengthL = arcsLL(refZ)()()[1]:length()
-                    local lengthR = arcsRR(refZ)()()[1]:length()
-                    local lengthRoofL = arcsLL(refZ)(function(l) return l * config.roofLength end)()[1]:length()
-                    local lengthRoofR = arcsRR(refZ)(function(l) return l * config.roofLength end)()[1]:length()
-                    local gapL = lengthL - lengthRoofL
-                    local gapR = lengthR - lengthRoofR
-                    local mArcs = (lengthL > lengthR) and arcsL or arcsR
-                    local dislodge = abs(gapL - gapR)
-                    
-                    local roofArcs = {
-                        l = mArcs[1](refZ)(function(l) return l * config.roofLength end, dislodge),
-                        r = mArcs[2](refZ)(function(l) return l * config.roofLength end, dislodge)
-                    }
-                    
-                    local roof = {
-                        edge = arcGen(roofArcs, -0.5),
-                        surface = arcGen(roofArcs, 0.5)
-                    }
-                    
-                    local lpc, rpc, lpic, rpic, pc = uus.bitLatCoords(5)(roof.edge.l, roof.edge.r, roof.surface.l, roof.surface.r)
-                    local lppc, rppc, ppc = uus.bitLatCoords(10)(roof.edge.l, roof.edge.r)
-                    
-                    mArcs.roof = {
-                                edge = func.with(roof.edge, {lc = lpc, rc = rpc, mc = mc(lpc, rpc), c = pc}),
-                                surface = func.with(roof.surface, {lc = lpic, rc = rpic, mc = mc(lpic, rpic), c = pc}),
-                                pole = func.with(roof.edge, {lc = lppc, rc = rppc, mc = mc(lppc, rppc), c = ppc})
-                            }
-                end
-                
-                
-                local greater = function(x, y) return x > y and x or y end
-                
-                local retriveBaseParams = function(arcsL, arcsR)
-                    local max = arcsL.c > arcsR.c and 2 * (arcsR.c - 1) or 2 * (arcsL.c - 1)
-                    
-                    local intersection = (function(x) return x > max and max or x end)(greater(uus.coordIntersection(arcsL.rc, arcsR.lc)))
-                    local r =
-                        pipe.new
-                        * (pipe.mapn(
-                            func.seq(intersection, max),
-                            arcsL.rc * pipe.range(intersection, max + 1) * il,
-                            arcsR.lc * pipe.range(intersection, max + 1) * il
-                        )
-                        (function(i, l, r)
-                            local vecL = (l.i - l.s):withZ(0)
-                            local vecR = (r.i - l.s):withZ(0)
-                            local vec = (r.s - l.s):withZ(0)
-                            return vec:cross(vecL).z > 0 and vec:cross(vecR).z < 0 and i or false
-                        end
-                        ))
-                        * pipe.filter(pipe.noop())
-                        * function(r) return #r > 0 and r[#r] or max end
-                    return intersection, intersection + floor(config.lengthMiddlePlatform * (r - intersection))
-                end
-                
-                local intersection, commonLength = retriveBaseParams(arcsL.platform, arcsR.platform)
-                local ln = line.byPtPt(arcsL.surface.rc[commonLength + 1], arcsR.surface.lc[commonLength + 1])
-                local retriveParams = function(arcsL, arcsR)
-                    local max = arcsL.c > arcsR.c and 2 * (arcsR.c - 1) or 2 * (arcsL.c - 1)
-                    local intersection = (function(x) return x > max and max or x end)(greater(uus.coordIntersection(arcsL.rc, arcsR.lc)))
-                    local commonLength =
-                        pipe.exec
-                        * function()
-                            local r =
-                                pipe.new
-                                * (pipe.mapn(
-                                    func.seq(intersection, max - 1),
-                                    arcsL.rc * pipe.range(intersection, max) * il,
-                                    arcsR.lc * pipe.range(intersection, max) * il
-                                )
-                                (function(i, l, r)
-                                    local xL = line.byPtPt(l.i, l.s) - ln
-                                    local xR = line.byPtPt(r.i, r.s) - ln
-                                    return ((l.i - xL):dot(l.s - xL) < 0 or (r.i - xR):dot(r.s - xR) < 0) and i or false
-                                end)
-                                )
-                                * pipe.filter(pipe.noop())
-                                * function(r) return #r > 0 and r[1] or max end
-                            return floor(r)
-                        end
-                    return intersection, commonLength
-                end
-                
-                local roofIntersection, roofCommonLength = retriveParams(arcsL.roof.edge, arcsR.roof.edge)
-                local roofPoleIntersection = retriveBaseParams(arcsL.roof.pole, arcsR.roof.pole)
-                local chairIntersection = retriveBaseParams(arcsL.chair, arcsR.chair)
-                local laneIntersection, laneCommonLength = retriveParams(arcsL.laneEdge, arcsR.laneEdge)
-                
-                local ptL = arcsL.surface.lc[intersection]
-                local ptR = arcsR.surface.rc[intersection]
-                local vec = ptR - ptL
-                
-                arcsL.platform.intersection = intersection
-                arcsR.platform.intersection = intersection
-                arcsL.lane.intersection = laneIntersection
-                arcsR.lane.intersection = laneIntersection
-                arcsL.terrain.intersection = intersection
-                arcsR.terrain.intersection = intersection
-                
-                arcsL.lane.common = laneCommonLength
-                arcsR.lane.common = laneCommonLength
-                arcsL.platform.common = commonLength
-                arcsR.platform.common = commonLength
-                arcsL.terrain.common = commonLength
-                arcsR.terrain.common = commonLength
-                
-                arcsL.platformO = func.with(arcsL.platform, {})
-                arcsR.platformO = func.with(arcsR.platform, {})
-                
-                if (intersection < #arcsL.surface.lc and intersection < #arcsR.surface.lc) then
-                    
-                    local lL = (arcsL.surface.lc[intersection + 1] - arcsL.surface.rc[intersection + 1]):length()
-                    local rL = (arcsR.surface.lc[intersection + 1] - arcsR.surface.rc[intersection + 1]):length()
-                    local mL = (arcsR.surface.lc[intersection + 1] - arcsL.surface.rc[intersection + 1]):length()
-                    
-                    
-                    arcsL.platform.rc = func.with(arcsL.platform.rc, {[intersection] = ptL + vec * (lL / (lL + rL + mL))})
-                    arcsR.platform.lc = func.with(arcsR.platform.lc, {[intersection] = ptL + vec * ((mL + lL) / (lL + rL + mL))})
-                    arcsL.surface.rc = func.with(arcsL.surface.rc, {[intersection] = arcsL.platform.rc[intersection] - vec:normalized() * 0.8})
-                    arcsR.surface.lc = func.with(arcsR.surface.lc, {[intersection] = arcsR.platform.lc[intersection] + vec:normalized() * 0.8})
-                
-                end
-                
-                if (config.roofLength > 0) then
-                    local ptL = arcsL.roof.edge.lc[roofIntersection]
-                    local ptR = arcsR.roof.edge.rc[roofIntersection]
-                    local vec = ptR - ptL
-                    
-                    arcsL.roof.intersection = roofIntersection
-                    arcsL.roof.common = roofCommonLength
-                    arcsR.roof.intersection = roofIntersection
-                    arcsR.roof.common = roofCommonLength
-                    
-                    if (roofIntersection < #arcsL.roof.edge.lc and roofIntersection < #arcsR.roof.edge.lc) then
-                        local lL = (arcsL.roof.edge.lc[roofIntersection + 1] - arcsL.roof.edge.rc[roofIntersection + 1]):length()
-                        local rL = (arcsR.roof.edge.lc[roofIntersection + 1] - arcsR.roof.edge.rc[roofIntersection + 1]):length()
-                        local mL = (arcsR.roof.edge.lc[roofIntersection + 1] - arcsL.roof.edge.rc[roofIntersection + 1]):length()
-                        
-                        
-                        arcsL.roof.edge.rc = func.with(arcsL.roof.edge.rc, {[roofIntersection] = ptL + vec * (lL / (lL + rL + mL))})
-                        arcsR.roof.edge.lc = func.with(arcsR.roof.edge.lc, {[roofIntersection] = ptL + vec * ((mL + lL) / (lL + rL + mL))})
-                        arcsL.roof.surface.rc = func.with(arcsL.roof.surface.rc, {[roofIntersection] = arcsL.roof.edge.rc[roofIntersection] - vec:normalized() * 0.8})
-                        arcsR.roof.surface.lc = func.with(arcsR.roof.surface.lc, {[roofIntersection] = arcsR.roof.edge.lc[roofIntersection] + vec:normalized() * 0.8})
-                    end
-                    
-                    arcsL.roof.pole.intersection = roofPoleIntersection
-                    arcsR.roof.pole.intersection = roofPoleIntersection
-                    arcsL.chair.intersection = chairIntersection
-                    arcsR.chair.intersection = chairIntersection
-                end
-            end
-        end
-        return allArcs
-    end
-end
-
 
 uus.defaultParams = function(params)
     local defParams = params()

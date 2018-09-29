@@ -50,64 +50,6 @@ uusm.trackType = pipe.exec * function()
     return list
 end
 
-uusm.var = {}
-    -- {
-    --     {
-    --         key = "wExtPlatform",
-    --         name = sp .. "\n" .. _("Platform Variation") .. "\n",
-    --         values = func.map(uusm.extWidthList, tostring),
-    --         defaultIndex = 0
-    --     },
-    --     {
-    --         key = "varModelWidth",
-    --         name = _("Narrowest Extremity Width") .. " " .. "(%)",
-    --         values = {_("Uniform"), _("Linear"), _("Quadratic"), _("Quartic"), _("Gaussian"), _("Gaussian 2")},
-    --         defaultIndex = 1
-    --     },
-    --     {
-    --         key = "lExtPlatform",
-    --         name = "",
-    --         values = func.map(uusm.extLengthList, tostring),
-    --         defaultIndex = 0
-    --     },
-    --     {
-    --         key = "varModelLength",
-    --         name = _("Shortest Platform") .. " " .. "(%)",
-    --         values = {_("Uniform"), _("Linear"), _("Quadratic"), _("Quartic"), _("Gaussian"), _("Gaussian 2")},
-    --         defaultIndex = 1
-    --     },
-    --     {
-    --         key = "yOffsetPlatformSign",
-    --         name = "",
-    --         values = {"+", "-"},
-    --         defaultIndex = 0
-    --     },
-    --     {
-    --         key = "yOffsetPlatform",
-    --         name = _("Offset Platform Max.") .. " " .. "(%)",
-    --         values = func.map(uusm.yOffsetList, tostring),
-    --         defaultIndex = 0
-    --     },
-    --     {
-    --         key = "varRefType",
-    --         name = "",
-    --         values = {_("Track"), _("Platform")},
-    --         defaultIndex = 1
-    --     },
-    --     {
-    --         key = "varRefPos",
-    --         name = _("Reference"),
-    --         values = {_("Left"), _("Center"), _("Right")},
-    --         defaultIndex = 0
-    --     },
-    --     {
-    --         key = "varNbUnaffected",
-    --         name = "\n" .. _("Unaffected platforms") .. " " .. "(%)",
-    --         values = func.map(uusm.varUnaffectedList, tostring),
-    --         defaultIndex = 0
-    --     }
-    -- }
-
 uusm.slope = {
     {
         key = "slopeSign",
@@ -158,28 +100,10 @@ uusm.platform = {
         defaultIndex = 1
     },
     {
-        key = "hasMiddlePlatform",
-        name = _("Central Platform"),
-        values = {_("No"), _("Yes")},
-        defaultIndex = 1
-    },
-    {
         key = "hasRightPlatform",
         name = _("Rightmost Platform"),
         values = {_("No"), _("Yes")},
         defaultIndex = 1
-    },
-    {
-        key = "convAngle",
-        name = _("Convering Angle"),
-        values = func.map(uusm.convAngle, tostring),
-        defaultIndex = 0
-    },
-    {
-        key = "roofLength",
-        name = _("Roof length") .. " " .. "(%)",
-        values = func.map(uusm.roofLengthList, tostring),
-        defaultIndex = 3
     }
 }
 

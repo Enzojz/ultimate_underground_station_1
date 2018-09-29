@@ -69,8 +69,7 @@ local function params()
                 defaultIndex = 5
             }
         }
-        + uusm.exclu("hasMiddlePlatform", "convAngle")(uusm.platform)
-        + uusm.var
+        + uusm.platform
         + uusm.slope
         + uusm.alt
 end
@@ -95,7 +94,7 @@ local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreL
     local leftGroup = ptListI * pipe.filter(function(p) return p.i < middlePos end) * pipe.rev()
     local middleGroup = ptListI * pipe.filter(function(p) return p.i == middlePos end)
     local rightGroup = ptListI * pipe.filter(function(p) return p.i > middlePos end)
-    local platformArcGen = uus.platformArcGen(tW, pW)(arcPacker)
+    -- local platformArcGen = uus.platformArcGen(tW, pW)(arcPacker)
     
     local lengthFn = function(posPct) return 1 - (1 - config.lExtPlatform) * uus.varFn(config.lExtPlatform)[config.varModelLength](posPct) end
 
@@ -118,7 +117,8 @@ local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreL
                                 i = t.i,
                                 a = {
                                     arcPacker(r - (0.5 * tW), o, lengthPct, offsetPct),
-                                    arcPacker(r - (0.5 * tW + pW), o, lengthPct, offsetPct)
+                                    arcPacker(r - (0.5 * tW + pW), o, lengthPct, offsetPct),
+                                    arcPacker(r - (0.5 * tW + 0.5 * pW), o, lengthPct, offsetPct)
                                 }},
                             r - pW, o, true)(...)
                         end
@@ -140,7 +140,8 @@ local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreL
                                 i = t.i,
                                 a = {
                                     arcPacker(r + (0.5 * tW + pW), o, lengthPct, offsetPct),
-                                    arcPacker(r + (0.5 * tW), o, lengthPct, offsetPct)
+                                    arcPacker(r + (0.5 * tW), o, lengthPct, offsetPct),
+                                    arcPacker(r + (0.5 * tW + 0.5 * pW), o, lengthPct, offsetPct)
                                 }},
                             r + pW, o)(...)
                         end
@@ -162,14 +163,15 @@ local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreL
                 },
                 {config.r}, {o}
         ) else
-            local isVar = config.varNbUnaffected == 0
-            if (not isVar) then
+            -- local isVar = config.varNbUnaffected == 0
+            -- if (not isVar) then
                 return generateArcs(
                     {
                         i = middlePos,
                         a = {
                             arcPacker(config.r + 0.5 * pW, o),
-                            arcPacker(config.r - 0.5 * pW, o)
+                            arcPacker(config.r - 0.5 * pW, o),
+                            arcPacker(config.r, o)
                         }
                     },
                     {
@@ -177,19 +179,19 @@ local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreL
                         config.r - (0.5 * pW - 0.5 * tW)
                     }, {o}
             )
-            else
-                local rR, oR, a = platformArcGen(config.r + 0.5 * pW, o, 1, 0, pW, true)
-                return generateArcs(
-                    {
-                        i = middlePos,
-                        a = a
-                    },
-                    {
-                        config.r - (0.5 * tW),
-                        rR
-                    }, {o, oR}
-            )
-            end
+            -- else
+            --     local rR, oR, a = platformArcGen(config.r + 0.5 * pW, o, 1, 0, pW, true)
+            --     return generateArcs(
+            --         {
+            --             i = middlePos,
+            --             a = a
+            --         },
+            --         {
+            --             config.r - (0.5 * tW),
+            --             rR
+            --         }, {o, oR}
+            -- )
+            -- end
         end
     end
     * function(arcs)
@@ -198,15 +200,12 @@ local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreL
             * pipe.map(function(a) return a[1]()()()() * function(l) return l[1]:length() + l[2]:length() end end) 
             * pipe.min()
         return arcs * pipe.map(pipe.map(function(a) return a(minLength) end))
-
     end
     * uus.allArcs(config)
     
     local arcCoords = allArcs * pipe.filter(function(a) return a.isPlatform end)
-    
 
     local build = uus.build(config, fitModel)
-
     return build(pipe.new, pipe.new, pipe.new, pipe.new, pipe.new, pipe.new, uus.trackGrouping(pipe.new, table.unpack(allArcs)))
 end
 
@@ -219,7 +218,6 @@ local function updateFn()
         local trackBuilder = trackEdge.builder(catenary, trackType)
         local hPlatform = uusm.hPlatformList[params.hPlatform + 1] * 0.001
         local wPlatform = uusm.wPlatformList[params.wPlatform + 1]
-        local roofLength = uusm.roofLengthList[params.roofLength + 1] * 0.01
         
         local nbTracks = uusm.trackNumberList[params.nbTracks + 1]
         local radius = (uusm.rList[params.radius + 1] * 1000) * (params.sign == 0 and 1 or -1)
@@ -243,7 +241,7 @@ local function updateFn()
                     varNbUnaffected = 0,-- uusm.varUnaffectedList[params.varNbUnaffected + 1] * 0.01,
                     varModelLength = 1, --params.varModelLength + 1,
                     wTrack = trackWidth,
-                    roofLength = roofLength,
+                    roofLength = 1,
                     slope = slope,
                     models = models
                 },
@@ -255,7 +253,10 @@ local function updateFn()
         local result = 
             pipe.new
             * {
-                edgeLists = pipe.new / (pipe.new * {edge * station.mergeEdges} * station.prepareEdges * trackBuilder.tunnel("railroad_old.lua")),
+                edgeLists = pipe.new 
+                / (pipe.new * {edge * station.mergeEdges} * station.prepareEdges * trackBuilder.tunnel("railroad_old.lua"))
+                / (pipe.new * {mockEdge * station.mergeEdges} * station.prepareEdges * trackBuilder.tunnel("railroad_old.lua"))
+                ,
                 models = terminals + models,
                 terminalGroups = terminalsGroup,
                 terrainAlignmentLists = station.mergePoly(table.unpack(terrain))()
