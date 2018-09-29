@@ -67,30 +67,33 @@ uus.generateArcExt = function(arc)
     }
 end
 
-uus.arcPacker = function(length, slope)
+uus.arcPacker = function(length, slope, r)
     return function(radius, o, lengthVar, dislodge)
         local dislodge = dislodge and (dislodge * length / radius) or 0
         local length = lengthVar and (length * lengthVar) or length
         local initRad = (radius > 0 and pi or 0) + dislodge
-        return function(z)
-            local z = z or 0
-            return function(lengthOverride)
-                local l = lengthOverride and lengthOverride(length) or length
-                return function(xDr)
-                    local dr = xDr or 0
-                    local ar = arc.byOR(o + coor.xyz(0, 0, z), abs(radius - dr))
-                    local rad = (radius > 0 and 1 or -1) * l / ar.r * 0.5
-                    return pipe.new
-                        / ar:withLimits({
-                            sup = initRad - rad,
-                            inf = initRad,
-                            slope = -slope
-                        })
-                        / ar:withLimits({
-                            inf = initRad,
-                            sup = initRad + rad,
-                            slope = slope
-                        })
+        return function(minLength)
+            local length = minLength and (length / minLength * length) or length
+            return function(z)
+                local z = z or 0
+                return function(lengthOverride)
+                    local l = lengthOverride and lengthOverride(length) or length
+                    return function(xDr)
+                        local dr = xDr or 0
+                        local ar = arc.byOR(o + coor.xyz(0, 0, z), abs(radius - dr))
+                        local rad = l / r * 0.5
+                        return pipe.new
+                            / ar:withLimits({
+                                sup = initRad - rad,
+                                inf = initRad,
+                                slope = -slope
+                            })
+                            / ar:withLimits({
+                                inf = initRad,
+                                sup = initRad + rad,
+                                slope = slope
+                            })
+                    end
                 end
             end
         end
@@ -324,30 +327,8 @@ uus.generateEdges = function(edges, isLeft, arcPacker)
         }
 end
 
-uus.generateEdgesTerminal = function(edges, isLeft, arcPacker)
-    local arcs = arcPacker()()()
-    local eInf, eSup = table.unpack(arcs * pipe.map2(isLeft and {pipe.noop(), pipe.noop()} or {arc.rev, arc.rev}, function(a, op) return op(a) end) * pipe.map(uus.generateArc))
-    if isLeft then
-        eInf[1] = eInf[1]:avg(eSup[2])
-        eSup[2] = eInf[1]
-        eInf[3] = eInf[3]:avg(eSup[4])
-        eSup[4] = eInf[3]
-    else
-        eInf[2] = eInf[2]:avg(eSup[1])
-        eSup[1] = eInf[2]
-        eInf[4] = eInf[4]:avg(eSup[3])
-        eSup[3] = eInf[4]
-    end
-    return edges /
-        {
-            edge = pipe.new / eInf / eSup + arcs * pipe.mapFlatten(uus.generateArcExt) * function(ls) return {ls[2]} end,
-            snap = pipe.new / {false, false} / {false, false} / {false, true}
-        }
-end
-
 uus.generateTerminals = function(config)
     local platformZ = config.hPlatform + 0.53
-    local edgeRule = config.isTerminal and function(edges) return #edges * 8 - 12 end or function(edges) return #edges * 8 - 16 end
     return function(edges, terminals, terminalsGroup, arcs, enablers)
         local lc, rc, c = arcs.lane.lc, arcs.lane.rc, arcs.lane.c
         local newTerminals = pipe.new
@@ -390,7 +371,7 @@ uus.generateTerminals = function(config)
             } or {}, function(t)
                 return {
                     terminals = t.terminals,
-                    vehicleNodeOverride = t.fVehicleNodeOverride(config.isTerminal and 6 or 8)
+                    vehicleNodeOverride = t.fVehicleNodeOverride(8)
                 }
             end
     )
@@ -566,29 +547,29 @@ uus.generateModels = function(fitModel, config)
             * pipe.rep(c - 2)(config.models.surface)
             * pipe.mapi(function(p, i) return (i == (c > 5 and 4 or 2) or (i == floor(c * 0.5) + 4) and (arcs.hasLower or arcs.hasUpper)) and config.models.stair or config.models.surface end)
             / config.models.extremity
-            * (function(ls) return config.isTerminal and (ls * pipe.rev() + pipe.rep(c - 1)(config.models.surface)) or (ls * pipe.rev() + ls) end)
+            * (function(ls) return ls * pipe.rev() + ls end)
         
         local platformSurfaceEx = pipe.new
             * pipe.rep(c - 2)(config.models.surface)
             / config.models.extremity
-            * (function(ls) return config.isTerminal and (ls * pipe.rev() + pipe.rep(c - 1)(config.models.surface)) or (ls * pipe.rev() + ls) end)
+            * (function(ls) return ls * pipe.rev() + ls end)
         
         local platformEdgeO = pipe.new
             * pipe.rep(c - 2)(config.models.edge)
             / config.models.corner
-            * (function(ls) return config.isTerminal and (ls * pipe.rev() + pipe.rep(c - 1)(config.models.edge)) or (ls * pipe.rev() + ls) end)
+            * (function(ls) return ls * pipe.rev() + ls end)
         
         local platformEdgeL, platformEdgeR = platformEdgeO, platformEdgeO
         
         local roofSurface = pipe.new
             * pipe.rep(pc - 2)(config.models.roofTop)
             / config.models.roofExtremity
-            * (function(ls) return config.isTerminal and (ls * pipe.rev() + pipe.rep(c - 1)(config.models.roofTop)) or (ls * pipe.rev() + ls) end)
+            * (function(ls) return ls * pipe.rev() + ls end)
         
         local roofEdge = pipe.new
             * pipe.rep(pc - 2)(config.models.roofEdge)
             / config.models.roofCorner
-            * (function(ls) return config.isTerminal and (ls * pipe.rev() + pipe.rep(c - 1)(config.models.roofEdge)) or (ls * pipe.rev() + ls) end)
+            * (function(ls) return ls * pipe.rev() + ls end)
         
         local newModels = pipe.mapn(
             func.seq(1, 2 * c - 2),
@@ -1000,20 +981,18 @@ uus.buildTerminal = function(fitModel, config)
 end
 
 uus.build = function(config, fitModel, generateEdges)
-    local generateEdges = config.isTerminal and uus.generateEdgesTerminal or uus.generateEdges
+    local generateEdges = uus.generateEdges
     local generateModels = uus.generateModels(fitModel, config)
     local generateTerminals = uus.generateTerminals(config)
     local generateTerrain = uus.generateTerrain(config)
     local generateTrackTerrain = uus.generateTrackTerrain(config)
     local buildTerminal = uus.buildTerminal(fitModel, config)
-    local function build(edges, terminals, terminalsGroup, models, terrain, gr, ...)
+    local function build(edges, mockEdges, terminals, terminalsGroup, models, terrain, gr, ...)
         local isLeftmost = #models == 0
         local isRightmost = #{...} == 0
         
-        local models, terrain = table.unpack((isLeftmost and config.isTerminal) and {buildTerminal({gr, ...})} or {models, terrain})
-        
         if (gr == nil) then
-            return edges, terminals, terminalsGroup,
+            return edges, mockEdges, terminals, terminalsGroup,
                 models * pipe.filter(pipe.noop()),
                 terrain
         elseif (#gr == 3 and gr[1].isTrack and gr[2].isPlatform and gr[3].isTrack) then
@@ -1022,11 +1001,10 @@ uus.build = function(config, fitModel, generateEdges)
             local terminals, terminalsGroup = generateTerminals(edges, terminals, terminalsGroup, gr[2], {true, true})
             return build(
                 edges,
+                mockEdges,
                 terminals,
                 terminalsGroup,
-                models + generateModels(gr[2])
-                + (config.leftFences and isLeftmost and generateFences(gr[1][1], true, true) or {})
-                + (config.rightFences and isRightmost and generateFences(gr[3][1], false, true) or {}),
+                models + generateModels(gr[2]),
                 terrain + generateTerrain(gr[2]) + generateTrackTerrain(gr[1][1]) + generateTrackTerrain(gr[3][1]),
                 ...)
         elseif (#gr == 2 and gr[1].isTrack and gr[2].isPlatform) then
@@ -1034,40 +1012,38 @@ uus.build = function(config, fitModel, generateEdges)
             local terminals, terminalsGroup = generateTerminals(edges, terminals, terminalsGroup, gr[2], {true, false})
             return build(
                 edges,
+                mockEdges,
                 terminals,
                 terminalsGroup,
-                models
-                + generateModels(gr[2])
-                + (config.leftFences and isLeftmost and generateFences(gr[1][1], true, true, entries[3].fenceFilter) or {})
-                + (config.rightFences and isRightmost and generateFences(gr[2][2], false, false, entries[3].fenceFilter) or {}),
+                models + generateModels(gr[2]),
                 terrain + generateTerrain(gr[2]) + generateTrackTerrain(gr[1][1]),
                 ...)
         elseif (#gr == 2 and gr[1].isPlatform and gr[2].isTrack) then
             local edges = generateEdges(edges, false, gr[2][1])
             local terminals, terminalsGroup = generateTerminals(edges, terminals, terminalsGroup, gr[1], {false, true})
-            return build(edges,
+            return build(
+                edges,
+                mockEdges,
                 terminals,
                 terminalsGroup,
-                models
-                + generateModels(gr[1])
-                + (config.leftFences and isLeftmost and generateFences(gr[1][1], true, false, entries[3].fenceFilter) or {})
-                + (config.rightFences and isRightmost and generateFences(gr[2][1], false, true, entries[3].fenceFilter) or {}),
+                models + generateModels(gr[1]),
                 terrain + generateTerrain(gr[1]) + generateTrackTerrain(gr[2][1]),
                 ...)
         elseif (#gr == 1 and gr[1].isPlatform) then
             local terminals, terminalsGroup = generateTerminals(edges, terminals, terminalsGroup, gr[1], {false, false})
-            return build(edges,
+            return build(
+                edges,
+                mockEdges,
                 terminals,
                 terminalsGroup,
-                models
-                + generateModels(gr[1])
-                + (config.leftFences and isLeftmost and generateFences(gr[1][1], true, false, entries[3].fenceFilter) or {})
-                + (config.rightFences and isRightmost and generateFences(gr[1][1], false, false, entries[3].fenceFilter) or {}),
+                models + generateModels(gr[1]),
                 terrain + generateTerrain(gr[1]),
                 ...)
         else
             local edges = generateEdges(edges, false, gr[1][1])
-            return build(edges,
+            return build(
+                edges,
+                mockEdges,
                 terminals,
                 terminalsGroup,
                 models,
@@ -1108,87 +1084,18 @@ end
 
 uus.platformArcGen = function(tW, pW)
     return function(arcPacker)
-        return function(r, o, lPct, oPct, pWe, isRight)
+        return function(r, o, lPct, oPct, isRight)
             local rInner = r - (isRight and 1 or -1) * (0.5 * tW)
             local rOuter = r - (isRight and 1 or -1) * (0.5 * tW + pW)
             local inner = arcPacker(rInner, o, lPct, oPct)
-            local li, ls = table.unpack(inner()()())
-            local ri, rs = table.unpack(arcPacker(rOuter, o, lPct * abs(rOuter - rInner) / rOuter, oPct)()()())
+            local li, ls = table.unpack(inner()()()())
+            local ri, rs = table.unpack(arcPacker(rOuter, o, lPct * abs(rOuter - rInner) / rOuter, oPct)()()()())
             
-            local r, o = platformArcGenParam(li, ri, rInner, pWe)
+            local r, o = platformArcGenParam(li, ri, rInner, pW)
             
             return r + 0.5 * tW * (isRight and 1 or -1), o, {
                 isRight and inner or arcPacker(r, o, lPct, oPct),
                 isRight and arcPacker(r, o, lPct, oPct) or inner
-            }
-        end
-    end
-end
-
-uus.platformDualArcGen = function(tW, pW)
-    return function(arcPacker)
-        return function(rA, oA, rB, oB, lPct, oPct, pWe, isRight)
-            local rInnerA = rA - (isRight and 1 or -1) * (0.5 * tW)
-            local rOuterA = rA - (isRight and 1 or -1) * (0.5 * tW + pW)
-            local rInnerB = rB - (isRight and 1 or -1) * (0.5 * tW)
-            local rOuterB = rB - (isRight and 1 or -1) * (0.5 * tW + pW)
-            local inner = arcPacker(rInnerA, oA, rInnerB, oB, lPct, oPct)
-            local li, ls = table.unpack(inner()()())
-            local ri, rs = table.unpack(arcPacker(rOuterA, oA, rOuterB, oB, lPct, oPct)()()())
-            
-            local rA, oA = platformArcGenParam(li, ri, rInnerA, pWe)
-            local rB, oB = platformArcGenParam(ls, rs, rInnerB, pWe)
-            
-            return rA + 0.5 * tW * (isRight and 1 or -1), oA, rB + 0.5 * tW * (isRight and 1 or -1), oB, {
-                isRight and inner or arcPacker(rA, oA, rB, oB, lPct, oPct),
-                isRight and arcPacker(rA, oA, rB, oB, lPct, oPct) or inner
-            }
-        end
-    end
-end
-
-
-local platformArcGenParamTerminal = function(ls, rs, li, ri, rInner, pWe)
-    local mlpt = ls:pt(ls.inf):withZ(0)
-    local mrpt = rs:pt(rs.inf):withZ(0)
-    
-    local mvec = (mrpt - mlpt):normalized():withZ(0)
-    local f = mvec:dot(mlpt - ls.o) > 0 and 1 or -1
-    
-    mvec = (mlpt - ls.o):normalized()
-    
-    local elpt = ls:pt(li.sup)
-    local erpt = (elpt - li.o):normalized() * f * pWe + elpt
-    
-    local mln = line.byVecPt(mvec, mrpt)
-    local pln = line.byVecPt(mvec .. coor.rotZ(pi * 0.5), erpt)
-    local xpt = (mln - pln):withZ(0)
-    
-    local rvec = (xpt - mrpt):dot(xpt - ls.o) * rInner
-    local cvec = (elpt - ls.o):dot(mlpt - ls.o)
-    
-    local lenP2 = (xpt - erpt):length2()
-    local lenT = (xpt - mrpt):length()
-    local r = (lenP2 / lenT + lenT) * 0.5 * (rvec < 0 and 1 or -1) * (cvec > 0 and 1 or -1)
-    
-    local o = mrpt + (xpt - mrpt):normalized() * abs(r)
-    
-    return r, o
-end
-
-uus.platformArcGenTerminal = function(tW, pW)
-    return function(arcPacker)
-        return function(r, o, lPct, pWe, isRight)
-            local rInner = r - (isRight and 1 or -1) * (0.5 * tW)
-            local rOuter = r - (isRight and 1 or -1) * (0.5 * tW + pW)
-            local inner = arcPacker(rInner, o, lPct, 0)
-            local li, ls = table.unpack(inner()()())
-            local ri, rs = table.unpack(arcPacker(rOuter, o, lPct * abs(rOuter - rInner) / rOuter, 0)()()())
-            
-            local r, o = platformArcGenParamTerminal(ls, rs, li, ri, rInner, pWe)
-            return r + 0.5 * tW * (isRight and 1 or -1), o, {
-                isRight and inner or arcPacker(r, o, lPct, 0),
-                isRight and arcPacker(r, o, lPct, 0) or inner
             }
         end
     end
@@ -1251,13 +1158,6 @@ uus.models = function(prefixM)
         chair = prefixM("platform/platform_chair"),
         access = prefixM("platform/platform_access_t"),
         underground = prefixM("underground_entry.mdl")
-    }
-end
-
-uus.fencesGen = function(colorCode, styleCode)
-    return {
-        "uus/fences/" .. tostring(colorCode) .. "/platform_fences_" .. tostring(styleCode) .. ".mdl",
-        "uus/fences/" .. tostring(colorCode) .. "/platform_fences_pole_" .. tostring(styleCode) .. ".mdl",
     }
 end
 
@@ -1479,6 +1379,10 @@ uus.preBuild = function(totalTracks, nbTransitTracks, posTransitTracks, ignoreFs
             if (#transitSeq > 0) then
                 if (posTransitTracks == 1) then
                     result = result + transitSeq
+                elseif (posTransitTracks == -2) then
+                    result = transitSeq + result
+                elseif (posTransitTracks == 0) then
+                    result = pipe.new * pipe.rep(ceil(nbTransitTracks * 0.5))(t) + result + pipe.new * pipe.rep(floor(nbTransitTracks * 0.5))(t)
                 else
                     local idx = result * pipe.zip(func.seq(1, #result), {"t", "i"}) * pipe.filter(function(p) return not p.t end) * pipe.map(pipe.select("i"))
                     result = result * pipe.range(1, idx[ceil(#idx * 0.5)]) + transitSeq + result * pipe.range(idx[ceil(#idx * 0.5)] + 1, #result)
