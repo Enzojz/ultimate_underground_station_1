@@ -401,7 +401,7 @@ uus.generateTerminals = function(config)
     end
 end
 
-local buildSurface = function(fitModel, platformZ, tZ)
+local buildSurface = function(fitModel, config, platformZ, tZ)
     return function(c, w)
         return function(i, s, sx, lic, ric)
             local lic = i >= c and lic or {s = lic.i, i = lic.s}
@@ -410,75 +410,79 @@ local buildSurface = function(fitModel, platformZ, tZ)
             local sizeS = uus.assembleSize(lic, ric)
             
             local vecs = {
-                top = sizeS.rt - sizeS.lt,
-                bottom = sizeS.rb - sizeS.lb
+                top = (sizeS.rt - sizeS.lt):normalized(),
+                bottom = (sizeS.rb - sizeS.lb):normalized()
             }
-            if (vecs.top:length() < (1.5 * w) and vecs.bottom:length() < (1.5 * w)) then
+            if (config.wPlatform == 5) then
                 return pipe.new
                     / station.newModel(s .. "_br.mdl", tZ, fitModel(w, 5, platformZ, sizeS, false, false))
                     / station.newModel(s .. "_tl.mdl", tZ, fitModel(w, 5, platformZ, sizeS, true, true))
             else
-                local n = (function(l)
-                    return (l - floor(l) < 0.5)
-                        and (function(n) return n % 2 == 0 and n - 1 or n end)(floor(l))
-                        or (function(n) return n % 2 == 0 and n + 1 or n end)
-                        (ceil(l))
-                end)((vecs.top:length() + vecs.bottom:length()) / 14)
-                
-                local h = (n - 1) * 0.5
-                
-                local sizeS2 = {
-                    lb = sizeS.lb + vecs.bottom * h / n,
-                    lt = sizeS.lt + vecs.top * h / n,
-                    rb = sizeS.rb - vecs.bottom * h / n,
-                    rt = sizeS.rt - vecs.top * h / n
+                local sizeL = {
+                    lb = sizeS.lb,
+                    lt = sizeS.lt,
+                    rb = sizeS.lb + vecs.bottom * 2.5,
+                    rt = sizeS.lt + vecs.top * 2.5
                 }
-                
-                return pipe.new
-                    * func.seq(1, h)
-                    * pipe.map(function(i)
-                        local size = {
-                            lb = sizeS.lb + vecs.bottom * (i - 1) / n,
-                            lt = sizeS.lt + vecs.top * (i - 1) / n,
-                            rb = sizeS.lb + vecs.bottom * i / n,
-                            rt = sizeS.lt + vecs.top * i / n
-                        }
-                        
-                        return pipe.new
-                            / station.newModel(sx .. "_br.mdl", tZ, fitModel(w, 5, platformZ, size, false, false))
-                            / station.newModel(sx .. "_tl.mdl", tZ, fitModel(w, 5, platformZ, size, true, true))
-                    end
-                    )
-                    * pipe.flatten()
-                    + {
-                        station.newModel(s .. "_br.mdl", tZ, fitModel(w, 5, platformZ, sizeS2, false, false)),
-                        station.newModel(s .. "_tl.mdl", tZ, fitModel(w, 5, platformZ, sizeS2, true, true))
+                local sizeR = {
+                    lb = sizeS.rb - vecs.bottom * 2.5,
+                    lt = sizeS.rt - vecs.top * 2.5,
+                    rb = sizeS.rb,
+                    rt = sizeS.rt
+                }
+                if (config.wPlatform == 10) then
+                    local sizeC = {
+                        lb = sizeL.rb,
+                        lt = sizeL.rt,
+                        rb = sizeR.lb,
+                        rt = sizeR.lt
                     }
-                    + pipe.new
-                    * func.seq(1, h)
-                    * pipe.map(
-                        function(i)
-                            local size = {
-                                lb = sizeS.rb - vecs.bottom * i / n,
-                                lt = sizeS.rt - vecs.top * i / n,
-                                rb = sizeS.rb - vecs.bottom * (i - 1) / n,
-                                rt = sizeS.rt - vecs.top * (i - 1) / n
-                            }
-                            
-                            return pipe.new
-                                / station.newModel(sx .. "_br.mdl", tZ, fitModel(w, 5, platformZ, size, false, false))
-                                / station.newModel(sx .. "_tl.mdl", tZ, fitModel(w, 5, platformZ, size, true, true))
-                        end
-                    )
-                    * pipe.flatten()
+                    return pipe.new
+                        / station.newModel(sx .. "_l_br.mdl", tZ, fitModel(2.5, 5, platformZ, sizeL, false, false))
+                        / station.newModel(sx .. "_l_tl.mdl", tZ, fitModel(2.5, 5, platformZ, sizeL, true, true))
+                        / station.newModel(sx .. "_r_br.mdl", tZ, fitModel(2.5, 5, platformZ, sizeR, false, false))
+                        / station.newModel(sx .. "_r_tl.mdl", tZ, fitModel(2.5, 5, platformZ, sizeR, true, true))
+                        / station.newModel(s .. "_br.mdl", tZ, fitModel(w, 5, platformZ, sizeC, false, false))
+                        / station.newModel(s .. "_tl.mdl", tZ, fitModel(w, 5, platformZ, sizeC, true, true))
+                else
+                    local sizeLR = {
+                        lb = sizeL.rb,
+                        lt = sizeL.rt,
+                        rb = sizeL.rb + vecs.bottom * 2.5,
+                        rt = sizeL.rt + vecs.top * 2.5
+                    }
+                    local sizeRL = {
+                        lb = sizeR.lb - vecs.bottom * 2.5,
+                        lt = sizeR.lt - vecs.top * 2.5,
+                        rb = sizeR.lb,
+                        rt = sizeR.lt
+                    }
+                    local sizeC = {
+                        lb = sizeLR.rb,
+                        lt = sizeLR.rt,
+                        rb = sizeRL.lb,
+                        rt = sizeRL.lt
+                    }
+                    return pipe.new
+                        / station.newModel(sx .. "_l_br.mdl", tZ, fitModel(2.5, 5, platformZ, sizeL, false, false))
+                        / station.newModel(sx .. "_l_tl.mdl", tZ, fitModel(2.5, 5, platformZ, sizeL, true, true))
+                        / station.newModel(sx .. "_r_br.mdl", tZ, fitModel(2.5, 5, platformZ, sizeR, false, false))
+                        / station.newModel(sx .. "_r_tl.mdl", tZ, fitModel(2.5, 5, platformZ, sizeR, true, true))
+                        / station.newModel(sx .. "_l_br.mdl", tZ, fitModel(2.5, 5, platformZ, sizeRL, false, false))
+                        / station.newModel(sx .. "_l_tl.mdl", tZ, fitModel(2.5, 5, platformZ, sizeRL, true, true))
+                        / station.newModel(sx .. "_r_br.mdl", tZ, fitModel(2.5, 5, platformZ, sizeLR, false, false))
+                        / station.newModel(sx .. "_r_tl.mdl", tZ, fitModel(2.5, 5, platformZ, sizeLR, true, true))
+                        / station.newModel(s .. "_br.mdl", tZ, fitModel(w, 5, platformZ, sizeC, false, false))
+                        / station.newModel(s .. "_tl.mdl", tZ, fitModel(w, 5, platformZ, sizeC, true, true))
+                end
             end
         end
     end
 end
 
-local retriveModels = function(fitModel, platformZ, tZ)
+local retriveModels = function(fitModel, config, platformZ, tZ)
     return function(c, ccl, ccr, w)
-        local buildSurface = buildSurface(fitModel, platformZ, tZ)(c, 5 - w * 2)
+        local buildSurface = buildSurface(fitModel, config, platformZ, tZ)(c, 5 - w * 2)
         return function(i, el, er, s, sx, lc, rc, lic, ric)
             local surface = buildSurface(i, s, sx, lic, ric)
             
@@ -555,8 +559,7 @@ uus.generateModels = function(fitModel, config)
     local tZ = coor.transZ(config.hPlatform - 1.4)
     local platformZ = config.hPlatform + 0.53
     
-    local buildSurface = buildSurface(fitModel, platformZ, tZ)
-    local retriveModels = retriveModels(fitModel, platformZ, tZ)
+    local retriveModels = retriveModels(fitModel, config, platformZ, tZ)
     local buildPoles = buildPoles(config, platformZ, tZ)
     local buildChairs = buildChairs(config, platformZ, tZ)
     
@@ -569,12 +572,12 @@ uus.generateModels = function(fitModel, config)
         local platformSurface = pipe.new
             * pipe.rep(c - 2)(config.models.surface)
             * pipe.mapi(function(p, i) return (i == (c > 5 and 4 or 2) or (i == floor(c * 0.5) + 4) and (arcs.hasLower or arcs.hasUpper)) and config.models.stair or config.models.surface end)
-            / config.models.extremity
+            / config.models.surface
             * (function(ls) return ls * pipe.rev() + ls end)
         
         local platformSurfaceEx = pipe.new
             * pipe.rep(c - 2)(config.models.surface)
-            / config.models.extremity
+            / config.models.surface
             * (function(ls) return ls * pipe.rev() + ls end)
         
         local platformEdgeO = pipe.new
@@ -605,20 +608,19 @@ uus.generateModels = function(fitModel, config)
         
         local chairs = buildChairs(lcc, rcc, mcc, cc, 1, 2 * cc - 1)
         
-        local newRoof = config.roofLength == 0
-            and {}
-            or pipe.new * pipe.mapn(
-                func.seq(1, 2 * pc - 2),
-                roofEdge,
-                roofEdge,
-                roofSurface,
-                roofSurface,
-                il(lpc), il(rpc), il(lpic), il(rpic)
-            )(retriveModels(pc, pc, pc, 1))
-            / buildPoles(mpp, ppc, 1, ppc * 2 - 1)
+        -- local newRoof = config.roofLength == 0
+        --     and {}
+        --     or pipe.new * pipe.mapn(
+        --         func.seq(1, 2 * pc - 2),
+        --         roofEdge,
+        --         roofEdge,
+        --         roofSurface,
+        --         roofSurface,
+        --         il(lpc), il(rpc), il(lpic), il(rpic)
+        --     )(retriveModels(pc, pc, pc, 1))
+        --     / buildPoles(mpp, ppc, 1, ppc * 2 - 1)
         
-        
-        return (pipe.new / newModels / newRoof / chairs) * pipe.flatten() * pipe.flatten()
+        return (pipe.new / newModels / chairs) * pipe.flatten() * pipe.flatten()
     end
 end
 
