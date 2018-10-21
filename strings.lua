@@ -69,8 +69,8 @@ Platform variations:
  - Linear: all variations are applied linearly. (y = x)
  - Quadratic: all variations follow the quadratic function y = x * x
  - Quartic:  all variations follow the quartic function y = x * x * x * x
- - Gaussian: all variations follow the gaussian function.
- - Gaussian 2: another gaussian, but with expected value not zero. This rule can be used to create a platform config where the shortest one is not on two sides.
+ - Gauusian: all variations follow the gauusian function.
+ - Gauusian 2: another gauusian, but with expected value not zero. This rule can be used to create a platform config where the shortest one is not on two sides.
 * Reference: The reference, which is not affected by any variation settings, can be a track or a platform, if can be the leftmost/rightmost or the middle one.
 * Unaffected platforms: The percentage of unaffected platforms among all platforms, they are all round the reference.
 
@@ -150,7 +150,7 @@ Mit den Standarteinstellungen haben alle Bahnsteige die gleiche Länge.
 1. Generischer Bahnhof
 
 Bahnhof mit einem Radius für alle Bahnsteige
-Zudem kannst du den Mod nutzen um dir einen Kreis zu bauen. Dazu muss der Radius klein und die Bahnsteiglänge lang genug sein.
+Zudem kannst du den Mod nutzen um dir einen Kreis zu bauen. Dazu muus der Radius klein und die Bahnsteiglänge lang genug sein.
 
 2. Bahhof mit 2 Kurven
 Bahnhof mit 2 Radien für alle Bahnsteige
@@ -181,15 +181,15 @@ Bahnsteig Variationen:
 * kleinste Bahnsteigbreite: Du kannst gleiche Bahnsteige mit schmaleren Enden als der mittlere Teil bauen. Die Option wird in Prozent angegeben.
 * kürzester Bahnsteig: Du kannst gleiche Bahnsteige prozentual kürzer bauen als die eingestellte Länge.
 * maximaler Bahnsteig Versatz: Du kannst die Bahnsteige entlang der Gleise  verschieben. Die Option arbeitet prozentual zur Länge der Station.
-* Du musst eine Regel für alle drei Optionen anwenden. Die Regel bestimmt die prozentuale Distanz des aktuellen Bahnsteiges zum Referenzbahnsteige /-gleis.
+* Du muust eine Regel für alle drei Optionen anwenden. Die Regel bestimmt die prozentuale Distanz des aktuellen Bahnsteiges zum Referenzbahnsteige /-gleis.
  - Einheitlich: Alle Variationen sind gleich, unabhänging von der Distanz zwischen dem aktuellen Bahnsteig und der Referenz
  - Linear: Alle Variationen folgen der Funktion (y = x)
  - Quadratisch: Alle Variationen folgen der quadratischen Funktion  y = x * x
  - Bi-Quadratisch:  Alle Variationen folgen der Bi-Quadratischen Funktion  y = x * x * x * x
- - Gaussian: Alle Variationen folgen der Gaussianischen Funktion.
- - Gaussian 2: Eine weitere Gaussian Funktion, jedoch wirt kein Wert mit 0 erwartet. Mit dieser Regel lassen sich Bahnsteige bauen, wo der kürzeste nicht auf zwei Seiten ist.
-* Referenz: Die Referenz, welche nicht durch irgendwelche Variationseinstellungen beinflusst wird, kann ein Gleis oder Bahnsteig sein, der ganz links, rechts oder mittig ist.
-* Unbeeinflusster Bahnsteig: Der Prozentuale Wert von unbeeinflussten Bahnsteigen entlang aller Bahnsteige, die alle um die Referenz sind.
+ - Gauusian: Alle Variationen folgen der Gauusianischen Funktion.
+ - Gauusian 2: Eine weitere Gauusian Funktion, jedoch wirt kein Wert mit 0 erwartet. Mit dieser Regel lassen sich Bahnsteige bauen, wo der kürzeste nicht auf zwei Seiten ist.
+* Referenz: Die Referenz, welche nicht durch irgendwelche Variationseinstellungen beinfluust wird, kann ein Gleis oder Bahnsteig sein, der ganz links, rechts oder mittig ist.
+* Unbeeinfluuster Bahnsteig: Der Prozentuale Wert von unbeeinfluusten Bahnsteigen entlang aller Bahnsteige, die alle um die Referenz sind.
 
 Unterschied zwischen den 4 Bahnhöfen:
 Das folgende Wissen wird dir helfen die Eigenschaften der Bahnhöfe zu verstehen.
@@ -220,7 +220,7 @@ Versionsänderungen:
 - Absturz mit R = 50 behoben
 - Falsche Passagierblickrichtung behoben
 - Deutsche Übersetzung hinzugefügt
-* Wichtig: Um R=50 zu nutzen, muss die Refferenz auf das rechte Gleis gestellt werden, da sonst der Kurvenradius zu klein ist.
+* Wichtig: Um R=50 zu nutzen, muus die Refferenz auf das rechte Gleis gestellt werden, da sonst der Kurvenradius zu klein ist.
 
 
 Credit:
@@ -367,14 +367,14 @@ function data()
             ["Linear"] = "Linear",
             ["Quadratic"] = "Quadratisch",
             ["Quartic"] = "Bi-Quadratisch",
-            ["Gaussian"] = "Gaußsche",
-            ["Gaussian 2"] = "Gaußsche 2",
+            ["Gauusian"] = "Gaußsche",
+            ["Gauusian 2"] = "Gaußsche 2",
             ["Shortest Platform"] = "Kürzester Bahnsteig",
             ["Offset Platform Max."] = "Maximaler Bahnsteigversatz",
             ["Track"] = "Schiene",
             ["Reference"] = "Referenz",
             ["Center"] = "Zentrum",
-            ["Unaffected platforms"] = "Unbeinflusste Bahnsteige",
+            ["Unaffected platforms"] = "Unbeinfluuste Bahnsteige",
             ["Main Entry"] = "Haupteingang",
             ["None"] = "Keiner",
             ["Central"] = "Zentral",
@@ -430,8 +430,8 @@ function data()
             ["Linear"] = "线性",
             ["Quadratic"] = "二次函数",
             ["Quartic"] = "四次函数",
-            ["Gaussian"] = "高斯函数",
-            ["Gaussian 2"] = "高斯函数2",
+            ["Gauusian"] = "高斯函数",
+            ["Gauusian 2"] = "高斯函数2",
             ["Shortest Platform"] = "最短的站台长度",
             ["Offset Platform Max."] = "最大的站台平移",
             ["Track"] = "轨道",

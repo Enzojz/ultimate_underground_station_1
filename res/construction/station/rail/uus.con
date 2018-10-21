@@ -216,6 +216,7 @@ local function updateFn()
         local trackWidth = uusm.trackWidthList[params.trackType + 1]
         local catenary = params.catenary == 1
         local trackBuilder = trackEdge.builder(catenary, trackType)
+        local mockTrackBuilder = trackEdge.builder(false, trackType)
         local hPlatform = uusm.hPlatformList[params.hPlatform + 1] * 0.001
         local wPlatform = uusm.wPlatformList[params.wPlatform + 1]
         
@@ -255,7 +256,7 @@ local function updateFn()
             * {
                 edgeLists = pipe.new 
                 / (pipe.new * {edge * station.mergeEdges} * station.prepareEdges * trackBuilder.tunnel("railroad_old.lua"))
-                / (pipe.new * {mockEdge * station.mergeEdges} * station.prepareEdges * trackBuilder.tunnel("railroad_old.lua"))
+                / (pipe.new * {mockEdge * station.mergeEdges} * station.prepareEdges * mockTrackBuilder.tunnel("railroad_old.lua"))
                 ,
                 models = terminals + models,
                 terminalGroups = terminalsGroup,

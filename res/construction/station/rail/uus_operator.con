@@ -197,6 +197,8 @@ function data()
             description = _("description")
         },
         order = 5011,
+	skipCollision = true,
+	autoRemovable = false,
         params = params(),
         updateFn = updateFn
     }
