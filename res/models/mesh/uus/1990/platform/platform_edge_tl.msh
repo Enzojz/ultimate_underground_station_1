@@ -1,50 +1,39 @@
-function data() return 
-  { animations = {  }, matConfigs = { { 0, 0, 0 } }, 
-    subMeshes = 
-      { 
-        { 
-          indices = 
-            { 
-              normal = { count = 24, offset = 1584 }, 
-              position = { count = 24, offset = 1584 }, 
-              tangent = { count = 24, offset = 1584 }, 
-              uv0 = { count = 24, offset = 1584 }, 
-             }, 
-          materials = { "uus/asphalt.mtl" }
-         }, 
-        { 
-          indices = 
-            { 
-              normal = { count = 60, offset = 1608 }, 
-              position = { count = 60, offset = 1608 }, 
-              tangent = { count = 60, offset = 1608 }, 
-              uv0 = { count = 60, offset = 1608 }, 
-             }, 
-          materials = 
-            { 
-              "station/train/passenger/trainstation_1990_borders_3.mtl"
-             }
-         }, 
-        { 
-          indices = 
-            { 
-              normal = { count = 48, offset = 1668 }, 
-              position = { count = 48, offset = 1668 }, 
-              tangent = { count = 48, offset = 1668 }, 
-              uv0 = { count = 48, offset = 1668 }, 
-             }, 
-          materials = { "uus/concrete.mtl" }
-         }
-       }, 
-    vertexAttr = 
-      { 
-        normal = 
-          { count = 396, numComp = 3, offset = 660 }, 
-        position = 
-          { count = 396, numComp = 3, offset = 0 }, 
-        tangent = 
-          { count = 528, numComp = 4, offset = 1056 }, 
-        uv0 = 
-          { count = 264, numComp = 2, offset = 396 }, 
-       }
-   } end
+function data() return {
+  animations = {  },
+  matConfigs = {
+    { 0, 0 }
+  },
+  subMeshes = {
+    {
+      indices = {
+        normal   = { count = 96, offset = 1512 },
+        position = { count = 96, offset = 1512 },
+        tangent  = { count = 96, offset = 1512 },
+        uv0      = { count = 96, offset = 1512 },
+        uv1      = { count = 96, offset = 1512 }
+      },
+      materials = {
+        "uus/asphalt.mtl"
+      }
+    },
+    {
+      indices = {
+        normal   = { count = 12, offset = 1608 },
+        position = { count = 12, offset = 1608 },
+        tangent  = { count = 12, offset = 1608 },
+        uv0      = { count = 12, offset = 1608 },
+        uv1      = { count = 12, offset = 1608 }
+      },
+      materials = {
+        "uus/asphalt.mtl"
+      }
+    }
+  },
+  vertexAttr = {
+    normal   = { count = 324, numComp = 3, offset = 540 },
+    position = { count = 324, numComp = 3, offset = 0 },
+    tangent  = { count = 432, numComp = 4, offset = 864 },
+    uv0      = { count = 216, numComp = 2, offset = 324 },
+    uv1      = { count = 216, numComp = 2, offset = 1296 }
+  }
+} end

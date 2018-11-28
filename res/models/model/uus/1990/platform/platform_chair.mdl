@@ -15,9 +15,9 @@ function data()
                     {
                         id = "station/train/passenger/1990/lod_0_double_chair.msh",
                         transf = {
-                            1, 0, 0, 0, 
-                            0, 1, 0, 0, 
-                            0, 0, 1, 0, 
+                            1, 0, 0, 0,
+                            0, 1, 0, 0,
+                            0, 0, 1, 0,
                             0, 0, 0, 1,
                         },
                         type = "MESH",

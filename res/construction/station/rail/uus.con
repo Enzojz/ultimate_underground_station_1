@@ -211,7 +211,6 @@ end
 
 local function updateFn()
     return uus.safeBuild(params, function(params)
-        local buildingList, buildingParamsList = require("uus_building")("uus/1990/")
         local trackType = uusm.trackList[params.trackType + 1]
         local trackWidth = uusm.trackWidthList[params.trackType + 1]
         local catenary = params.catenary == 1

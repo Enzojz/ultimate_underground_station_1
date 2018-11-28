@@ -2,7 +2,7 @@ function data()
     return {
         collider = {
             params = {
-                
+            
             },
             type = "MESH",
         },
@@ -15,22 +15,21 @@ function data()
                             1, 0, 0, 0,
                             0, 1, 0, 0,
                             0, 0, 1, 0,
-                            0, 0, 0, 1 
+                            0, 0, 0, 1
                         },
                         type = "MESH",
-                    }, 
+                    },
                 },
                 matConfigs = {
-                    { 0, }, 
+                    {0, },
                 },
                 static = false,
                 visibleFrom = 0,
                 visibleTo = 5000,
-            }, 
+            },
         },
         metadata = {
         },
-        
-    }
-    end
     
+    }
+end

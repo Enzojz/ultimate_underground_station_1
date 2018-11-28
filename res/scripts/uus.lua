@@ -5,7 +5,7 @@ local line = require "uus/coorline"
 local quat = require "uus/quaternion"
 local station = require "uus/stationlib"
 local pipe = require "uus/pipe"
-dump = require "datadumper"
+dump = require "inspect"
 local uus = {}
 
 local math = math
@@ -34,6 +34,52 @@ uus.normalizeRad = function(rad)
     return (rad < pi * -0.5) and uus.normalizeRad(rad + pi * 2) or
         ((rad > pi + pi * 0.5) and uus.normalizeRad(rad - pi * 2) or rad)
 end
+
+
+local nSeg = function(length, base)
+    local nSeg = ceil((length - base * 0.5) / base)
+    return nSeg > 0 and nSeg or 1
+end
+
+uus.subDivide = function(size, w, h, nSegH, nSegV)
+    local vecT = size.rt - size.lt
+    local vecB = size.rb - size.lb
+    local vecL = size.lb - size.lt
+    local vecR = size.rb - size.rt
+    local nSegH = nSegH or nSeg((vecT + vecB):length() * 0.5, w)
+    local nSegV = nSegV or nSeg((vecL + vecR):length() * 0.5, h)
+    local segLengthT = vecT:length() / nSegH
+    local segLengthB = vecB:length() / nSegH
+    local vecTN = vecT:normalized()
+    local vecBN = vecB:normalized()
+    return pipe.new
+        * func.seq(1, nSegH)
+        * pipe.map(function(h)
+            local lt = size.lt + vecTN * (h - 1) * segLengthT
+            local rt = lt + vecTN * segLengthT
+            local lb = size.lb + vecBN * (h - 1) * segLengthB
+            local rb = lb + vecBN * segLengthB
+            local vecL = lb - lt
+            local vecR = rb - rt
+            local segLengthL = vecL:length() / nSegV
+            local segLengthR = vecR:length() / nSegV
+            local vecLN = vecL:normalized()
+            local vecRN = vecR:normalized()
+            return pipe.new
+                * func.seq(1, nSegV)
+                * pipe.map(function(v)
+                    return
+                        {
+                            lt = lt + vecLN * (v - 1) * segLengthL,
+                            lb = lt + vecLN * v * segLengthL,
+                            rt = rt + vecRN * (v - 1) * segLengthR,
+                            rb = rt + vecRN * v * segLengthR
+                        }
+                end)
+        end)
+        * pipe.flatten()
+end
+
 
 uus.generateArc = function(arc)
     local sup = arc:pt(arc.sup)
@@ -159,7 +205,7 @@ local function ungroup(fst, ...)
     end
 end
 
-local bitLatCoords = function(length)
+local biLatCoords = function(length)
     return function(...)
         local arcs = pipe.new * {...}
         local arcsInf = equalizeArcs(table.unpack(func.map({...}, pipe.select(1))))
@@ -181,7 +227,7 @@ local bitLatCoords = function(length)
     end
 end
 
-uus.bitLatCoords = bitLatCoords
+uus.biLatCoords = biLatCoords
 
 local assembleSize = function(lc, rc)
     return {
@@ -413,76 +459,17 @@ local buildSurface = function(fitModel, config, platformZ, tZ)
                 top = (sizeS.rt - sizeS.lt):normalized(),
                 bottom = (sizeS.rb - sizeS.lb):normalized()
             }
-            if (config.wPlatform == 5) then
-                return pipe.new
-                    / station.newModel(s .. "_br.mdl", tZ, fitModel(w, 5, platformZ, sizeS, false, false))
-                    / station.newModel(s .. "_tl.mdl", tZ, fitModel(w, 5, platformZ, sizeS, true, true))
-            else
-                local sizeL = {
-                    lb = sizeS.lb,
-                    lt = sizeS.lt,
-                    rb = sizeS.lb + vecs.bottom * 2.5,
-                    rt = sizeS.lt + vecs.top * 2.5
-                }
-                local sizeR = {
-                    lb = sizeS.rb - vecs.bottom * 2.5,
-                    lt = sizeS.rt - vecs.top * 2.5,
-                    rb = sizeS.rb,
-                    rt = sizeS.rt
-                }
-                if (config.wPlatform == 10) then
-                    local sizeC = {
-                        lb = sizeL.rb,
-                        lt = sizeL.rt,
-                        rb = sizeR.lb,
-                        rt = sizeR.lt
-                    }
-                    return pipe.new
-                        / station.newModel(sx .. "_l_br.mdl", tZ, fitModel(2.5, 5, platformZ, sizeL, false, false))
-                        / station.newModel(sx .. "_l_tl.mdl", tZ, fitModel(2.5, 5, platformZ, sizeL, true, true))
-                        / station.newModel(sx .. "_r_br.mdl", tZ, fitModel(2.5, 5, platformZ, sizeR, false, false))
-                        / station.newModel(sx .. "_r_tl.mdl", tZ, fitModel(2.5, 5, platformZ, sizeR, true, true))
-                        / station.newModel(s .. "_br.mdl", tZ, fitModel(w, 5, platformZ, sizeC, false, false))
-                        / station.newModel(s .. "_tl.mdl", tZ, fitModel(w, 5, platformZ, sizeC, true, true))
-                else
-                    local sizeLR = {
-                        lb = sizeL.rb,
-                        lt = sizeL.rt,
-                        rb = sizeL.rb + vecs.bottom * 2.5,
-                        rt = sizeL.rt + vecs.top * 2.5
-                    }
-                    local sizeRL = {
-                        lb = sizeR.lb - vecs.bottom * 2.5,
-                        lt = sizeR.lt - vecs.top * 2.5,
-                        rb = sizeR.lb,
-                        rt = sizeR.lt
-                    }
-                    local sizeC = {
-                        lb = sizeLR.rb,
-                        lt = sizeLR.rt,
-                        rb = sizeRL.lb,
-                        rt = sizeRL.lt
-                    }
-                    return pipe.new
-                        / station.newModel(sx .. "_l_br.mdl", tZ, fitModel(2.5, 5, platformZ, sizeL, false, false))
-                        / station.newModel(sx .. "_l_tl.mdl", tZ, fitModel(2.5, 5, platformZ, sizeL, true, true))
-                        / station.newModel(sx .. "_r_br.mdl", tZ, fitModel(2.5, 5, platformZ, sizeR, false, false))
-                        / station.newModel(sx .. "_r_tl.mdl", tZ, fitModel(2.5, 5, platformZ, sizeR, true, true))
-                        / station.newModel(sx .. "_l_br.mdl", tZ, fitModel(2.5, 5, platformZ, sizeRL, false, false))
-                        / station.newModel(sx .. "_l_tl.mdl", tZ, fitModel(2.5, 5, platformZ, sizeRL, true, true))
-                        / station.newModel(sx .. "_r_br.mdl", tZ, fitModel(2.5, 5, platformZ, sizeLR, false, false))
-                        / station.newModel(sx .. "_r_tl.mdl", tZ, fitModel(2.5, 5, platformZ, sizeLR, true, true))
-                        / station.newModel(s .. "_br.mdl", tZ, fitModel(w, 5, platformZ, sizeC, false, false))
-                        / station.newModel(s .. "_tl.mdl", tZ, fitModel(w, 5, platformZ, sizeC, true, true))
-                end
-            end
+
+            return pipe.new
+                / station.newModel(s .. "_br.mdl", tZ, fitModel(w, 5, platformZ, sizeS, false, false))
+                / station.newModel(s .. "_tl.mdl", tZ, fitModel(w, 5, platformZ, sizeS, true, true))
         end
     end
 end
 
 local retriveModels = function(fitModel, config, platformZ, tZ)
     return function(c, ccl, ccr, w)
-        local buildSurface = buildSurface(fitModel, config, platformZ, tZ)(c, 5 - w * 2)
+        local buildSurface = buildSurface(fitModel, config, platformZ, tZ)(c, 10 - w * 2)
         return function(i, el, er, s, sx, lc, rc, lic, ric)
             local surface = buildSurface(i, s, sx, lic, ric)
             
@@ -560,53 +547,50 @@ uus.generateModels = function(fitModel, config)
     local platformZ = config.hPlatform + 0.53
     
     local retriveModels = retriveModels(fitModel, config, platformZ, tZ)
-    local buildPoles = buildPoles(config, platformZ, tZ)
-    local buildChairs = buildChairs(config, platformZ, tZ)
+    -- local buildPoles = buildPoles(config, platformZ, tZ)
+    -- local buildChairs = buildChairs(config, platformZ, tZ)
     
     return function(arcs)
         local lc, rc, lic, ric, c = arcs.platform.lc, arcs.platform.rc, arcs.surface.lc, arcs.surface.rc, arcs.surface.c
         local lpc, rpc, lpic, rpic, pc = arcs.roof.edge.lc, arcs.roof.edge.rc, arcs.roof.surface.lc, arcs.roof.surface.rc, arcs.roof.edge.c
-        local lpp, rpp, mpp, ppc = arcs.roof.pole.lc, arcs.roof.pole.rc, arcs.roof.pole.mc, arcs.roof.pole.c
-        local lcc, rcc, mcc, cc = arcs.chair.lc, arcs.chair.rc, arcs.chair.mc, arcs.chair.c
+        -- local lpp, rpp, mpp, ppc = arcs.roof.pole.lc, arcs.roof.pole.rc, arcs.roof.pole.mc, arcs.roof.pole.c
+        -- local lcc, rcc, mcc, cc = arcs.chair.lc, arcs.chair.rc, arcs.chair.mc, arcs.chair.c
         
         local platformSurface = pipe.new
-            * pipe.rep(c - 2)(config.models.surface)
-            * pipe.mapi(function(p, i) return (i == (c > 5 and 4 or 2) or (i == floor(c * 0.5) + 4) and (arcs.hasLower or arcs.hasUpper)) and config.models.stair or config.models.surface end)
-            / config.models.extremity
+            * pipe.rep(c - 1)(config.models.central)
             * (function(ls) return ls * pipe.rev() + ls end)
         
-        local platformSurfaceEx = pipe.new
-            * pipe.rep(c - 2)(config.models.surface)
-            / config.models.extremity
+        local platformEdge = pipe.new
+            * pipe.rep(c - 1)(config.models.edge)
             * (function(ls) return ls * pipe.rev() + ls end)
         
-        local platformEdgeO = pipe.new
-            * pipe.rep(c - 2)(config.models.edge)
-            / config.models.corner
+        local ceilCentral = pipe.new
+            * pipe.rep(pc - 1)(config.models.ceilCentral)
             * (function(ls) return ls * pipe.rev() + ls end)
         
-        local platformEdgeL, platformEdgeR = platformEdgeO, platformEdgeO
-        
-        local roofSurface = pipe.new
-            * pipe.rep(pc - 2)(config.models.roofTop)
-            / config.models.roofExtremity
+        local ceilEdge = pipe.new
+            * pipe.rep(pc - 1)(config.models.ceilEdge)
             * (function(ls) return ls * pipe.rev() + ls end)
         
-        local roofEdge = pipe.new
-            * pipe.rep(pc - 2)(config.models.roofEdge)
-            / config.models.roofCorner
-            * (function(ls) return ls * pipe.rev() + ls end)
-        
-        local newModels = pipe.mapn(
+        local platforms  = pipe.mapn(
             func.seq(1, 2 * c - 2),
-            platformEdgeL,
-            platformEdgeR,
+            platformEdge,
+            platformEdge,
             platformSurface,
-            platformSurfaceEx,
+            platformSurface,
             il(lc), il(rc), il(lic), il(ric)
         )(retriveModels(c, c, c, 0.8))
         
-        local chairs = buildChairs(lcc, rcc, mcc, cc, 1, 2 * cc - 1)
+        local ceils  = pipe.mapn(
+            func.seq(1, 2 * pc - 2),
+            ceilEdge,
+            ceilEdge,
+            ceilCentral,
+            ceilCentral,
+            il(lpc), il(rpc), il(lpic), il(rpic)
+        )(retriveModels(pc, pc, pc, 0.7))
+        
+        -- local chairs = buildChairs(lcc, rcc, mcc, cc, 1, 2 * cc - 1)
         
         -- local newRoof = config.roofLength == 0
         --     and {}
@@ -620,7 +604,7 @@ uus.generateModels = function(fitModel, config)
         --     )(retriveModels(pc, pc, pc, 1))
         --     / buildPoles(mpp, ppc, 1, ppc * 2 - 1)
         
-        return (pipe.new / newModels / chairs) * pipe.flatten() * pipe.flatten()
+        return (pipe.new / platforms / ceils) * pipe.flatten() * pipe.flatten()
     end
 end
 
@@ -643,7 +627,7 @@ uus.generateTrackTerrain = function(config)
         local ar = arc()()
         local arl = ar(-0.5 * config.wTrack)
         local arr = ar(0.5 * config.wTrack)
-        local lc, rc, c = uus.bitLatCoords(5)(arl, arr)
+        local lc, rc, c = uus.biLatCoords(5)(arl, arr)
         return pipe.new
             / {
                 equal = pipe.new
@@ -679,8 +663,8 @@ uus.allArcs = function(config)
                 r = arcR(refZ)()
             }
             local roof = {
-                l = arcL(refZ)(function(l) return l * config.roofLength end),
-                r = arcR(refZ)(function(l) return l * config.roofLength end)
+                l = arcL(refZ)(),
+                r = arcR(refZ)()
             }
             local terrain = {
                 l = arcL()(function(l) return l + 5 end),
@@ -693,17 +677,17 @@ uus.allArcs = function(config)
                 edge = arcGen(general, -0.5),
                 surface = arcGen(general, 0.3),
                 roof = {
-                    edge = arcGen(roof, -0.5),
+                    edge = arcGen(roof, -0.2),
                     surface = arcGen(roof, 0.5)
                 },
                 terrain = arcGen(terrain, -0.5)
             }
             
-            local lc, rc, lec, rec, c = uus.bitLatCoords(5)(arcs.lane.l, arcs.lane.r, arcs.laneEdge.l, arcs.laneEdge.r)
-            local lsc, rsc, lsuc, rsuc, ltc, rtc, sc = uus.bitLatCoords(5)(arcs.edge.l, arcs.edge.r, arcs.surface.l, arcs.surface.r, arcs.terrain.l, arcs.terrain.r)
-            local lcc, rcc, cc = uus.bitLatCoords(10)(arcs.edge.l, arcs.edge.r)
-            local lpc, rpc, lpic, rpic, pc = uus.bitLatCoords(5)(arcs.roof.edge.l, arcs.roof.edge.r, arcs.roof.surface.l, arcs.roof.surface.r)
-            local lppc, rppc, ppc = uus.bitLatCoords(10)(arcs.roof.edge.l, arcs.roof.edge.r)
+            local lc, rc, lec, rec, c = uus.biLatCoords(5)(arcs.lane.l, arcs.lane.r, arcs.laneEdge.l, arcs.laneEdge.r)
+            local lsc, rsc, lsuc, rsuc, ltc, rtc, sc = uus.biLatCoords(5)(arcs.edge.l, arcs.edge.r, arcs.surface.l, arcs.surface.r, arcs.terrain.l, arcs.terrain.r)
+            local lcc, rcc, cc = uus.biLatCoords(10)(arcs.edge.l, arcs.edge.r)
+            local lpc, rpc, lpic, rpic, pc = uus.biLatCoords(5)(arcs.roof.edge.l, arcs.roof.edge.r, arcs.roof.surface.l, arcs.roof.surface.r)
+            local lppc, rppc, ppc = uus.biLatCoords(10)(arcs.roof.edge.l, arcs.roof.edge.r)
             return {
                 [1] = arcL,
                 [2] = arcR,
@@ -719,8 +703,6 @@ uus.allArcs = function(config)
                     pole = func.with(arcs.roof.edge, {lc = lppc, rc = rppc, mc = mc(lppc, rppc), c = ppc})
                 },
                 terrain = func.with(arcs.terrain, {lc = ltc, rc = rtc, mc = mc(ltc, rtc), c = sc}),
-                hasLower = (sc - 5 - floor(sc * 0.5) > 0) and (c - 5 - floor(c * 0.5) > 0),
-                hasUpper = (sc + 5 + floor(sc * 0.5) <= #lsc) and (c + 5 + floor(c * 0.5) <= #lc),
                 isPlatform = true
             }
         else
@@ -744,8 +726,8 @@ uus.allArcs = function(config)
                 }
             }
             
-            local lsc, rsc, lsuc, rsuc, sc = uus.bitLatCoords(5)(arcs.edge.l, arcs.edge.r, arcs.surface.l, arcs.surface.r)
-            local lpc, rpc, lpic, rpic, pc = uus.bitLatCoords(5)(arcs.roof.edge.l, arcs.roof.edge.r, arcs.roof.surface.l, arcs.roof.surface.r)
+            local lsc, rsc, lsuc, rsuc, sc = uus.biLatCoords(5)(arcs.edge.l, arcs.edge.r, arcs.surface.l, arcs.surface.r)
+            local lpc, rpc, lpic, rpic, pc = uus.biLatCoords(5)(arcs.roof.edge.l, arcs.roof.edge.r, arcs.roof.surface.l, arcs.roof.surface.r)
             
             return {
                 [1] = arc,
@@ -875,17 +857,11 @@ uus.trackGrouping = trackGrouping
 uus.models = function(prefixM)
     local prefixM = function(p) return prefixM .. p end
     return {
-        surface = prefixM("platform/platform_surface"),
-        extremity = prefixM("platform/platform_extremity"),
-        corner = prefixM("platform/platform_corner"),
+        central = prefixM("platform/platform_central"),
         edge = prefixM("platform/platform_edge"),
-        roofTop = prefixM("platform/platform_roof_top"),
-        roofExtremity = prefixM("platform/platform_roof_extremity"),
-        roofEdge = prefixM("platform/platform_roof_edge"),
-        roofCorner = prefixM("platform/platform_roof_corner"),
-        roofPole = prefixM("platform/platform_roof_pole"),
-        roofPoleExtreme = prefixM("platform/platform_roof_pole_extreme_1"),
-        stair = prefixM("platform/platform_stair"),
+        ceilCentral = prefixM("platform/ceil_central"),
+        ceilEdge = prefixM("platform/ceil_edge"),
+        top = prefixM("platform/top"),
         trash = prefixM("platform/platform_trash"),
         chair = prefixM("platform/platform_chair"),
         underground = prefixM("underground_entry.mdl")
