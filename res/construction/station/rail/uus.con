@@ -78,7 +78,7 @@ local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreL
     local pW = config.wPlatform
     local tW = config.wTrack
     local bandWidth = 0.8
-    local fitModel = slope == 0 and uus.fitModel2D or uus.fitModel
+    local fitModel = uus.fitModel
     
     local ptList = uus.preBuild(totalTracks, config.nbTransitTracks, config.posTransitTracks, ignoreFst, ignoreLst)(totalTracks, pipe.new)
     local ptListI = ptList * pipe.zip(func.seq(1, #ptList), {"t", "i"})
@@ -204,7 +204,8 @@ local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreL
     * uus.allArcs(config)
     
     local arcCoords = allArcs * pipe.filter(function(a) return a.isPlatform end)
-
+    -- dump()(allArcs)
+    -- dump()({uus.trackGrouping(pipe.new, table.unpack(allArcs))})
     local build = uus.build(config, fitModel)
     return build(pipe.new, pipe.new, pipe.new, pipe.new, pipe.new, pipe.new, uus.trackGrouping(pipe.new, table.unpack(allArcs)))
 end
@@ -215,7 +216,7 @@ local function updateFn()
         local trackWidth = uusm.trackWidthList[params.trackType + 1]
         local catenary = params.catenary == 1
         local trackBuilder = trackEdge.builder(catenary, trackType)
-        local mockTrackBuilder = trackEdge.builder(false, trackType)
+        local mockTrackBuilder = trackEdge.builder(false, "zzz_mock_4.lua")
         local hPlatform = uusm.hPlatformList[params.hPlatform + 1] * 0.001
         local wPlatform = uusm.wPlatformList[params.wPlatform + 1]
         
@@ -249,7 +250,7 @@ local function updateFn()
                 params.hasRightPlatform == 0
         )
         local coffset = coor.xyz(-4.3, 0, hPlatform + 0.53)
-
+        
         local result = 
             pipe.new
             * {
@@ -259,8 +260,14 @@ local function updateFn()
                 ,
                 models = terminals + models,
                 terminalGroups = terminalsGroup,
-                terrainAlignmentLists = station.mergePoly(table.unpack(terrain))()
+                terrainAlignmentLists = {
+                    {
+                        type = "EQUAL",
+                        faces = {}
+                    }
+                } --station.mergePoly(table.unpack(terrain))()
             }
+            -- * station.setHeight(-15)
         return result
     end)
 end

@@ -1,31 +1,43 @@
 function data() return {
   animations = {  },
   matConfigs = {
-    { 0, 0 }
+    { 0, 0, 0 }
   },
   subMeshes = {
     {
       indices = {
-        normal   = { count = 60, offset = 1176 },
-        position = { count = 60, offset = 1176 },
-        tangent  = { count = 60, offset = 1176 },
-        uv0      = { count = 60, offset = 1176 },
-        uv1      = { count = 60, offset = 1176 }
+        normal   = { count = 24, offset = 1176 },
+        position = { count = 24, offset = 1176 },
+        tangent  = { count = 24, offset = 1176 },
+        uv0      = { count = 24, offset = 1176 },
+        uv1      = { count = 24, offset = 1176 }
       },
       materials = {
-        "uus/asphalt.mtl"
+        "uus/platform.mtl"
       }
     },
     {
       indices = {
-        normal   = { count = 24, offset = 1236 },
-        position = { count = 24, offset = 1236 },
-        tangent  = { count = 24, offset = 1236 },
-        uv0      = { count = 24, offset = 1236 },
-        uv1      = { count = 24, offset = 1236 }
+        normal   = { count = 24, offset = 1200 },
+        position = { count = 24, offset = 1200 },
+        tangent  = { count = 24, offset = 1200 },
+        uv0      = { count = 24, offset = 1200 },
+        uv1      = { count = 24, offset = 1200 }
       },
       materials = {
-        "uus/asphalt.mtl"
+        "uus/platform_strip.mtl"
+      }
+    },
+    {
+      indices = {
+        normal   = { count = 36, offset = 1224 },
+        position = { count = 36, offset = 1224 },
+        tangent  = { count = 36, offset = 1224 },
+        uv0      = { count = 36, offset = 1224 },
+        uv1      = { count = 36, offset = 1224 }
+      },
+      materials = {
+        "uus/platform_base.mtl"
       }
     }
   },

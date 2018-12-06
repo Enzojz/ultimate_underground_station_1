@@ -28,18 +28,6 @@ function data()
                 wrapT = "REPEAT",
             
             },
-            map_ao = {
-                compressionAllowed = true,
-                scaleDownAllowed = false,
-                fileName = "models/uus/asphalt_ao1.dds",
-                magFilter = "NEAREST",
-                minFilter = "NEAREST",
-                mipmapAlphaScale = 0,
-                type = "TWOD",
-                wrapS = "REPEAT",
-                wrapT = "REPEAT",
-            
-            },
             map_normal = {
                 compressionAllowed = true,
                 fileName = "models/uus/asphalt_normals.dds",
@@ -62,7 +50,7 @@ function data()
             },
         
         },
-        type = "PHYSICAL_NRML_MAP_UV1_AO",
+        type = "PHYSICAL_NRML_MAP",
     
     }
 end
