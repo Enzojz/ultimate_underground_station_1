@@ -450,49 +450,18 @@ uus.generateTerminals = function(config)
 end
 
 local buildSurface = function(fitModel, config, platformZ, tZ)
-    return function(c, w)
-        return function(i, s, lic, ric)
-            local lic = i >= c and lic or {s = lic.i, i = lic.s}
-            local ric = i >= c and ric or {s = ric.i, i = ric.s}
+    return function(c, w, fnSize)
+        local fnSize = fnSize or function(_, lc, rc) return uus.assembleSize(lc, rc) end
+        return function(i, s, lc, rc)
+            local sizeS = fnSize(i, lc, rc)
             
-            local sizeS = uus.assembleSize(lic, ric)
-            
-            local vecs = {
-                top = (sizeS.rt - sizeS.lt):normalized(),
-                bottom = (sizeS.rb - sizeS.lb):normalized()
-            }
-            
-            return s 
+            return s
                 and pipe.new
-                / station.newModel(s .. "_br.mdl", tZ, fitModel(w, 5, platformZ, sizeS, false, false))
                 / station.newModel(s .. "_tl.mdl", tZ, fitModel(w, 5, platformZ, sizeS, true, true))
+                / station.newModel(s .. "_br.mdl", tZ, fitModel(w, 5, platformZ, sizeS, false, false))
                 or pipe.new * {}
         end
     end
-end
-
-local retriveModels = function(fitModel, config, platformZ, tZ)
-    local buildSurface = buildSurface(fitModel, config, platformZ, tZ)
-    return function(c, ccl, ccr, w)
-        local buildSurface = buildSurface(c, 10 - w * 2)
-        return function(i, el, er, s, lc, rc, lic, ric)
-            local surface = buildSurface(i, s, lic, ric)
-            
-            local lce = i >= ccl and lc or {s = lc.i, i = lc.s}
-            local rce = i >= ccr and rc or {s = rc.i, i = rc.s}
-            local lice = i >= ccl and lic or {s = lic.i, i = lic.s}
-            local rice = i >= ccr and ric or {s = ric.i, i = ric.s}
-            
-            local sizeLe = uus.assembleSize(lce, lice)
-            local sizeRe = uus.assembleSize(rice, rce)
-            
-            return surface
-                / station.newModel(el .. "_br.mdl", tZ, fitModel(w, 5, platformZ, sizeLe, false, false))
-                / station.newModel(el .. "_tl.mdl", tZ, fitModel(w, 5, platformZ, sizeLe, true, true))
-                / station.newModel(er .. "_bl.mdl", tZ, fitModel(w, 5, platformZ, sizeRe, false, true))
-                / station.newModel(er .. "_tr.mdl", tZ, fitModel(w, 5, platformZ, sizeRe, true, false))
-        end
-    end, buildSurface
 end
 
 local function buildPoles(config, platformZ, tZ)
@@ -575,8 +544,9 @@ uus.generateModels = function(fitModel, config)
     local tZ = coor.transZ(config.hPlatform - 1.4)-- model height = 1.93 - 1.4 -> 0.53 -> adjust model level to rail level
     local platformZ = config.hPlatform + 0.53 --target Z
     
-    local retriveCeil, buildCeil = retriveModels(fitModel, config, platformZ, coor.I())
-    local retriveModels = retriveModels(fitModel, config, platformZ, tZ)
+    local buildPlatform = buildSurface(fitModel, config, platformZ, tZ)
+    local buildCeil = buildSurface(fitModel, config, platformZ, coor.I())
+    local buildWall = buildSurface(fitModel, config, platformZ, coor.scaleZ(5 - platformZ) * coor.transZ(platformZ))
     
     local platform = function(arcs)
         local lc, rc, lic, ric, c = arcs.platform.lc, arcs.platform.rc, arcs.surface.lc, arcs.surface.rc, arcs.surface.c
@@ -614,23 +584,51 @@ uus.generateModels = function(fitModel, config)
             func.seq(1, 2 * c - 2),
             upstepWalls,
             il(lic), il(ric)
-        )(buildSurface(fitModel, config, platformZ, coor.scaleZ(5 - platformZ) * coor.transZ(platformZ))(c, 8.4))
+        )(buildWall(c, 8.4,
+            function(i, lc, rc) return
+                i >= c
+                and uus.assembleSize(lc, rc)
+                or uus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s})
+            end))
         
-        local platforms = pipe.mapn(
-            func.seq(1, 2 * c - 2),
-            platformEdge,
-            platformEdge,
-            platformSurface,
-            il(lc), il(rc), il(lic), il(ric)
-        )(retriveModels(c, c, c, 0.8))
+        local platforms = pipe.new
+            + pipe.mapn(
+                func.seq(1, 2 * c - 2),
+                platformSurface,
+                il(lic), il(ric)
+            )(buildPlatform(c, 10 - 1.6, function(i, lc, rc) return
+                i >= c
+                and uus.assembleSize(lc, rc)
+                or uus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s})
+            end))
+            + pipe.mapn(
+                func.seq(1, 2 * c - 2),
+                platformEdge,
+                il(lc), il(lic)
+            )(buildPlatform(c, 0.8))
+            + pipe.mapn(
+                func.seq(1, 2 * c - 2),
+                platformEdge,
+                il(func.rev(rc)), il(func.rev(ric))
+            )(buildPlatform(c, 0.8))
         
-        local ceils = pipe.mapn(
-            func.seq(1, 2 * pc - 2),
-            ceilEdge,
-            ceilEdge,
-            ceilCentral,
-            il(lpc), il(rpc), il(lpic), il(rpic)
-        )(retriveCeil(pc, pc, pc, 0.7))
+        local ceils =
+            pipe.new
+            + pipe.mapn(
+                func.seq(1, 2 * c - 2),
+                ceilCentral,
+                il(lpic), il(rpic)
+            )(buildCeil(c, 10 - 1.4))
+            + pipe.mapn(
+                func.seq(1, 2 * c - 2),
+                ceilEdge,
+                il(lpc), il(lpic)
+            )(buildCeil(c, 0.7))
+            + pipe.mapn(
+                func.seq(1, 2 * c - 2),
+                ceilEdge,
+                il(func.rev(rpc)), il(func.rev(rpic))
+            )(buildCeil(c, 0.7))
         
         local tops = pipe.mapn(
             func.seq(1, 2 * pc - 2),
