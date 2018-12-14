@@ -23,7 +23,10 @@ function data()
             two_sided = {
                 twoSided = false,
                 
-            },		
+            },
+            light_scale = {
+                lightScale = 15.0           -- scale RGB-texture-value of emissive materials
+              }
         },
         type = "EMISSIVE",	
     }

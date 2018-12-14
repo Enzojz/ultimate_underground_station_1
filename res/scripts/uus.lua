@@ -462,9 +462,11 @@ local buildSurface = function(fitModel, config, platformZ, tZ)
                 bottom = (sizeS.rb - sizeS.lb):normalized()
             }
             
-            return pipe.new
+            return s 
+                and pipe.new
                 / station.newModel(s .. "_br.mdl", tZ, fitModel(w, 5, platformZ, sizeS, false, false))
                 / station.newModel(s .. "_tl.mdl", tZ, fitModel(w, 5, platformZ, sizeS, true, true))
+                or pipe.new * {}
         end
     end
 end
@@ -579,10 +581,10 @@ uus.generateModels = function(fitModel, config)
     local platform = function(arcs)
         local lc, rc, lic, ric, c = arcs.platform.lc, arcs.platform.rc, arcs.surface.lc, arcs.surface.rc, arcs.surface.c
         local lpc, rpc, lpic, rpic, pc = arcs.roof.edge.lc, arcs.roof.edge.rc, arcs.roof.surface.lc, arcs.roof.surface.rc, arcs.roof.edge.c
-        -- local lpp, rpp, mpp, ppc = arcs.roof.pole.lc, arcs.roof.pole.rc, arcs.roof.pole.mc, arcs.roof.pole.c
-        -- local lcc, rcc, mcc, cc = arcs.chair.lc, arcs.chair.rc, arcs.chair.mc, arcs.chair.c
+        
         local platformSurface = pipe.new
-            * pipe.rep(c - 1)(config.models.central)
+            * func.seq(1, c - 1)
+            * pipe.map(function(i) return i == floor(c * 0.5) and config.models.upstepA or i == floor(c * 0.5) + 1 and config.models.upstepB or config.models.central end)
             * (function(ls) return ls * pipe.rev() + ls end)
         
         local platformEdge = pipe.new
@@ -590,7 +592,8 @@ uus.generateModels = function(fitModel, config)
             * (function(ls) return ls * pipe.rev() + ls end)
         
         local ceilCentral = pipe.new
-            * pipe.rep(pc - 1)(config.models.ceilCentral)
+            * func.seq(1, c - 1)
+            * pipe.map(function(i) return i == floor(c * 0.5) and config.models.ceilUpstepA or i == floor(c * 0.5) + 1 and config.models.ceilUpstepB or config.models.ceilCentral end)
             * (function(ls) return ls * pipe.rev() + ls end)
         
         local ceilEdge = pipe.new
@@ -598,8 +601,20 @@ uus.generateModels = function(fitModel, config)
             * (function(ls) return ls * pipe.rev() + ls end)
         
         local ceilTop = pipe.new
-            * pipe.rep(pc - 1)(config.models.topPlatform)
+            * func.seq(1, c - 1)
+            * pipe.map(function(i) return (i == floor(c * 0.5) or i == floor(c * 0.5) + 1) and config.models.topUpstep or config.models.topPlatform end)
             * (function(ls) return ls * pipe.rev() + ls end)
+        
+        local upstepWalls = pipe.new
+            * func.seq(1, c - 1)
+            * pipe.map(function(i) return i == floor(c * 0.5) and config.models.upstepWallA or i == floor(c * 0.5) + 1 and config.models.upstepWallB or false end)
+            * (function(ls) return ls * pipe.rev() + ls end)
+        
+        local platformsWalls = pipe.mapn(
+            func.seq(1, 2 * c - 2),
+            upstepWalls,
+            il(lic), il(ric)
+        )(buildSurface(fitModel, config, platformZ, coor.scaleZ(5 - platformZ) * coor.transZ(platformZ))(c, 8.4))
         
         local platforms = pipe.mapn(
             func.seq(1, 2 * c - 2),
@@ -683,7 +698,7 @@ uus.generateModels = function(fitModel, config)
             }
         end)
         
-        return (pipe.new / platforms / ceils / tops / extremityPlatform) * pipe.flatten() * pipe.flatten() + extremity
+        return (pipe.new / platforms / ceils / tops / platformsWalls / extremityPlatform) * pipe.flatten() * pipe.flatten() + extremity
     end
     
     local track = function(arcs)
@@ -963,9 +978,16 @@ uus.models = function(prefixM)
     return {
         central = prefixM("platform/platform_central"),
         edge = prefixM("platform/platform_edge"),
+        upstepA = prefixM("platform/platform_upstep_a"),
+        upstepB = prefixM("platform/platform_upstep_b"),
+        upstepWallA = prefixM("platform/upstep_wall_a"),
+        upstepWallB = prefixM("platform/upstep_wall_b"),
         ceilCentral = prefixM("platform/ceil_central"),
         ceilEdge = prefixM("platform/ceil_edge"),
+        ceilUpstepA = prefixM("platform/ceil_upstep_a"),
+        ceilUpstepB = prefixM("platform/ceil_upstep_b"),
         topPlatform = prefixM("platform/top_platform"),
+        topUpstep = prefixM("platform/top_upstep"),
         topTrackCenter = prefixM("platform/top_center"),
         topTrackLeft = prefixM("platform/top_left"),
         topTrackRight = prefixM("platform/top_right"),
