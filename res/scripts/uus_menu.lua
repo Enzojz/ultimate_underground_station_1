@@ -7,6 +7,7 @@ uusm.slopeList = {0, 2.5, 5, 7.5, 10, 12.5, 15, 20, 25, 30, 35, 40, 45, 50, 55, 
 uusm.rList = {uus.infi * 0.001, 5, 3.5, 2, 1, 4 / 5, 2 / 3, 3 / 5, 1 / 2, 1 / 3, 1 / 4, 1 / 5, 1 / 6, 1 / 8, 1 / 10, 1 / 20}
 uusm.hPlatformList = {200, 280, 380, 550, 680, 760, 915, 960, 1100, 1219, 1250, 1380}
 uusm.wPlatformList = {5, 10, 15}
+uusm.wStairsList = {3, 7, 7}
 uusm.hStation = {0, 1, 2, 3, 4, 5, 6}
 uusm.roofLengthList = {100, 95, 80, 75, 50, 25, 0}
 uusm.extWidthList = {100, 75, 50, 25, 10}

@@ -219,6 +219,7 @@ local function updateFn()
         local mockTrackBuilder = trackEdge.builder(false, "zzz_mock_4.lua")
         local hPlatform = uusm.hPlatformList[params.hPlatform + 1] * 0.001
         local wPlatform = uusm.wPlatformList[params.wPlatform + 1]
+        local wStairs = uusm.wStairsList[params.wPlatform + 1]
         
         local nbTracks = uusm.trackNumberList[params.nbTracks + 1]
         local radius = (uusm.rList[params.radius + 1] * 1000) * (params.sign == 0 and 1 or -1)
@@ -235,6 +236,7 @@ local function updateFn()
                     r = radius,
                     hPlatform = hPlatform,
                     wPlatform = wPlatform,
+                    wStairs = wStairs,
                     lExtPlatform = 1, -- uusm.extLengthList[params.lExtPlatform + 1] * 0.01,
                     yOffsetPlatform = 0, --uusm.yOffsetList[params.yOffsetPlatform + 1] * (params.yOffsetPlatformSign == 0 and 0.01 or -0.01),
                     varRefPos = -1, --params.varRefPos - 1,

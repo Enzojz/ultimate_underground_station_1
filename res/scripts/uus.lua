@@ -464,29 +464,6 @@ local buildSurface = function(fitModel, config, platformZ, tZ)
     end
 end
 
-local function buildPoles(config, platformZ, tZ)
-    return function(mc, c, f, t)
-        local seq = pipe.new
-            * pipe.rep(c - 2)(config.models.roofPole)
-            / config.models.roofPoleExtreme
-            * function(ls) return ls * pipe.rev() + ls end
-        
-        return pipe.mapn(
-            pipe.range(f, t)(pipe.mapi(function(mc, i) return i >= c and coor.I() or coor.flipY() end)(seq)),
-            pipe.range(f, t)(il(mc)),
-            pipe.range(f, t)(seq)
-        )
-        (function(t, mc, m)
-            local vecPo = mc.s - mc.i
-            return station.newModel(m .. ".mdl", tZ, t,
-                coor.scaleY(vecPo:length() / 10),
-                quat.byVec(coor.xyz(0, 10, 0), vecPo):mRot(),
-                coor.trans(mc.i:avg(mc.s)),
-                coor.transZ(-platformZ))
-        end)
-    end
-end
-
 local function buildChairs(config, platformZ, tZ)
     return function(lc, rc, mc, c, f, t)
         local platformChairs = pipe.new
@@ -735,20 +712,6 @@ uus.generateModels = function(fitModel, config)
     end
 end
 
-uus.generateTerrain = function(config)
-    return function(arcs)
-        return pipe.new
-            / {
-                equal = pipe.new
-                * pipe.mapn(il(arcs.terrain.lc), il(arcs.terrain.rc))
-                (function(lc, rc)
-                    local size = assembleSize(lc, rc)
-                    return pipe.new / size.lt / size.lb / size.rb / size.rt * station.finalizePoly
-                end)
-            }
-    end
-end
-
 uus.generateTrackTerrain = function(config)
     return function(arc)
         local ar = arc()()
@@ -780,54 +743,50 @@ uus.allArcs = function(config)
     return pipe.map(function(p)
         if (#p == 3) then
             local arcL, arcR, arcRef = table.unpack(p)
-            
-            local lane = {
-                l = arcL(refZ)(function(l) return l - 3 end),
-                r = arcR(refZ)(function(l) return l - 3 end)
-            }
-            
             local general = {
                 l = arcL(refZ)(),
                 r = arcR(refZ)()
             }
             
-            local terrain = {
-                l = arcL()(function(l) return l + 5 end),
-                r = arcR()(function(l) return l + 5 end)
-            }
-            
             local arcs = {
-                lane = arcGen(lane, 1),
-                laneEdge = arcGen(lane, -0.5),
+                lane = arcGen(general, 0.6),
                 edge = arcGen(general, -0.5),
                 surface = arcGen(general, 0.3),
                 roof = {
                     edge = arcGen(general, -0.5),
                     surface = arcGen(general, 0.2)
                 },
-                terrain = arcGen(terrain, -0.5)
+                stairs = {
+                    outer = arcGen(general, (config.wPlatform - config.wStairs) * 0.5),
+                    inner = arcGen(general, (config.wPlatform - config.wStairs) * 0.5 + 0.25)
+                }
             }
             
-            local lc, rc, lec, rec, c = uus.biLatCoords(5)(arcs.lane.l, arcs.lane.r, arcs.laneEdge.l, arcs.laneEdge.r)
-            local lsc, rsc, lsuc, rsuc, ltc, rtc, sc = uus.biLatCoords(5)(arcs.edge.l, arcs.edge.r, arcs.surface.l, arcs.surface.r, arcs.terrain.l, arcs.terrain.r)
-            local lcc, rcc, cc = uus.biLatCoords(10)(arcs.edge.l, arcs.edge.r)
-            local lpc, rpc, lpic, rpic, pc = uus.biLatCoords(5)(arcs.roof.edge.l, arcs.roof.edge.r, arcs.roof.surface.l, arcs.roof.surface.r)
-            local lppc, rppc, ppc = uus.biLatCoords(10)(arcs.roof.edge.l, arcs.roof.edge.r)
+            local lsc, rsc, lsuc, rsuc, lc, rc, lpc, rpc, lpic, rpic, lsoc, rsoc, lsic, rsic, c = uus.biLatCoords(5)(
+                arcs.edge.l, arcs.edge.r, 
+                arcs.surface.l, arcs.surface.r, 
+                arcs.lane.l, arcs.lane.r,
+                arcs.roof.edge.l, arcs.roof.edge.r, 
+                arcs.roof.surface.l, arcs.roof.surface.r, 
+                arcs.stairs.outer.l, arcs.stairs.outer.r, 
+                arcs.stairs.inner.l, arcs.stairs.inner.r
+            )
+
             return {
                 [1] = arcL,
                 [2] = arcR,
                 [3] = arcRef,
                 lane = func.with(arcs.lane, {lc = lc, rc = rc, mc = mc(lc, rc), c = c}),
-                laneEdge = func.with(arcs.laneEdge, {lc = lec, rc = rec, mc = mc(lec, rec), c = c}),
-                platform = func.with(arcs.edge, {lc = lsc, rc = rsc, mc = mc(lsc, rsc), c = sc}),
-                surface = func.with(arcs.surface, {lc = lsuc, rc = rsuc, mc = mc(lsuc, rsuc), c = sc}),
-                chair = func.with(arcs.edge, {lc = lcc, rc = rcc, mc = mc(lcc, rcc), c = cc}),
+                platform = func.with(arcs.edge, {lc = lsc, rc = rsc, mc = mc(lsc, rsc), c = c}),
+                surface = func.with(arcs.surface, {lc = lsuc, rc = rsuc, mc = mc(lsuc, rsuc), c = c}),
                 roof = {
-                    edge = func.with(arcs.roof.edge, {lc = lpc, rc = rpc, mc = mc(lpc, rpc), c = pc}),
-                    surface = func.with(arcs.roof.surface, {lc = lpic, rc = rpic, mc = mc(lpic, rpic), c = pc}),
-                    pole = func.with(arcs.roof.edge, {lc = lppc, rc = rppc, mc = mc(lppc, rppc), c = ppc})
+                    edge = func.with(arcs.roof.edge, {lc = lpc, rc = rpc, mc = mc(lpc, rpc), c = c}),
+                    surface = func.with(arcs.roof.surface, {lc = lpic, rc = rpic, mc = mc(lpic, rpic), c = c}),
                 },
-                terrain = func.with(arcs.terrain, {lc = ltc, rc = rtc, mc = mc(ltc, rtc), c = sc}),
+                stairs = {
+                    outer = func.with(arcs.stairs.outer, {lc = lsoc, rc = rsoc, mc = mc(lsoc, rsoc), c = c}),
+                    inner = func.with(arcs.stairs.inner, {lc = lsic, rc = rsic, mc = mc(lsic, rsic), c = c}),
+                },
                 isPlatform = true
             }
         else
@@ -847,16 +806,20 @@ uus.allArcs = function(config)
                 }
             }
             
-            local lsc, rsc, lsuc, rsuc, sc = uus.biLatCoords(5)(arcs.edge.l, arcs.edge.r, arcs.surface.l, arcs.surface.r)
-            local lpc, rpc, lpic, rpic, pc = uus.biLatCoords(5)(arcs.roof.edge.l, arcs.roof.edge.r, arcs.roof.surface.l, arcs.roof.surface.r)
+            local lsc, rsc, lsuc, rsuc, lpc, rpc, lpic, rpic, c = uus.biLatCoords(5)(
+                arcs.edge.l, arcs.edge.r, 
+                arcs.surface.l, arcs.surface.r,
+                arcs.roof.edge.l, arcs.roof.edge.r, 
+                arcs.roof.surface.l, arcs.roof.surface.r
+            )
             
             return {
                 [1] = arc,
-                platform = func.with(arcs.edge, {lc = lsc, rc = rsc, mc = mc(lsc, rsc), c = sc}),
-                surface = func.with(arcs.surface, {lc = lsuc, rc = rsuc, mc = mc(lsuc, rsuc), c = sc}),
+                platform = func.with(arcs.edge, {lc = lsc, rc = rsc, mc = mc(lsc, rsc), c = c}),
+                surface = func.with(arcs.surface, {lc = lsuc, rc = rsuc, mc = mc(lsuc, rsuc), c = c}),
                 roof = {
-                    edge = func.with(arcs.roof.edge, {lc = lpc, rc = rpc, mc = mc(lpc, rpc), c = pc}),
-                    surface = func.with(arcs.roof.surface, {lc = lpic, rc = rpic, mc = mc(lpic, rpic), c = pc}),
+                    edge = func.with(arcs.roof.edge, {lc = lpc, rc = rpc, mc = mc(lpc, rpc), c = c}),
+                    surface = func.with(arcs.roof.surface, {lc = lpic, rc = rpic, mc = mc(lpic, rpic), c = c}),
                 },
                 isTrack = true
             }
@@ -869,7 +832,6 @@ uus.build = function(config, fitModel, generateEdges)
     local generateMockEdges = uus.generateMockEdges(config)
     local generateModels = uus.generateModels(fitModel, config)
     local generateTerminals = uus.generateTerminals(config)
-    local generateTerrain = uus.generateTerrain(config)
     local generateTrackTerrain = uus.generateTrackTerrain(config)
     local generateFences = uus.generateFences(fitModel, config)
     
@@ -894,7 +856,7 @@ uus.build = function(config, fitModel, generateEdges)
                 models + generateModels(gr)
                 + (isLeftmost and generateFences(gr[1], true) or {})
                 + (isRightmost and generateFences(gr[3], false) or {}),
-                terrain + generateTerrain(gr[2]) + generateTrackTerrain(gr[1][1]) + generateTrackTerrain(gr[3][1]),
+                terrain,
                 ...)
         elseif (#gr == 2 and gr[1].isTrack and gr[2].isPlatform) then
             local edges = generateEdges(edges, true, gr[1][1])
@@ -908,7 +870,7 @@ uus.build = function(config, fitModel, generateEdges)
                 models + generateModels(gr)
                 + (isLeftmost and generateFences(gr[1], true) or {})
                 + (isRightmost and generateFences(gr[2], false) or {}),
-                terrain + generateTerrain(gr[2]) + generateTrackTerrain(gr[1][1]),
+                terrain,
                 ...)
         elseif (#gr == 2 and gr[1].isPlatform and gr[2].isTrack) then
             local edges = generateEdges(edges, false, gr[2][1])
@@ -922,7 +884,7 @@ uus.build = function(config, fitModel, generateEdges)
                 models + generateModels(gr)
                 + (isLeftmost and generateFences(gr[1], true) or {})
                 + (isRightmost and generateFences(gr[2], false) or {}),
-                terrain + generateTerrain(gr[1]) + generateTrackTerrain(gr[2][1]),
+                terrain,
                 ...)
         elseif (#gr == 1 and gr[1].isPlatform) then
             local terminals, terminalsGroup = generateTerminals(edges, terminals, terminalsGroup, gr[1], {false, false})
@@ -935,7 +897,7 @@ uus.build = function(config, fitModel, generateEdges)
                 models + generateModels(gr)
                 + (isLeftmost and generateFences(gr[1], true) or {})
                 + (isRightmost and generateFences(gr[1], false) or {}),
-                terrain + generateTerrain(gr[1]),
+                terrain,
                 ...)
         else
             local edges = generateEdges(edges, false, gr[1][1])
@@ -947,7 +909,7 @@ uus.build = function(config, fitModel, generateEdges)
                 models + generateModels(gr)
                 + (isLeftmost and generateFences(gr[1], true) or {})
                 + (isRightmost and generateFences(gr[1], false) or {}),
-                terrain + generateTrackTerrain(gr[1][1]),
+                terrain,
                 ...)
         end
     end
