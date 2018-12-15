@@ -554,7 +554,11 @@ uus.generateModels = function(fitModel, config)
         
         local platformSurface = pipe.new
             * func.seq(1, c - 1)
-            * pipe.map(function(i) return i == floor(c * 0.5) and config.models.upstepA or i == floor(c * 0.5) + 1 and config.models.upstepB or config.models.central end)
+            * pipe.map(
+                config.hasDown 
+                and function(i) return i == floor(c * 0.5) and config.models.downstep or config.models.central end
+                or function(i) return i == floor(c * 0.5) and config.models.upstepA or i == floor(c * 0.5) + 1 and config.models.upstepB or config.models.central end
+                )
             * (function(ls) return ls * pipe.rev() + ls end)
         
         local platformEdge = pipe.new
@@ -563,7 +567,11 @@ uus.generateModels = function(fitModel, config)
         
         local ceilCentral = pipe.new
             * func.seq(1, c - 1)
-            * pipe.map(function(i) return i == floor(c * 0.5) and config.models.ceilUpstepA or i == floor(c * 0.5) + 1 and config.models.ceilUpstepB or config.models.ceilCentral end)
+            * pipe.map(
+                config.hasDown    
+                and function(i) return config.models.ceilCentral end
+                or function(i) return i == floor(c * 0.5) and config.models.ceilUpstepA or i == floor(c * 0.5) + 1 and config.models.ceilUpstepB or config.models.ceilCentral end
+            )
             * (function(ls) return ls * pipe.rev() + ls end)
         
         local ceilEdge = pipe.new
@@ -572,12 +580,19 @@ uus.generateModels = function(fitModel, config)
         
         local ceilTop = pipe.new
             * func.seq(1, c - 1)
-            * pipe.map(function(i) return (i == floor(c * 0.5) or i == floor(c * 0.5) + 1) and config.models.topUpstep or config.models.topPlatform end)
+            * pipe.map(
+            config.hasDown
+            and function(i) return config.models.topPlatform end   
+            or function(i) return (i == floor(c * 0.5) or i == floor(c * 0.5) + 1) and config.models.topUpstep or config.models.topPlatform end
+            )
             * (function(ls) return ls * pipe.rev() + ls end)
         
         local upstepWalls = pipe.new
             * func.seq(1, c - 1)
-            * pipe.map(function(i) return i == floor(c * 0.5) and config.models.upstepWallA or i == floor(c * 0.5) + 1 and config.models.upstepWallB or false end)
+            * pipe.map(
+            config.hasDown
+            and function(i) return false end
+            or function(i) return i == floor(c * 0.5) and config.models.upstepWallA or i == floor(c * 0.5) + 1 and config.models.upstepWallB or false end)
             * (function(ls) return ls * pipe.rev() + ls end)
         
         local platformsWalls = pipe.mapn(
@@ -976,6 +991,7 @@ uus.models = function(prefixM)
     return {
         central = prefixM("platform/platform_central"),
         edge = prefixM("platform/platform_edge"),
+        downstep = prefixM("platform/platform_downstep"), 
         upstepA = prefixM("platform/platform_upstep_a"),
         upstepB = prefixM("platform/platform_upstep_b"),
         upstepWallA = prefixM("platform/upstep_wall_a"),
