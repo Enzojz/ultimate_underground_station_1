@@ -10,7 +10,7 @@ function data()
             {
                 children = {
                     {
-                        id = "uus/1990/platform/top_platform_br.msh",
+                        id = "uus/1990/platform/top_platform_central_br.msh",
                         transf = {
                             1, 0, 0, 0,
                             0, 1, 0, 0,
