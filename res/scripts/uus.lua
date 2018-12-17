@@ -531,99 +531,48 @@ uus.generateModels = function(fitModel, config)
         local hIndices = func.seq(1, c - 1)
         local indices = func.seq(1, cModels)
         
+        local fnModels = function(downNormal, down)
+            return function(upNormal, upA, upB)
+                local fn = config.hasDown
+                    and function(i) if (i == floor(c * 0.5)) then return normal else return down end end
+                    or function(i)
+                        if (i == floor(c * 0.5)) then return upA
+                        elseif (i == floor(c * 0.5) + 1) then return upB
+                        else return upNormal end
+                    end
+                return pipe.new * hIndices * pipe.map(fn) * (function(ls) return ls * pipe.rev() + ls end)
+            end
+        end
+        
         local models = {
             platform = {
                 left = pipe.rep(cModels)(config.models.platform.left),
                 right = pipe.rep(cModels)(config.models.platform.right),
                 edge = pipe.rep(cModels)(config.models.platform.edge),
-                central = pipe.new
-                * hIndices
-                * pipe.map(
-                    config.hasDown
-                    and function(i) return i ~= floor(c * 0.5) and config.models.platform.central or false end
-                    or function(i) return i ~= floor(c * 0.5) and i ~= floor(c * 0.5) + 1 and config.models.platform.central or false end
-                )
-                * (function(ls) return ls * pipe.rev() + ls end)
+                central = fnModels(config.models.platform.central, false)(config.models.platform.central, false, false)
             },
             
             stair = {
-                central = pipe.new
-                * hIndices
-                * pipe.map(
-                    config.hasDown
-                    and function(i) return i == floor(c * 0.5) and config.models.downstep.central or false end
-                    or function(i) return i == floor(c * 0.5) and config.models.upstep.a or i == floor(c * 0.5) + 1 and config.models.upstep.b or false end
-                )
-                * (function(ls) return ls * pipe.rev() + ls end),
-                left = pipe.new
-                * hIndices
-                * pipe.map(
-                    config.hasDown
-                    and function(i) return i == floor(c * 0.5) and config.models.downstep.left or false end
-                    or function(i) return i == floor(c * 0.5) and config.models.upstep.aLeft or i == floor(c * 0.5) + 1 and config.models.upstep.bLeft or false end
-                )
-                * (function(ls) return ls * pipe.rev() + ls end),
-                right = pipe.new
-                * hIndices
-                * pipe.map(
-                    config.hasDown
-                    and function(i) return i == floor(c * 0.5) and config.models.downstep.right or false end
-                    or function(i) return i == floor(c * 0.5) and config.models.upstep.aRight or i == floor(c * 0.5) + 1 and config.models.upstep.bRight or false end
-                )
-                * (function(ls) return ls * pipe.rev() + ls end),
-                back = pipe.new
-                * hIndices
-                * pipe.map(
-                    config.hasDown
-                    and function(i) return false end
-                    or function(i) return i == floor(c * 0.5) + 1 and config.models.upstep.back or false end
-                )
-                * (function(ls) return ls * pipe.rev() + ls end),
+                central = fnModels(false, config.models.downstep.central)(false, config.models.upstep.a, config.models.upstep.b),
+                left = fnModels(false, config.models.downstep.left)(false, config.models.upstep.aLeft, config.models.upstep.bLeft),
+                right = fnModels(false, config.models.downstep.right)(false, config.models.upstep.aRight, config.models.upstep.bRight),
+                back = fnModels(false, false)(false, false, config.models.upstep.back),
             
             },
             
             ceil = {
-                left = pipe.new
-                * hIndices
-                * pipe.map(
-                    config.hasDown
-                    and function(i) return config.models.ceil.left end
-                    or function(i) return i == floor(c * 0.5) and config.models.ceil.aLeft or i == floor(c * 0.5) + 1 and config.models.ceil.bLeft or config.models.ceil.left end
-                )
-                * (function(ls) return ls * pipe.rev() + ls end),
-                right = pipe.new
-                * hIndices
-                * pipe.map(
-                    config.hasDown
-                    and function(i) return config.models.ceil.right end
-                    or function(i) return i == floor(c * 0.5) and config.models.ceil.aRight or i == floor(c * 0.5) + 1 and config.models.ceil.aRight or config.models.ceil.right end
-                )
-                * (function(ls) return ls * pipe.rev() + ls end),
+                left = fnModels(config.models.ceil.left, config.models.ceil.left)(config.models.ceil.left, config.models.ceil.aLeft, config.models.ceil.bLeft),
+                right = fnModels(config.models.ceil.right, config.models.ceil.right)(config.models.ceil.right, config.models.ceil.aRight, config.models.ceil.bRight),
                 edge = pipe.rep(cModels)(config.models.ceil.edge),
-                central = pipe.new
-                * hIndices
-                * pipe.map(
-                    config.hasDown
-                    and function(i) return config.models.ceil.central end
-                    or function(i) return (i ~= floor(c * 0.5) and i ~= floor(c * 0.5) + 1) and config.models.ceil.central or false end
-                )
-                * (function(ls) return ls * pipe.rev() + ls end)
+                central = fnModels(config.models.ceil.central, config.models.ceil.central)(config.models.ceil.central, false, false)
             },
             
             top = {
-                central = pipe.new
-                * hIndices
-                * pipe.map(
-                    config.hasDown
-                    and function(i) return config.models.top.platform.central end
-                    or function(i) return (i ~= floor(c * 0.5) and i ~= floor(c * 0.5) + 1) and config.models.top.platform.central or false end
-                )
-                * (function(ls) return ls * pipe.rev() + ls end),
+                central = fnModels(config.models.top.platform.central, config.models.top.platform.central)(config.models.top.platform.central, false, false),
                 left = pipe.rep(cModels)(config.models.top.platform.left),
                 right = pipe.rep(cModels)(config.models.top.platform.right)
             }
         }
-        
         
         local steps = pipe.new
             + pipe.mapn(
