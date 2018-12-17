@@ -399,7 +399,7 @@ end
 
 uus.generateTerminals = function(config)
     return function(edges, terminals, terminalsGroup, arcs, enablers)
-        local lc, rc, c = arcs.lane.lc, arcs.lane.rc, arcs.lane.c
+        local lc, rc, c = arcs.platform.lane.lc, arcs.platform.lane.rc, arcs.platform.lane.c
         local newTerminals = pipe.new
             * pipe.mapn(il(lc), il(rc))(function(lc, rc)
                 return {
@@ -449,7 +449,7 @@ uus.generateTerminals = function(config)
     end
 end
 
-local buildSurface = function(fitModel, config, platformZ, tZ)
+local buildcentral = function(fitModel, config, platformZ, tZ)
     return function(c, w, fnSize)
         local fnSize = fnSize or function(_, lc, rc) return uus.assembleSize(lc, rc) end
         return function(i, s, ...)
@@ -499,8 +499,8 @@ uus.generateFences = function(fitModel, config)
         local filter = filter and filter(isLeft, isTrack) or function(_) return true end
         local isTrack = arcRef.isTrack
         local c = arcRef.isTrack and
-            (isLeft and arcRef.roof.edge.lc or arcRef.roof.edge.rc) or
-            (isLeft and arcRef.roof.surface.lc or arcRef.roof.surface.rc)
+            (isLeft and arcRef.ceil.edge.lc or arcRef.ceil.edge.rc) or
+            (isLeft and arcRef.ceil.central.lc or arcRef.ceil.central.rc)
         local newModels =
             pipe.new * il(c)
             * pipe.filter(filter)
@@ -521,16 +521,14 @@ uus.generateModels = function(fitModel, config)
     local tZ = coor.transZ(config.hPlatform - 1.4)-- model height = 1.93 - 1.4 -> 0.53 -> adjust model level to rail level
     local platformZ = config.hPlatform + 0.53 --target Z
     
-    local buildPlatform = buildSurface(fitModel, config, platformZ, tZ)
-    local buildCeil = buildSurface(fitModel, config, platformZ, coor.I())
-    local buildWall = buildSurface(fitModel, config, platformZ, coor.scaleZ(5 - platformZ) * coor.transZ(platformZ))
+    local buildPlatform = buildcentral(fitModel, config, platformZ, tZ)
+    local buildCeil = buildcentral(fitModel, config, platformZ, coor.I())
+    local buildWall = buildcentral(fitModel, config, platformZ, coor.scaleZ(5 - platformZ) * coor.transZ(platformZ))
     
     local platform = function(arcs)
         local c = arcs.count
-        local lc, rc, lic, ric, c = arcs.platform.lc, arcs.platform.rc, arcs.surface.lc, arcs.surface.rc, arcs.surface.c
-        local lpc, rpc, lpic, rpic, pc = arcs.roof.edge.lc, arcs.roof.edge.rc, arcs.roof.surface.lc, arcs.roof.surface.rc, arcs.roof.edge.c
-        
-        local surface = {
+
+        local platform = {
             left = pipe.rep(2 * c - 2)(config.models.platform.left),
             right = pipe.rep(2 * c - 2)(config.models.platform.right),
             edge = pipe.rep(2 * c - 2)(config.models.platform.edge),
@@ -669,7 +667,7 @@ uus.generateModels = function(fitModel, config)
         local platforms = pipe.new
             + pipe.mapn(
                 func.seq(1, 2 * c - 2),
-                surface.central,
+                platform.central,
                 il(arcs.stairs.outer.lc), il(arcs.stairs.outer.rc)
             )(buildPlatform(c, 5, function(i, lc, rc) return
                 i >= c
@@ -678,23 +676,23 @@ uus.generateModels = function(fitModel, config)
             end))
             + pipe.mapn(
                 func.seq(1, 2 * c - 2),
-                surface.left,
-                il(arcs.surface.lc), il(arcs.stairs.outer.lc)
+                platform.left,
+                il(arcs.platform.central.lc), il(arcs.stairs.outer.lc)
             )(buildPlatform(c, 1.7))
             + pipe.mapn(
                 func.seq(1, 2 * c - 2),
-                surface.right,
-                il(arcs.stairs.outer.rc), il(arcs.surface.rc)
+                platform.right,
+                il(arcs.stairs.outer.rc), il(arcs.platform.central.rc)
             )(buildPlatform(c, 1.7))
             + pipe.mapn(
                 func.seq(1, 2 * c - 2),
-                surface.edge,
-                il(arcs.platform.lc), il(arcs.surface.lc)
+                platform.edge,
+                il(arcs.platform.edge.lc), il(arcs.platform.central.lc)
             )(buildPlatform(c, 0.8))
             + pipe.mapn(
                 func.seq(1, 2 * c - 2),
-                surface.edge,
-                il(func.rev(arcs.platform.rc)), il(func.rev(arcs.surface.rc))
+                platform.edge,
+                il(func.rev(arcs.platform.edge.rc)), il(func.rev(arcs.platform.central.rc))
             )(buildPlatform(c, 0.8))
         
         local ceils =
@@ -707,38 +705,38 @@ uus.generateModels = function(fitModel, config)
             + pipe.mapn(
                 func.seq(1, 2 * c - 2),
                 ceil.left,
-                il(arcs.roof.surface.lc), il(arcs.stairs.outer.lc)
+                il(arcs.ceil.central.lc), il(arcs.stairs.outer.lc)
             )(buildCeil(c, 1.8))
             + pipe.mapn(
                 func.seq(1, 2 * c - 2),
                 ceil.right,
-                il(arcs.stairs.outer.rc), il(arcs.roof.surface.rc)
+                il(arcs.stairs.outer.rc), il(arcs.ceil.central.rc)
             )(buildCeil(c, 1.8))
             + pipe.mapn(
                 func.seq(1, 2 * c - 2),
                 ceil.edge,
-                il(arcs.roof.edge.lc), il(arcs.roof.surface.lc)
+                il(arcs.ceil.edge.lc), il(arcs.ceil.central.lc)
             )(buildCeil(c, 0.7))
             + pipe.mapn(
                 func.seq(1, 2 * c - 2),
                 ceil.edge,
-                il(func.rev(arcs.roof.edge.rc)), il(func.rev(arcs.roof.surface.rc))
+                il(func.rev(arcs.ceil.edge.rc)), il(func.rev(arcs.ceil.central.rc))
             )(buildCeil(c, 0.7))
         
         local tops = pipe.mapn(
-            func.seq(1, 2 * pc - 2),
+            func.seq(1, 2 * c - 2),
             ceilTop,
-            il(lpc), il(rpc)
-        )(buildCeil(pc, 10))
+            il(arcs.ceil.edge.lc), il(arcs.ceil.edge.rc)
+        )(buildCeil(c, 10))
         
         local extremity = pipe.mapn(
             {
-                {lpc[1], lpic[1]},
-                {lpic[1], rpic[1]},
-                {rpic[1], rpc[1]},
-                {lpic[#lpic], lpc[#lpc]},
-                {rpic[#rpic], lpic[#lpic]},
-                {rpc[#rpc], rpic[#rpic]},
+                {arcs.ceil.edge.lc[1],    arcs.ceil.central.lc[1]},
+                {arcs.ceil.central.lc[1], arcs.ceil.central.rc[1]},
+                {arcs.ceil.central.rc[1], arcs.ceil.edge.rc[1]},
+                {arcs.ceil.central.lc[c * 2 - 1], arcs.ceil.edge.lc[c * 2 - 1]},
+                {arcs.ceil.central.rc[c * 2 - 1], arcs.ceil.central.lc[c * 2 - 1]},
+                {arcs.ceil.edge.rc[c * 2 - 1], arcs.ceil.central.rc[c * 2 - 1]},
             },
             {
                 config.models.wallExtremityEdge .. "_l", config.models.wallExtremity, config.models.wallExtremityEdge .. "_r",
@@ -761,10 +759,10 @@ uus.generateModels = function(fitModel, config)
         
         local extremityPlatform = pipe.mapn(
             {
-                {lpc[1], lpic[1]},
-                {rpic[1], rpc[1]},
-                {lpc[#lpc], lpic[#lpic]},
-                {rpic[#rpic], rpc[#rpc]},
+                {arcs.ceil.edge.lc[1], arcs.ceil.central.lc[1]},
+                {arcs.ceil.central.lc[1], arcs.ceil.edge.rc[1]},
+                {arcs.ceil.edge.lc[c * 2 - 1], arcs.ceil.central.lc[c * 2 - 1]},
+                {arcs.ceil.central.rc[c * 2 - 1], arcs.ceil.edge.rc[c * 2 - 1]},
             },
             {"l", "r", "r", "l"},
             {
@@ -795,7 +793,7 @@ uus.generateModels = function(fitModel, config)
     end
     
     local track = function(arcs)
-        local lpc, rpc, pc = arcs.roof.edge.lc, arcs.roof.edge.rc, arcs.roof.edge.c
+        local lpc, rpc, pc = arcs.ceil.edge.lc, arcs.ceil.edge.rc, arcs.ceil.edge.c
         
         local ceilTop = pipe.new
             * pipe.rep(pc - 1)(config.models.topTrackCenter)
@@ -850,14 +848,16 @@ uus.allArcs = function(config)
                 l = arcL(refZ)(),
                 r = arcR(refZ)()
             }
-            dump()({config.wPlatform, config.wStairs})
+
             local arcs = {
-                lane = arcGen(general, 0.6),
-                edge = arcGen(general, -0.5),
-                surface = arcGen(general, 0.3),
-                roof = {
+                platform = {
+                    lane = arcGen(general, 0.6),
                     edge = arcGen(general, -0.5),
-                    surface = arcGen(general, 0.2),
+                    central = arcGen(general, 0.3)
+                },
+                ceil = {
+                    edge = arcGen(general, -0.5),
+                    central = arcGen(general, 0.2),
                 },
                 stairs = {
                     outer = arcGen(general, (config.wPlatform - config.wStairs) * 0.5 + 0.3),
@@ -866,25 +866,28 @@ uus.allArcs = function(config)
             }
             
             local lsc, rsc, lsuc, rsuc, lc, rc, lpc, rpc, lpic, rpic, lsoc, rsoc, lsic, rsic, c = uus.biLatCoords(5)(
-                arcs.edge.l, arcs.edge.r,
-                arcs.surface.l, arcs.surface.r,
-                arcs.lane.l, arcs.lane.r,
-                arcs.roof.edge.l, arcs.roof.edge.r,
-                arcs.roof.surface.l, arcs.roof.surface.r,
+                arcs.platform.edge.l, arcs.platform.edge.r,
+                arcs.platform.central.l, arcs.platform.central.r,
+                arcs.platform.lane.l, arcs.platform.lane.r,
+                arcs.ceil.edge.l, arcs.ceil.edge.r,
+                arcs.ceil.central.l, arcs.ceil.central.r,
                 arcs.stairs.outer.l, arcs.stairs.outer.r,
                 arcs.stairs.inner.l, arcs.stairs.inner.r
             )
+
             return {
                 [1] = arcL,
                 [2] = arcR,
                 [3] = arcRef,
                 count = c,
-                lane = func.with(arcs.lane, {lc = lc, rc = rc, mc = mc(lc, rc), c = c}),
-                platform = func.with(arcs.edge, {lc = lsc, rc = rsc, mc = mc(lsc, rsc), c = c}),
-                surface = func.with(arcs.surface, {lc = lsuc, rc = rsuc, mc = mc(lsuc, rsuc), c = c}),
-                roof = {
-                    edge = func.with(arcs.roof.edge, {lc = lpc, rc = rpc, mc = mc(lpc, rpc), c = c}),
-                    surface = func.with(arcs.roof.surface, {lc = lpic, rc = rpic, mc = mc(lpic, rpic), c = c}),
+                platform = {
+                    edge = func.with(arcs.platform.edge, {lc = lsc, rc = rsc, mc = mc(lsc, rsc), c = c}),
+                    central = func.with(arcs.platform.central, {lc = lsuc, rc = rsuc, mc = mc(lsuc, rsuc), c = c}),
+                    lane = func.with(arcs.platform.lane, {lc = lc, rc = rc, mc = mc(lc, rc), c = c})
+                },
+                ceil = {
+                    edge = func.with(arcs.ceil.edge, {lc = lpc, rc = rpc, mc = mc(lpc, rpc), c = c}),
+                    central = func.with(arcs.ceil.central, {lc = lpic, rc = rpic, mc = mc(lpic, rpic), c = c}),
                 },
                 stairs = {
                     outer = func.with(arcs.stairs.outer, {lc = lsoc, rc = rsoc, mc = mc(lsoc, rsoc), c = c}),
@@ -902,26 +905,26 @@ uus.allArcs = function(config)
             
             local arcs = {
                 edge = arcGen(general, -config.wTrack * 0.5 + 0.5),
-                surface = arcGen(general, -config.wTrack * 0.5 + 1.3),
-                roof = {
+                central = arcGen(general, -config.wTrack * 0.5 + 1.3),
+                ceil = {
                     edge = arcGen(general, -config.wTrack * 0.5),
-                    surface = arcGen(general, -config.wTrack * 0.5 + 1)
+                    central = arcGen(general, -config.wTrack * 0.5 + 1)
                 }
             }
             
-            local lsc, rsc, lsuc, rsuc, lpc, rpc, lpic, rpic, c = uus.biLatCoords(5)(
-                arcs.edge.l, arcs.edge.r,
-                arcs.surface.l, arcs.surface.r,
-                arcs.roof.edge.l, arcs.roof.edge.r,
-                arcs.roof.surface.l, arcs.roof.surface.r
+            local lpc, rpc, lpic, rpic, c = uus.biLatCoords(5)(
+                -- arcs.platform.edge.l, arcs.platform.edge.r,
+                -- arcs.platform.central.l, arcs.platform.central.r,
+                arcs.ceil.edge.l, arcs.ceil.edge.r,
+                arcs.ceil.central.l, arcs.ceil.central.r
             )
             return {
                 [1] = arc,
-                platform = func.with(arcs.edge, {lc = lsc, rc = rsc, mc = mc(lsc, rsc), c = c}),
-                surface = func.with(arcs.surface, {lc = lsuc, rc = rsuc, mc = mc(lsuc, rsuc), c = c}),
-                roof = {
-                    edge = func.with(arcs.roof.edge, {lc = lpc, rc = rpc, mc = mc(lpc, rpc), c = c}),
-                    surface = func.with(arcs.roof.surface, {lc = lpic, rc = rpic, mc = mc(lpic, rpic), c = c}),
+                -- platform = func.with(arcs.platform.edge, {lc = lsc, rc = rsc, mc = mc(lsc, rsc), c = c}),
+                -- central = func.with(arcs.platform.central, {lc = lsuc, rc = rsuc, mc = mc(lsuc, rsuc), c = c}),
+                ceil = {
+                    edge = func.with(arcs.ceil.edge, {lc = lpc, rc = rpc, mc = mc(lpc, rpc), c = c}),
+                    central = func.with(arcs.ceil.central, {lc = lpic, rc = rpic, mc = mc(lpic, rpic), c = c}),
                 },
                 isTrack = true
             }
