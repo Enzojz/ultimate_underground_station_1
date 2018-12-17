@@ -452,8 +452,8 @@ end
 local buildSurface = function(fitModel, config, platformZ, tZ)
     return function(c, w, fnSize)
         local fnSize = fnSize or function(_, lc, rc) return uus.assembleSize(lc, rc) end
-        return function(i, s, lc, rc)
-            local sizeS = fnSize(i, lc, rc)
+        return function(i, s, ...)
+            local sizeS = fnSize(i, ...)
             
             return s
                 and pipe.new
@@ -526,100 +526,203 @@ uus.generateModels = function(fitModel, config)
     local buildWall = buildSurface(fitModel, config, platformZ, coor.scaleZ(5 - platformZ) * coor.transZ(platformZ))
     
     local platform = function(arcs)
+        local c = arcs.count
         local lc, rc, lic, ric, c = arcs.platform.lc, arcs.platform.rc, arcs.surface.lc, arcs.surface.rc, arcs.surface.c
         local lpc, rpc, lpic, rpic, pc = arcs.roof.edge.lc, arcs.roof.edge.rc, arcs.roof.surface.lc, arcs.roof.surface.rc, arcs.roof.edge.c
         
-        local platformSurface = pipe.new
+        local surface = {
+            left = pipe.rep(2 * c - 2)(config.models.platform.left),
+            right = pipe.rep(2 * c - 2)(config.models.platform.right),
+            edge = pipe.rep(2 * c - 2)(config.models.platform.edge),
+            central = pipe.new
             * func.seq(1, c - 1)
             * pipe.map(
-                config.hasDown 
-                and function(i) return i == floor(c * 0.5) and config.models.downstep or config.models.central end
-                or function(i) return i == floor(c * 0.5) and config.models.upstepA or i == floor(c * 0.5) + 1 and config.models.upstepB or config.models.central end
-                )
-            * (function(ls) return ls * pipe.rev() + ls end)
-        
-        local platformEdge = pipe.new
-            * pipe.rep(c - 1)(config.models.edge)
-            * (function(ls) return ls * pipe.rev() + ls end)
-        
-        local ceilCentral = pipe.new
-            * func.seq(1, c - 1)
-            * pipe.map(
-                config.hasDown    
-                and function(i) return config.models.ceilCentral end
-                or function(i) return i == floor(c * 0.5) and config.models.ceilUpstepA or i == floor(c * 0.5) + 1 and config.models.ceilUpstepB or config.models.ceilCentral end
+                config.hasDown
+                and function(i) return i ~= floor(c * 0.5) and config.models.platform.central or false end
+                or function(i) return i ~= floor(c * 0.5) and i ~= floor(c * 0.5) + 1 and config.models.platform.central or false end
             )
             * (function(ls) return ls * pipe.rev() + ls end)
+        }
         
-        local ceilEdge = pipe.new
-            * pipe.rep(pc - 1)(config.models.ceilEdge)
+        local stair = {
+            central = pipe.new
+            * func.seq(1, c - 1)
+            * pipe.map(
+                config.hasDown
+                and function(i) return i == floor(c * 0.5) and config.models.downstep.central or false end
+                or function(i) return i == floor(c * 0.5) and config.models.upstep.a or i == floor(c * 0.5) + 1 and config.models.upstep.b or false end
+            )
+            * (function(ls) return ls * pipe.rev() + ls end),
+            left = pipe.new
+            * func.seq(1, c - 1)
+            * pipe.map(
+                config.hasDown
+                and function(i) return i == floor(c * 0.5) and config.models.downstep.left or false end
+                or function(i) return i == floor(c * 0.5) and config.models.upstep.aLeft or i == floor(c * 0.5) + 1 and config.models.upstep.bLeft or false end
+            )
+            * (function(ls) return ls * pipe.rev() + ls end),
+            right = pipe.new
+            * func.seq(1, c - 1)
+            * pipe.map(
+                config.hasDown
+                and function(i) return i == floor(c * 0.5) and config.models.downstep.right or false end
+                or function(i) return i == floor(c * 0.5) and config.models.upstep.aRight or i == floor(c * 0.5) + 1 and config.models.upstep.bRight or false end
+            )
+            * (function(ls) return ls * pipe.rev() + ls end),
+            back = pipe.new
+            * func.seq(1, c - 1)
+            * pipe.map(
+                config.hasDown
+                and function(i) return false end
+                or function(i) return i == floor(c * 0.5) + 1 and config.models.upstep.back or false end
+            )
+            * (function(ls) return ls * pipe.rev() + ls end),
+        
+        }
+        
+        local ceil = {
+            left = pipe.new
+            * func.seq(1, c - 1)
+            * pipe.map(
+                config.hasDown
+                and function(i) return config.models.ceil.left end
+                or function(i) return i == floor(c * 0.5) and config.models.ceil.aLeft or i == floor(c * 0.5) + 1 and config.models.ceil.bLeft or config.models.ceil.left end
+            )
+            * (function(ls) return ls * pipe.rev() + ls end),
+            right = pipe.new
+            * func.seq(1, c - 1)
+            * pipe.map(
+                config.hasDown
+                and function(i) return config.models.ceil.right end
+                or function(i) return i == floor(c * 0.5) and config.models.ceil.aRight or i == floor(c * 0.5) + 1 and config.models.ceil.aRight or config.models.ceil.right end
+            )
+            * (function(ls) return ls * pipe.rev() + ls end),
+            edge = pipe.rep(2 * c - 2)(config.models.ceil.edge),
+            central = pipe.new
+            * func.seq(1, c - 1)
+            * pipe.map(
+                config.hasDown
+                and function(i) return config.models.ceil.central end
+                or function(i) return (i ~= floor(c * 0.5) and i ~= floor(c * 0.5) + 1) and config.models.ceil.central or false end
+            )
             * (function(ls) return ls * pipe.rev() + ls end)
+        }
         
         local ceilTop = pipe.new
             * func.seq(1, c - 1)
             * pipe.map(
-            config.hasDown
-            and function(i) return config.models.topPlatform end   
-            or function(i) return (i == floor(c * 0.5) or i == floor(c * 0.5) + 1) and config.models.topUpstep or config.models.topPlatform end
+                config.hasDown
+                and function(i) return config.models.topPlatform end
+                or function(i) return (i == floor(c * 0.5) or i == floor(c * 0.5) + 1) and config.models.topUpstep or config.models.topPlatform end
             )
             * (function(ls) return ls * pipe.rev() + ls end)
         
-        local upstepWalls = pipe.new
-            * func.seq(1, c - 1)
-            * pipe.map(
-            config.hasDown
-            and function(i) return false end
-            or function(i) return i == floor(c * 0.5) and config.models.upstepWallA or i == floor(c * 0.5) + 1 and config.models.upstepWallB or false end)
-            * (function(ls) return ls * pipe.rev() + ls end)
-        
-        local platformsWalls = pipe.mapn(
-            func.seq(1, 2 * c - 2),
-            upstepWalls,
-            il(lic), il(ric)
-        )(buildWall(c, 8.4,
-            function(i, lc, rc) return
+        local steps = pipe.new
+            + pipe.mapn(
+                func.seq(1, 2 * c - 2),
+                stair.central,
+                il(arcs.stairs.inner.lc), il(arcs.stairs.inner.rc)
+            )(buildPlatform(c, 4.5, function(i, lc, rc) return
                 i >= c
                 and uus.assembleSize(lc, rc)
                 or uus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s})
             end))
-        
+            + pipe.mapn(
+                func.seq(1, 2 * c - 2),
+                stair.back,
+                il(arcs.stairs.inner.lc), il(arcs.stairs.inner.rc)
+            )(buildWall(c, 4.5, function(i, lc, rc) return
+                i >= c
+                and uus.assembleSize(lc, rc)
+                or uus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s})
+            end))
+            + pipe.mapn(
+                func.seq(1, 2 * c - 2),
+                stair.left,
+                il(arcs.stairs.outer.lc),
+                il(arcs.stairs.inner.lc),
+                il(arcs.stairs.outer.rc),
+                il(arcs.stairs.inner.rc)
+                )(
+                (config.hasDown and buildPlatform or buildWall)(c, 0.25, function(i, loc, lic, roc, ric) return
+                    i >= c
+                    and uus.assembleSize(loc, lic)
+                    or uus.assembleSize({s = roc.i, i = roc.s}, {s = ric.i, i = ric.s})
+                end
+            )
+            )
+            + pipe.mapn(
+                func.seq(1, 2 * c - 2),
+                stair.right,
+                il(arcs.stairs.outer.lc),
+                il(arcs.stairs.inner.lc),
+                il(arcs.stairs.outer.rc),
+                il(arcs.stairs.inner.rc)
+                )(
+                (config.hasDown and buildPlatform or buildWall)(c, 0.25, function(i, loc, lic, roc, ric) return
+                    i >= c
+                    and uus.assembleSize(ric, roc)
+                    or uus.assembleSize({s = lic.i, i = lic.s}, {s = loc.i, i = loc.s})
+                end
+            )
+            )
         local platforms = pipe.new
             + pipe.mapn(
                 func.seq(1, 2 * c - 2),
-                platformSurface,
-                il(lic), il(ric)
-            )(buildPlatform(c, 10 - 1.6, function(i, lc, rc) return
+                surface.central,
+                il(arcs.stairs.outer.lc), il(arcs.stairs.outer.rc)
+            )(buildPlatform(c, 5, function(i, lc, rc) return
                 i >= c
                 and uus.assembleSize(lc, rc)
                 or uus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s})
             end))
             + pipe.mapn(
                 func.seq(1, 2 * c - 2),
-                platformEdge,
-                il(lc), il(lic)
+                surface.left,
+                il(arcs.surface.lc), il(arcs.stairs.outer.lc)
+            )(buildPlatform(c, 1.7))
+            + pipe.mapn(
+                func.seq(1, 2 * c - 2),
+                surface.right,
+                il(arcs.stairs.outer.rc), il(arcs.surface.rc)
+            )(buildPlatform(c, 1.7))
+            + pipe.mapn(
+                func.seq(1, 2 * c - 2),
+                surface.edge,
+                il(arcs.platform.lc), il(arcs.surface.lc)
             )(buildPlatform(c, 0.8))
             + pipe.mapn(
                 func.seq(1, 2 * c - 2),
-                platformEdge,
-                il(func.rev(rc)), il(func.rev(ric))
+                surface.edge,
+                il(func.rev(arcs.platform.rc)), il(func.rev(arcs.surface.rc))
             )(buildPlatform(c, 0.8))
         
         local ceils =
             pipe.new
             + pipe.mapn(
                 func.seq(1, 2 * c - 2),
-                ceilCentral,
-                il(lpic), il(rpic)
-            )(buildCeil(c, 10 - 1.4))
+                ceil.central,
+                il(arcs.stairs.outer.lc), il(arcs.stairs.outer.rc)
+            )(buildCeil(c, 5))
             + pipe.mapn(
                 func.seq(1, 2 * c - 2),
-                ceilEdge,
-                il(lpc), il(lpic)
+                ceil.left,
+                il(arcs.roof.surface.lc), il(arcs.stairs.outer.lc)
+            )(buildCeil(c, 1.8))
+            + pipe.mapn(
+                func.seq(1, 2 * c - 2),
+                ceil.right,
+                il(arcs.stairs.outer.rc), il(arcs.roof.surface.rc)
+            )(buildCeil(c, 1.8))
+            + pipe.mapn(
+                func.seq(1, 2 * c - 2),
+                ceil.edge,
+                il(arcs.roof.edge.lc), il(arcs.roof.surface.lc)
             )(buildCeil(c, 0.7))
             + pipe.mapn(
                 func.seq(1, 2 * c - 2),
-                ceilEdge,
-                il(func.rev(rpc)), il(func.rev(rpic))
+                ceil.edge,
+                il(func.rev(arcs.roof.edge.rc)), il(func.rev(arcs.roof.surface.rc))
             )(buildCeil(c, 0.7))
         
         local tops = pipe.mapn(
@@ -688,7 +791,7 @@ uus.generateModels = function(fitModel, config)
             }
         end)
         
-        return (pipe.new / platforms / ceils / tops / platformsWalls / extremityPlatform) * pipe.flatten() * pipe.flatten() + extremity
+        return (pipe.new / platforms / ceils / tops / extremityPlatform / steps) * pipe.flatten() * pipe.flatten() + extremity
     end
     
     local track = function(arcs)
@@ -747,35 +850,35 @@ uus.allArcs = function(config)
                 l = arcL(refZ)(),
                 r = arcR(refZ)()
             }
-            
+            dump()({config.wPlatform, config.wStairs})
             local arcs = {
                 lane = arcGen(general, 0.6),
                 edge = arcGen(general, -0.5),
                 surface = arcGen(general, 0.3),
                 roof = {
                     edge = arcGen(general, -0.5),
-                    surface = arcGen(general, 0.2)
+                    surface = arcGen(general, 0.2),
                 },
                 stairs = {
-                    outer = arcGen(general, (config.wPlatform - config.wStairs) * 0.5),
-                    inner = arcGen(general, (config.wPlatform - config.wStairs) * 0.5 + 0.25)
+                    outer = arcGen(general, (config.wPlatform - config.wStairs) * 0.5 + 0.3),
+                    inner = arcGen(general, (config.wPlatform - config.wStairs) * 0.5 + 0.55)
                 }
             }
             
             local lsc, rsc, lsuc, rsuc, lc, rc, lpc, rpc, lpic, rpic, lsoc, rsoc, lsic, rsic, c = uus.biLatCoords(5)(
-                arcs.edge.l, arcs.edge.r, 
-                arcs.surface.l, arcs.surface.r, 
+                arcs.edge.l, arcs.edge.r,
+                arcs.surface.l, arcs.surface.r,
                 arcs.lane.l, arcs.lane.r,
-                arcs.roof.edge.l, arcs.roof.edge.r, 
-                arcs.roof.surface.l, arcs.roof.surface.r, 
-                arcs.stairs.outer.l, arcs.stairs.outer.r, 
+                arcs.roof.edge.l, arcs.roof.edge.r,
+                arcs.roof.surface.l, arcs.roof.surface.r,
+                arcs.stairs.outer.l, arcs.stairs.outer.r,
                 arcs.stairs.inner.l, arcs.stairs.inner.r
             )
-
             return {
                 [1] = arcL,
                 [2] = arcR,
                 [3] = arcRef,
+                count = c,
                 lane = func.with(arcs.lane, {lc = lc, rc = rc, mc = mc(lc, rc), c = c}),
                 platform = func.with(arcs.edge, {lc = lsc, rc = rsc, mc = mc(lsc, rsc), c = c}),
                 surface = func.with(arcs.surface, {lc = lsuc, rc = rsuc, mc = mc(lsuc, rsuc), c = c}),
@@ -807,12 +910,11 @@ uus.allArcs = function(config)
             }
             
             local lsc, rsc, lsuc, rsuc, lpc, rpc, lpic, rpic, c = uus.biLatCoords(5)(
-                arcs.edge.l, arcs.edge.r, 
+                arcs.edge.l, arcs.edge.r,
                 arcs.surface.l, arcs.surface.r,
-                arcs.roof.edge.l, arcs.roof.edge.r, 
+                arcs.roof.edge.l, arcs.roof.edge.r,
                 arcs.roof.surface.l, arcs.roof.surface.r
             )
-            
             return {
                 [1] = arc,
                 platform = func.with(arcs.edge, {lc = lsc, rc = rsc, mc = mc(lsc, rsc), c = c}),
@@ -951,17 +1053,36 @@ uus.trackGrouping = trackGrouping
 uus.models = function(prefixM)
     local prefixM = function(p) return prefixM .. p end
     return {
-        central = prefixM("platform/platform_central"),
-        edge = prefixM("platform/platform_edge"),
-        downstep = prefixM("platform/platform_downstep"), 
-        upstepA = prefixM("platform/platform_upstep_a"),
-        upstepB = prefixM("platform/platform_upstep_b"),
-        upstepWallA = prefixM("platform/upstep_wall_a"),
-        upstepWallB = prefixM("platform/upstep_wall_b"),
-        ceilCentral = prefixM("platform/ceil_central"),
-        ceilEdge = prefixM("platform/ceil_edge"),
-        ceilUpstepA = prefixM("platform/ceil_upstep_a"),
-        ceilUpstepB = prefixM("platform/ceil_upstep_b"),
+        platform = {
+            edge = prefixM("platform/platform_edge"),
+            central = prefixM("platform/platform_central"),
+            left = prefixM("platform/platform_left"),
+            right = prefixM("platform/platform_right"),
+        },
+        upstep = {
+            a = prefixM("platform/platform_upstep_a"),
+            b = prefixM("platform/platform_upstep_b"),
+            aLeft = prefixM("platform/platform_upstep_a_left"),
+            aRight = prefixM("platform/platform_upstep_a_right"),
+            bLeft = prefixM("platform/platform_upstep_b_left"),
+            bRight = prefixM("platform/platform_upstep_b_right"),
+            back = prefixM("platform/platform_upstep_back")
+        },
+        downstep = {
+            right = prefixM("platform/platform_downstep_left"),
+            left = prefixM("platform/platform_downstep_right"),
+            central = prefixM("platform/platform_downstep")
+        },
+        ceil = {
+            edge = prefixM("platform/ceil_edge"),
+            central = prefixM("platform/ceil_central"),
+            left = prefixM("platform/ceil_left"),
+            right = prefixM("platform/ceil_right"),
+            aLeft = prefixM("platform/ceil_upstep_a_left"),
+            aRight = prefixM("platform/ceil_upstep_a_right"),
+            bLeft = prefixM("platform/ceil_upstep_b_left"),
+            bRight = prefixM("platform/ceil_upstep_b_right"),
+        },
         topPlatform = prefixM("platform/top_platform"),
         topUpstep = prefixM("platform/top_upstep"),
         topTrackCenter = prefixM("platform/top_center"),

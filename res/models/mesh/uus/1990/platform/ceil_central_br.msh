@@ -6,11 +6,11 @@ function data() return {
   subMeshes = {
     {
       indices = {
-        normal   = { count = 4944, offset = 79800 },
-        position = { count = 4944, offset = 79800 },
-        tangent  = { count = 4944, offset = 79800 },
-        uv0      = { count = 4944, offset = 79800 },
-        uv1      = { count = 4944, offset = 79800 }
+        normal   = { count = 5808, offset = 91560 },
+        position = { count = 5808, offset = 91560 },
+        tangent  = { count = 5808, offset = 91560 },
+        uv0      = { count = 5808, offset = 91560 },
+        uv1      = { count = 5808, offset = 91560 }
       },
       materials = {
         "uus/emissive.mtl"
@@ -18,11 +18,11 @@ function data() return {
     },
     {
       indices = {
-        normal   = { count = 756, offset = 84744 },
-        position = { count = 756, offset = 84744 },
-        tangent  = { count = 756, offset = 84744 },
-        uv0      = { count = 756, offset = 84744 },
-        uv1      = { count = 756, offset = 84744 }
+        normal   = { count = 732, offset = 97368 },
+        position = { count = 732, offset = 97368 },
+        tangent  = { count = 732, offset = 97368 },
+        uv0      = { count = 732, offset = 97368 },
+        uv1      = { count = 732, offset = 97368 }
       },
       materials = {
         "uus/ceiling.mtl"
@@ -30,10 +30,10 @@ function data() return {
     }
   },
   vertexAttr = {
-    normal   = { count = 17100, numComp = 3, offset = 28500 },
-    position = { count = 17100, numComp = 3, offset = 0 },
-    tangent  = { count = 22800, numComp = 4, offset = 45600 },
-    uv0      = { count = 11400, numComp = 2, offset = 17100 },
-    uv1      = { count = 11400, numComp = 2, offset = 68400 }
+    normal   = { count = 19620, numComp = 3, offset = 32700 },
+    position = { count = 19620, numComp = 3, offset = 0 },
+    tangent  = { count = 26160, numComp = 4, offset = 52320 },
+    uv0      = { count = 13080, numComp = 2, offset = 19620 },
+    uv1      = { count = 13080, numComp = 2, offset = 78480 }
   }
 } end

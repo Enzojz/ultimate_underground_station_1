@@ -1,28 +1,16 @@
 function data() return {
   animations = {  },
   matConfigs = {
-    { 0, 0 }
+    { 0 }
   },
   subMeshes = {
     {
       indices = {
-        normal   = { count = 12, offset = 27384 },
-        position = { count = 12, offset = 27384 },
-        tangent  = { count = 12, offset = 27384 },
-        uv0      = { count = 12, offset = 27384 },
-        uv1      = { count = 12, offset = 27384 }
-      },
-      materials = {
-        "uus/platform.mtl"
-      }
-    },
-    {
-      indices = {
-        normal   = { count = 1944, offset = 27396 },
-        position = { count = 1944, offset = 27396 },
-        tangent  = { count = 1944, offset = 27396 },
-        uv0      = { count = 1944, offset = 27396 },
-        uv1      = { count = 1944, offset = 27396 }
+        normal   = { count = 2124, offset = 29736 },
+        position = { count = 2124, offset = 29736 },
+        tangent  = { count = 2124, offset = 29736 },
+        uv0      = { count = 2124, offset = 29736 },
+        uv1      = { count = 2124, offset = 29736 }
       },
       materials = {
         "uus/upstep.mtl"
@@ -30,10 +18,10 @@ function data() return {
     }
   },
   vertexAttr = {
-    normal   = { count = 5868, numComp = 3, offset = 9780 },
-    position = { count = 5868, numComp = 3, offset = 0 },
-    tangent  = { count = 7824, numComp = 4, offset = 15648 },
-    uv0      = { count = 3912, numComp = 2, offset = 5868 },
-    uv1      = { count = 3912, numComp = 2, offset = 23472 }
+    normal   = { count = 6372, numComp = 3, offset = 10620 },
+    position = { count = 6372, numComp = 3, offset = 0 },
+    tangent  = { count = 8496, numComp = 4, offset = 16992 },
+    uv0      = { count = 4248, numComp = 2, offset = 6372 },
+    uv1      = { count = 4248, numComp = 2, offset = 25488 }
   }
 } end

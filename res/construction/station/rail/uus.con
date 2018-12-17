@@ -246,8 +246,8 @@ local function updateFn()
                     wTrack = trackWidth,
                     roofLength = 1,
                     slope = slope,
-                    models = models,
-                    hasDown = true
+                    models = models
+                    -- hasDown = false
                 },
                 params.hasLeftPlatform == 0,
                 params.hasRightPlatform == 0
