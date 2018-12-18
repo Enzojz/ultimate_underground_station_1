@@ -397,22 +397,65 @@ uus.generateMockEdges = function(config)
     end
 end
 
+local stepsLanePos = function(config)
+    return function(c)
+        local c = c - 1
+        return config.hasDown
+            and {{pos = floor(c * 0.25) + 1, vec = -1}, {pos = ceil(c * 0.75), vec = 1}}
+            or {{pos = floor(c * 0.25) + 1, vec = -2}, {pos = ceil(c * 0.75), vec = 2}}
+    end
+end
+
+local isStepsPos = function(config)
+    return function(c)
+        return config.hasDown
+            and function(i)
+                return i == floor(c * 0.25) or i == ceil(c * 0.75)
+            end
+            or function(i)
+                return
+                    i == floor(c * 0.25) or i == ceil(c * 0.75),
+                    i == floor(c * 0.25) - 1 or i == ceil(c * 0.75) + 1
+            
+            end
+    end
+end
+
 uus.generateTerminals = function(config)
-    return function(edges, terminals, terminalsGroup, arcs, enablers)
-        local lc, rc, c = arcs.platform.lane.lc, arcs.platform.lane.rc, arcs.platform.lane.c
+    local isStepsPos = isStepsPos(config)
+    local stepsLanePos = stepsLanePos(config)
+    return function(edges, terminals, terminalsGroup, lanePos, arcs, enablers)
+        local isStepsPos = isStepsPos(2 * arcs.count - 2)
+        
+        local newLanePos = func.map(
+            stepsLanePos(2 * arcs.count - 1),
+            function(i) return {f = arcs.platform.lane.mc[i.pos], t = arcs.platform.lane.mc[i.pos + i.vec] + coor.xyz(0, 0, config.hasDown and -3 or 6)} end
+        )
+
         local newTerminals = pipe.new
-            * pipe.mapn(il(lc), il(rc))(function(lc, rc)
+            * pipe.mapn(
+                func.seq(1, 2 * arcs.count - 2),
+                il(arcs.platform.lane.lc),
+                il(arcs.platform.lane.rc),
+                il(arcs.platform.lane.mc)
+            )
+            (function(i, lc, rc, mc)
+                local isStep = func.fold({isStepsPos(i)}, false, function(r, v) return v or r end)
                 return {
                     l = station.newModel(enablers[1] and "uus/terminal_lane.mdl" or "uus/standard_lane.mdl", uus.mRot(lc.s - lc.i), coor.trans(lc.i)),
                     r = station.newModel(enablers[2] and "uus/terminal_lane.mdl" or "uus/standard_lane.mdl", uus.mRot(rc.i - rc.s), coor.trans(rc.s)),
-                    link = (lc.s:avg(lc.i) - rc.s:avg(rc.i)):length() > 0.5 and station.newModel("uus/standard_lane.mdl", uus.mRot(lc.s:avg(lc.i) - rc.s:avg(rc.i)), coor.trans(rc.i:avg(rc.s)))
+                    c = not isStep and station.newModel("uus/standard_lane.mdl", uus.mRot(mc.i - mc.s), coor.trans(mc.s)),
+                    link = not isStep and (lc.s:avg(lc.i) - rc.s:avg(rc.i)):length() > 0.5
+                    and station.newModel("uus/standard_lane.mdl", uus.mRot(lc.s:avg(lc.i) - rc.s:avg(rc.i)), coor.trans(rc.i:avg(rc.s)))
                 }
             end)
             * function(ls)
                 return pipe.new
                     / func.map(ls, pipe.select("l"))
                     / func.map(ls, pipe.select("r"))
+                    / (ls * pipe.map(pipe.select("c")) * pipe.filter(pipe.noop()))
                     / (ls * pipe.map(pipe.select("link")) * pipe.filter(pipe.noop()))
+                    / func.map(newLanePos, function(l) return station.newModel("uus/standard_lane.mdl", uus.mRot(l.t - l.f), coor.trans(l.f)) end)
             end
         
         local newTerminalGroups = func.map(
@@ -445,11 +488,12 @@ uus.generateTerminals = function(config)
         )
         return terminals + newTerminals * pipe.flatten(),
             terminalsGroup
-            + newTerminalGroups
+            + newTerminalGroups,
+            lanePos / func.map(newLanePos, pipe.select("t"))
     end
 end
 
-local buildcentral = function(fitModel, config, platformZ, tZ)
+local buildSurface = function(fitModel, config, platformZ, tZ)
     return function(c, w, fnSize)
         local fnSize = fnSize or function(_, lc, rc) return uus.assembleSize(lc, rc) end
         return function(i, s, ...)
@@ -493,7 +537,7 @@ local function buildChairs(config, platformZ, tZ)
     end
 end
 
-uus.generateFences = function(fitModel, config)
+uus.generateSideWalls = function(fitModel, config)
     local platformZ = config.hPlatform + 0.53
     return function(arcRef, isLeft, filter)
         local filter = filter and filter(isLeft, isTrack) or function(_) return true end
@@ -521,26 +565,27 @@ uus.generateModels = function(fitModel, config)
     local tZ = coor.transZ(config.hPlatform - 1.4)-- model height = 1.93 - 1.4 -> 0.53 -> adjust model level to rail level
     local platformZ = config.hPlatform + 0.53 --target Z
     
-    local buildPlatform = buildcentral(fitModel, config, platformZ, tZ)
-    local buildCeil = buildcentral(fitModel, config, platformZ, coor.I())
-    local buildWall = buildcentral(fitModel, config, platformZ, coor.scaleZ(5 - platformZ) * coor.transZ(platformZ))
+    local buildPlatform = buildSurface(fitModel, config, platformZ, tZ)
+    local buildCeil = buildSurface(fitModel, config, platformZ, coor.I())
+    local buildWall = buildSurface(fitModel, config, platformZ, coor.scaleZ(5 - platformZ) * coor.transZ(platformZ))
+    local isStepsPos = isStepsPos(config)
     
     local platform = function(arcs)
         local c = arcs.count
         local cModels = 2 * c - 2
-        local hIndices = func.seq(1, c - 1)
         local indices = func.seq(1, cModels)
-        
+        local stepPos = isStepsPos(cModels)
         local fnModels = function(downNormal, down)
             return function(upNormal, upA, upB)
                 local fn = config.hasDown
-                    and function(i) if (i == floor(c * 0.5)) then return normal else return down end end
+                    and function(i) if stepPos(i) then return down else return downNormal end end
                     or function(i)
-                        if (i == floor(c * 0.5)) then return upA
-                        elseif (i == floor(c * 0.5) + 1) then return upB
+                        local posA, posB = stepPos(i)
+                        if posA then return upA
+                        elseif posB then return upB
                         else return upNormal end
                     end
-                return pipe.new * hIndices * pipe.map(fn) * (function(ls) return ls * pipe.rev() + ls end)
+                return pipe.new * indices * pipe.map(fn)
             end
         end
         
@@ -881,76 +926,102 @@ uus.allArcs = function(config)
     end)
 end
 
+uus.generateLanes = function(config)
+    return function(allLanePos)
+        local nTransversal = allLanePos * pipe.map(function(l) return #l end) * pipe.max()
+        local transversal = 
+        pipe.new
+        * func.seq(1, nTransversal)
+        * pipe.map(function(t)
+            local pts = allLanePos * pipe.map(pipe.select(t)) * pipe.filter(pipe.noop())
+            return func.map(il(pts), function(pt) return station.newModel("uus/standard_lane.mdl", uus.mRot(pt.s - pt.i), coor.trans(pt.i)) end)
+        end)
+        * pipe.flatten()
+
+        local centre = allLanePos * pipe.flatten() * function(pts) return pts[1]:avg(unpack(func.range(pts, 2, #pts))) end
+        local lineCentre = allLanePos * pipe.flatten() * pipe.map(function(pt)
+            return station.newModel("uus/standard_lane.mdl", uus.mRot(centre - pt), coor.trans(pt)) end)
+        return transversal + lineCentre, allLanePos * pipe.flatten() / centre * pipe.rev()
+    end
+end
+
 uus.build = function(config, fitModel, generateEdges)
     local generateEdges = uus.generateEdges
     local generateMockEdges = uus.generateMockEdges(config)
     local generateModels = uus.generateModels(fitModel, config)
     local generateTerminals = uus.generateTerminals(config)
     local generateTrackTerrain = uus.generateTrackTerrain(config)
-    local generateFences = uus.generateFences(fitModel, config)
+    local generateSideWalls = uus.generateSideWalls(fitModel, config)
+    local generateLanes = uus.generateLanes(config)
     
-    local function build(edges, mockEdges, terminals, terminalsGroup, models, terrain, gr, ...)
+    local function build(edges, mockEdges, terminals, terminalsGroup, lanePos, models, terrain, gr, ...)
         local isLeftmost = #models == 0
         local isRightmost = #{...} == 0
         
         if (gr == nil) then
+            local lanes, internalEntries = generateLanes(lanePos)
             return edges, mockEdges, terminals, terminalsGroup,
-                models * pipe.filter(pipe.noop()),
-                terrain
+                (models + lanes) * pipe.filter(pipe.noop()),
+                terrain,
+                internalEntries
         elseif (#gr == 3 and gr[1].isTrack and gr[2].isPlatform and gr[3].isTrack) then
             local edges = generateEdges(edges, true, gr[1][1])
             local edges = generateEdges(edges, false, gr[3][1])
             local mockEdges = generateMockEdges(mockEdges, gr[2][3])
-            local terminals, terminalsGroup = generateTerminals(edges, terminals, terminalsGroup, gr[2], {true, true})
+            local terminals, terminalsGroup, lanePos = generateTerminals(edges, terminals, terminalsGroup, lanePos, gr[2], {true, true})
             return build(
                 edges,
                 mockEdges,
                 terminals,
                 terminalsGroup,
+                lanePos,
                 models + generateModels(gr)
-                + (isLeftmost and generateFences(gr[1], true) or {})
-                + (isRightmost and generateFences(gr[3], false) or {}),
+                + (isLeftmost and generateSideWalls(gr[1], true) or {})
+                + (isRightmost and generateSideWalls(gr[3], false) or {}),
                 terrain,
                 ...)
         elseif (#gr == 2 and gr[1].isTrack and gr[2].isPlatform) then
             local edges = generateEdges(edges, true, gr[1][1])
             local mockEdges = generateMockEdges(mockEdges, gr[2][3])
-            local terminals, terminalsGroup = generateTerminals(edges, terminals, terminalsGroup, gr[2], {true, false})
+            local terminals, terminalsGroup, lanePos = generateTerminals(edges, terminals, terminalsGroup, lanePos, gr[2], {true, false})
             return build(
                 edges,
                 mockEdges,
                 terminals,
                 terminalsGroup,
+                lanePos,
                 models + generateModels(gr)
-                + (isLeftmost and generateFences(gr[1], true) or {})
-                + (isRightmost and generateFences(gr[2], false) or {}),
+                + (isLeftmost and generateSideWalls(gr[1], true) or {})
+                + (isRightmost and generateSideWalls(gr[2], false) or {}),
                 terrain,
                 ...)
         elseif (#gr == 2 and gr[1].isPlatform and gr[2].isTrack) then
             local edges = generateEdges(edges, false, gr[2][1])
             local mockEdges = generateMockEdges(mockEdges, gr[1][3])
-            local terminals, terminalsGroup = generateTerminals(edges, terminals, terminalsGroup, gr[1], {false, true})
+            local terminals, terminalsGroup, lanePos = generateTerminals(edges, terminals, terminalsGroup, lanePos, gr[1], {false, true})
             return build(
                 edges,
                 mockEdges,
                 terminals,
                 terminalsGroup,
+                lanePos,
                 models + generateModels(gr)
-                + (isLeftmost and generateFences(gr[1], true) or {})
-                + (isRightmost and generateFences(gr[2], false) or {}),
+                + (isLeftmost and generateSideWalls(gr[1], true) or {})
+                + (isRightmost and generateSideWalls(gr[2], false) or {}),
                 terrain,
                 ...)
         elseif (#gr == 1 and gr[1].isPlatform) then
-            local terminals, terminalsGroup = generateTerminals(edges, terminals, terminalsGroup, gr[1], {false, false})
+            local terminals, terminalsGroup, lanePos = generateTerminals(edges, terminals, terminalsGroup, lanePos, gr[1], {false, false})
             local mockEdges = generateMockEdges(mockEdges, gr[1][3])
             return build(
                 edges,
                 mockEdges,
                 terminals,
                 terminalsGroup,
+                lanePos,
                 models + generateModels(gr)
-                + (isLeftmost and generateFences(gr[1], true) or {})
-                + (isRightmost and generateFences(gr[1], false) or {}),
+                + (isLeftmost and generateSideWalls(gr[1], true) or {})
+                + (isRightmost and generateSideWalls(gr[1], false) or {}),
                 terrain,
                 ...)
         else
@@ -960,9 +1031,10 @@ uus.build = function(config, fitModel, generateEdges)
                 mockEdges,
                 terminals,
                 terminalsGroup,
+                lanePos,
                 models + generateModels(gr)
-                + (isLeftmost and generateFences(gr[1], true) or {})
-                + (isRightmost and generateFences(gr[1], false) or {}),
+                + (isLeftmost and generateSideWalls(gr[1], true) or {})
+                + (isRightmost and generateSideWalls(gr[1], false) or {}),
                 terrain,
                 ...)
         end

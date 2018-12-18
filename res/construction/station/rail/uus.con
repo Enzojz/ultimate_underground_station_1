@@ -207,7 +207,7 @@ local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreL
     -- dump()(allArcs)
     -- dump()({uus.trackGrouping(pipe.new, table.unpack(allArcs))})
     local build = uus.build(config, fitModel)
-    return build(pipe.new, pipe.new, pipe.new, pipe.new, pipe.new, pipe.new, uus.trackGrouping(pipe.new, table.unpack(allArcs)))
+    return build(pipe.new, pipe.new, pipe.new, pipe.new, pipe.new, pipe.new, pipe.new, uus.trackGrouping(pipe.new, table.unpack(allArcs)))
 end
 
 local function updateFn()
@@ -227,7 +227,7 @@ local function updateFn()
         
         local length = min(uusm.trackLengths[params.length + 1], abs(radius * pi * 1.5))
         
-        local edge, mockEdge, terminals, terminalsGroup, models, terrain =
+        local edge, mockEdge, terminals, terminalsGroup, models, terrain, internalEntries =
             buildStation(nbTracks,
                 uus.arcPacker(length, slope, radius),
                 {
@@ -246,8 +246,8 @@ local function updateFn()
                     wTrack = trackWidth,
                     roofLength = 1,
                     slope = slope,
-                    models = models
-                    -- hasDown = false
+                    models = models,
+                    hasDown = true
                 },
                 params.hasLeftPlatform == 0,
                 params.hasRightPlatform == 0
@@ -263,6 +263,7 @@ local function updateFn()
                 ,
                 models = terminals + models,
                 terminalGroups = terminalsGroup,
+                internalEntries = internalEntries,
                 terrainAlignmentLists = {
                     {
                         type = "EQUAL",

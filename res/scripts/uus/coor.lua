@@ -123,6 +123,8 @@ local vecXyzAvg = function(self, ...)
     return func.fold(pts, self, function(l, r) return l + r end) / (#pts + 1)
 end
 
+coor.xyzAvg = vecXyAvg
+
 function coor.xyz(x, y, z)
     local result = {
         x = x,
