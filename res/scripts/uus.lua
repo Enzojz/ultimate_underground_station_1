@@ -959,11 +959,11 @@ uus.build = function(config, fitModel, generateEdges)
         local isRightmost = #{...} == 0
         
         if (gr == nil) then
-            local lanes, internalEntries = generateLanes(lanePos)
+            local lanes, connectors = generateLanes(lanePos)
             return edges, mockEdges, terminals, terminalsGroup,
                 (models + lanes) * pipe.filter(pipe.noop()),
                 terrain,
-                internalEntries
+                connectors
         elseif (#gr == 3 and gr[1].isTrack and gr[2].isPlatform and gr[3].isTrack) then
             local edges = generateEdges(edges, true, gr[1][1])
             local edges = generateEdges(edges, false, gr[3][1])

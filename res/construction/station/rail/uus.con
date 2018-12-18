@@ -227,7 +227,7 @@ local function updateFn()
         
         local length = min(uusm.trackLengths[params.length + 1], abs(radius * pi * 1.5))
         
-        local edge, mockEdge, terminals, terminalsGroup, models, terrain, internalEntries =
+        local edge, mockEdge, terminals, terminalsGroup, models, terrain, connectors =
             buildStation(nbTracks,
                 uus.arcPacker(length, slope, radius),
                 {
@@ -263,7 +263,7 @@ local function updateFn()
                 ,
                 models = terminals + models,
                 terminalGroups = terminalsGroup,
-                internalEntries = internalEntries,
+                connectors = connectors,
                 terrainAlignmentLists = {
                     {
                         type = "EQUAL",

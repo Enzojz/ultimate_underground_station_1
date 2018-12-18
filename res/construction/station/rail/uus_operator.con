@@ -32,7 +32,7 @@ justReset = justReset or false
 
 local pure = function(pa)
     local params = {}
-    for key,value in pairs(pa) do
+    for key, value in pairs(pa) do
         if (key ~= "seed") then
             params[key] = value
         end
@@ -43,23 +43,23 @@ end
 local function params()
     local sp = "·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·\n"
     return
-    {
         {
-            key = "mode",
-            name = _("Function"),
-            values = {_("Mark Station"), _("Assembly"), _("Reset")},
-        },
-        {
-            key = "radius",
-            name = _("Effective radius"),
-            values = func.map(radiusList, tostring)
+            {
+                key = "mode",
+                name = _("Function"),
+                values = {_("Mark Station"), _("Assembly"), _("Reset")},
+            },
+            {
+                key = "radius",
+                name = _("Effective radius"),
+                values = func.map(radiusList, tostring)
+            }
         }
-    }
 end
 
 local function findMarkers()
     return pipe.new
-        * game.interface.getEntities({pos = {0, 0}, radius = 900000})
+        * game.interface.getEntities({pos = game.gui.getTerrainPos(), radius = 1000})
         * pipe.map(game.interface.getEntity)
         * pipe.filter(function(data) return data.fileName and string.match(data.fileName, "station/rail/uus_operator.con") end)
         * pipe.sort(function(x, y) return x.id < y.id end)
@@ -68,7 +68,7 @@ end
 local placeMarker = function()
     return {
         models = {
-            {          
+            {
                 id = "uus/placeMarker.mdl",
                 transf = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}
             }
@@ -100,7 +100,7 @@ end
 local searchStation = function(m)
     local r = radiusList[m.params.radius + 1]
     local pos = coor.tuple2Vec(m.position)
-    return pipe.new 
+    return pipe.new
         * game.interface.getEntities({pos = m.position, radius = r})
         * pipe.map(game.interface.getEntity)
         * pipe.filter(function(data) return data.fileName and string.match(data.fileName, "station/rail/") and data.fileName ~= "station/rail/uus_operator.con" end)
@@ -115,31 +115,35 @@ local cov = function(m)
     end)
 end
 
-local assembly = function()
-    local st = findMarkers()
-    * pipe.map(function(m) return game.interface.getEntities({pos = m.position, radius = radiusList[m.params.radius + 1]}) end)
-    * pipe.flatten()
-    * pipe.fold(pipe.new * {}, function(r, s) return func.contains(r, s) and r or r / s end)
-    * pipe.map(game.interface.getEntity)
-    * pipe.filter(function(data) return data.fileName and string.match(data.fileName, "station/rail/") and data.fileName ~= "station/rail/uus_operator.con" end)
+local allStations = function()
+    return pipe.new
+        * game.interface.getEntities(
+            {pos = game.gui.getTerrainPos(), radius = 1000},
+            {includeData = false, type = "CONSTRUCTION", fileName = "station/rail/uus.con"})
+        * pipe.map(game.interface.getEntity)
+        * pipe.sort(function(x, y) return x.id < y.id end)
+end
 
+local assembly = function()
+    local st = allStations()
+    
     if (#st > 1) then
         local ref = st[1]
         local vecRef, rotRef, _ = coor.decomposite(ref.transf)
         local iRot = coor.inv(cov(rotRef))
-        local rest = st 
-        * pipe.range(2, #st)
-        * pipe.map(function(st)
-            local vec, rot, _ = coor.decomposite(st.transf)
-            return {
-                params = st.params,
-                id = st.id,
-                fileName = st.fileName,
-                m = iRot * rot * coor.trans((vec - vecRef) .. iRot),
-                transf = st.transf,
-                name = st.name,
-            }
-        end)
+        local rest = st
+            * pipe.range(2, #st)
+            * pipe.map(function(st)
+                local vec, rot, _ = coor.decomposite(st.transf)
+                return {
+                    params = st.params,
+                    id = st.id,
+                    fileName = st.fileName,
+                    m = iRot * rot * coor.trans((vec - vecRef) .. iRot),
+                    transf = st.transf,
+                    name = st.name,
+                }
+            end)
         game.interface.upgradeConstruction(
             ref.id,
             "station/rail/uus_assemble.con",
@@ -156,29 +160,26 @@ local assembly = function()
         )
         return reset()
     end
-
+    
     return placeMarker()
 end
 
 local updateFn = function(params)
     if (params.mode == 0) then
-        local allMarkers = findMarkers()
-
-        func.forEach(allMarkers, function(m)
-            local st, r = searchStation(m)
-            if (#st > 0) then
-                game.interface.setZone(tostring(m.id), {
-                    polygon = func.seqMap({1, 19}, 
-                        function(i) 
-                            local rad = i * pi / 10; 
-                            return {sin(rad) * r + m.position[1], cos(rad) * r + m.position[2]}
+        local st = allStations() * pipe.forEach(
+            function(e)
+                local r = radiusList[params.radius + 1]
+                game.interface.setZone(tostring(e.params.seed), {
+                    polygon = func.seqMap({1, 19},
+                        function(i)
+                            local rad = i * pi / 10;
+                            return {sin(rad) * r + e.position[1], cos(rad) * r + e.position[2]}
                         end
                     ),
                     draw = true,
                     drawColor = {0.3, 0.3, 1, 1}
                 })
-            end
-        end)
+            end)
     end
     justReset = justReset and params.mode == 2
     return ({placeMarker, assembly, reset})[params.mode + 1](params)
@@ -197,8 +198,8 @@ function data()
             description = _("description")
         },
         order = 5011,
-	skipCollision = true,
-	autoRemovable = false,
+        skipCollision = true,
+        autoRemovable = false,
         params = params(),
         updateFn = updateFn
     }
