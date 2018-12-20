@@ -1,0 +1,92 @@
+local paramsutil = require "paramsutil"
+local func = require "uus/func"
+local coor = require "uus/coor"
+local line = require "uus/coorline"
+local trackEdge = require "uus/trackedge"
+local station = require "uus/stationlib"
+local quat = require "uus/quaternion"
+local pipe = require "uus/pipe"
+local uus = require "uus"
+local uusm = require "uus_menu"
+local ma = math
+
+local abs = ma.abs
+local ceil = ma.ceil
+local floor = ma.floor
+local pi = ma.pi
+local atan = ma.atan
+local pow = ma.pow
+local cos = ma.cos
+local sin = ma.sin
+local min = ma.min
+local e = ma.exp(1)
+local log = ma.log
+local log10 = log(10)
+local unpack = table.unpack
+
+local widthList = {2, 3, 4, 5, 6}
+
+local function params()
+    return
+        {
+            {
+                key = "width",
+                name = _("Width"),
+                values = func.map(widthList, tostring),
+                defaultIndex = 3
+            },
+        }
+end
+
+local updateFn = function(params)
+    local width = (widthList[params.width + 1] or 5) - 0.5
+    local transL = coor.transX(-0.5 * width)
+    local transR = coor.transX(0.5 * width)
+    local isLeftOpen = params.isLeftOpen or true
+    local isRightOpen = params.isRightOpen or true
+    
+    local holeFace = station.surfaceOf(coor.xyz(width + 0.25, 6.85, 0.0), coor.xyz(0.0, -1.575, 0))
+    local terrainFace = station.surfaceOf(coor.xyz(width + 2, 8, 0.0), coor.xyz(0.0, -1.575, 0))
+    return {
+        models = {
+            station.newModel("uus/entry/entry_left.mdl", transL),
+            station.newModel("uus/entry/entry_right.mdl", transR),
+            station.newModel("uus/entry/entry_central.mdl", coor.scaleX(width / 4.5)),
+            station.newModel(isLeftOpen and "uus/entry/entry_open_side.mdl" or "uus/entry/entry_closed_side.mdl", transL),
+            station.newModel(isRightOpen and "uus/entry/entry_open_side.mdl" or "uus/entry/entry_closed_side.mdl", coor.rotZ(pi) * coor.transY(2 * 5.2085) * transR),
+        },
+        terrainAlignmentLists = {
+            {
+                type = "EQUAL",
+                faces = {terrainFace}
+            }
+        },
+        groundFaces = {
+            {face = holeFace, modes = {{type = "FILL", key = "hole"}}},
+            {face = terrainFace, modes = {{type = "FILL", key = "industry_gravel_small_01"}}},
+            {face = terrainFace, modes = {{type = "STROKE_OUTER", key = "building_paving"}}}
+        },
+        connectors = {
+            coor.xyz(3.5 + w * 0.5, 5.2085, -3.9),
+            coor.xyz(-3.5 - w * 0.5, 5.2085, -3.9)
+        }
+    }
+end
+
+function data()
+    return {
+        type = "RAIL_STATION",
+        buildMode = "SINGLE",
+        availability = {
+            yearFrom = 0,
+            yearTo = 0
+        },
+        description = {
+            name = _("Enrty"),
+            description = _("description")
+        },
+        order = 5011,
+        params = params(),
+        updateFn = updateFn
+    }
+end

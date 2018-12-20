@@ -1,0 +1,25 @@
+function data() return {
+  animations = {  },
+  matConfigs = {
+    { 0 }
+  },
+  subMeshes = {
+    {
+      indices = {
+        normal   = { count = 2388, offset = 28656 },
+        position = { count = 2388, offset = 28656 },
+        tangent  = { count = 2388, offset = 28656 },
+        uv0      = { count = 2388, offset = 28656 }
+      },
+      materials = {
+        "uus/entry_concrete.mtl"
+      }
+    }
+  },
+  vertexAttr = {
+    normal   = { count = 7164, numComp = 3, offset = 11940 },
+    position = { count = 7164, numComp = 3, offset = 0 },
+    tangent  = { count = 9552, numComp = 4, offset = 19104 },
+    uv0      = { count = 4776, numComp = 2, offset = 7164 }
+  }
+} end
