@@ -75,9 +75,9 @@ local ptToSetDistance = function(pt)
     return function(pts, i)
         local distances = pipe.new * pts * pipe.map(function(p) return {pt = p, distance = (p - pt):length()} end) * pipe.sort(function(l, r) return l.distance < r.distance end)
         return {
-            pt = pt, 
-            set = pts, 
-            avg = func.fold(distances, 0, function(r, d) return r + d.distance end) / #distances, 
+            pt = pt,
+            set = pts,
+            avg = func.fold(distances, 0, function(r, d) return r + d.distance end) / #distances,
             min = distances[1].distance,
             result = distances,
             order = i
@@ -91,22 +91,22 @@ local function generateConnectionNetwork(result, current, ...)
     
     if (#allRest == 0) then return result end
     if (#current == 0) then return generateConnectionNetwork(result, ...) end
-
-    local x = current 
-    * pipe.map(function(pt) return func.mapi(allRest, ptToSetDistance(pt)) end)
-    * pipe.flatten()
-    * pipe.sort(function(l, r) return l.min < r.min end)
-
+    
+    local x = current
+        * pipe.map(function(pt) return func.mapi(allRest, ptToSetDistance(pt)) end)
+        * pipe.flatten()
+        * pipe.sort(function(l, r) return l.min < r.min end)
+    
     local shortestPair = x[1]
     local rest = allRest * pipe.mapi(function(pts, i) return i ~= shortestPair.order and pts or false end) * pipe.filter(pipe.noop())
-
+    
     local current = current + shortestPair.set
-
+    
     local avgResultIndex = ceil(#shortestPair.result * 0.5)
     
-    local result = result 
-    / {shortestPair.pt, shortestPair.result[1].pt} 
-    / (avgResultIndex > 1 and {shortestPair.pt, shortestPair.result[avgResultIndex].pt} or #shortestPair.result > 1 and {shortestPair.pt, shortestPair.result[2].pt} or nil)
+    local result = result
+        / {shortestPair.pt, shortestPair.result[1].pt}
+        / (avgResultIndex > 1 and {shortestPair.pt, shortestPair.result[avgResultIndex].pt} or #shortestPair.result > 1 and {shortestPair.pt, shortestPair.result[2].pt} or nil)
     
     return generateConnectionNetwork(result, current, unpack(rest))
 end
@@ -126,9 +126,51 @@ local updateFn = function(params)
         * pipe.map(function(c)
             return station.newModel("uus/standard_lane.mdl", uus.mRot(c[2] - c[1]), coor.trans(c[1]))
         end)
+    
+    local entryConn = pipe.new 
+    * params.entries
+    * pipe.map(function(data)
+            game.interface.bulldoze(data.id)
+            local result = pipe.new
+                * game.config.construction[data.fileName](func.with(data.params, {state = params.state}))
+                * station.setTransform(data.m)
+            local targets = func.map(result.connectors, function(pt)
+                return allConn
+                    * pipe.flatten()
+                    * pipe.map(function(p) return {
+                        pt = coor.o + p, 
+                        distance = (p - pt):length(),
+                        conn = station.newModel("uus/standard_lane.mdl", uus.mRot(pt - p), coor.trans(p))
+                    } end)
+                    * pipe.min(function(l, r) return l.distance < r.distance end)
+            end)
 
-    local newResult = station.mergeResults(result, table.unpack(children))
-    return func.with(newResult, {models = newResult.models + conn})
+            return (targets[1].pt - targets[2].pt):length() > 0.5
+                and {func.map(targets, pipe.select("conn")), result}
+                or (targets[1].distance < targets[2].distance)
+                and {
+                    {targets[1].conn},
+                    pipe.new
+                    * game.config.construction[data.fileName](func.with(data.params, {state = params.state, isLeftOpen = true, isRightOpen = false}))
+                    * station.setTransform(data.m)
+                }
+                or {
+                    {targets[2].conn},
+                    pipe.new
+                    * game.config.construction[data.fileName](func.with(data.params, {state = params.state, isLeftOpen = false, isRightOpen = true}))
+                    * station.setTransform(data.m)
+                }
+        end
+    )
+
+    local entryResults = entryConn * pipe.map(pipe.select(2))
+    local entryConns = entryConn
+        * pipe.map(pipe.select(1))
+        * pipe.flatten()
+        * dump()
+    
+    local newResult = station.mergeResults(result, table.unpack(entryResults + children))
+    return func.with(newResult, {models = newResult.models + conn + entryConns})
 end
 
 function data()

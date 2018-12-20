@@ -207,7 +207,7 @@ stationlib.mergePoly = function(...)
 end
 
 stationlib.mergeResults = function(...)
-    local function merge(edgeLists, models, terminalGroups, terrainAlignmentLists, r, ...)
+    local function merge(edgeLists, models, terminalGroups, terrainAlignmentLists, groundFaces, r, ...)
         if (r) then
             local count = {
                 terminal = #models,
@@ -216,7 +216,7 @@ stationlib.mergeResults = function(...)
             return merge(
                 edgeLists + r.edgeLists,
                 models + r.models,
-                terminalGroups + 
+                r.terminalGroups and terminalGroups + 
                     func.map(
                         r.terminalGroups,
                         function(t)
@@ -225,8 +225,9 @@ stationlib.mergeResults = function(...)
                                 vehicleNodeOverride = t.vehicleNodeOverride + count.edges
                             }
                         end
-                    ),
+                    ) or terminalGroups,
                 terrainAlignmentLists + r.terrainAlignmentLists,
+                r.groundFaces and groundFaces + r.groundFaces or groundFaces,
                 ...
             )
         else
@@ -234,11 +235,12 @@ stationlib.mergeResults = function(...)
                 edgeLists = edgeLists,
                 models = models,
                 terminalGroups = terminalGroups,
-                terrainAlignmentLists = terrainAlignmentLists
+                terrainAlignmentLists = terrainAlignmentLists,
+                groundFaces = groundFaces
             }
         end
     end
-    return merge(pipe.new, pipe.new, pipe.new, pipe.new, ...)
+    return merge(pipe.new, pipe.new, pipe.new, pipe.new, pipe.new, ...)
 end
 
 return stationlib

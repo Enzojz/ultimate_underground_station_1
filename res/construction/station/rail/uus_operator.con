@@ -97,16 +97,6 @@ local reset = function()
     return placeMarker()
 end
 
-local searchStation = function(m)
-    local r = radiusList[m.params.radius + 1]
-    local pos = coor.tuple2Vec(m.position)
-    return pipe.new
-        * game.interface.getEntities({pos = m.position, radius = r})
-        * pipe.map(game.interface.getEntity)
-        * pipe.filter(function(data) return data.fileName and string.match(data.fileName, "station/rail/") and data.fileName ~= "station/rail/uus_operator.con" end)
-        * pipe.sort(function(l, r) return (coor.tuple2Vec(l.position) - pos):length() < (coor.tuple2Vec(r.position) - pos):length() end), r
-end
-
 local cov = function(m)
     return func.seqMap({0, 3}, function(r)
         return func.seqMap({1, 4}, function(c)
@@ -124,10 +114,20 @@ local allStations = function()
         * pipe.sort(function(x, y) return x.id < y.id end)
 end
 
+
+local allEntries = function()
+    return pipe.new
+        * game.interface.getEntities(
+            {pos = game.gui.getTerrainPos(), radius = 1000},
+            {includeData = false, type = "CONSTRUCTION", fileName = "station/rail/uus_entry.con"})
+        * pipe.map(game.interface.getEntity)
+        * pipe.sort(function(x, y) return x.id < y.id end)
+end
+
 local assembly = function()
     local st = allStations()
-    
-    if (#st > 1) then
+    local en = allEntries()
+    if (#st + #en > 1) then
         local ref = st[1]
         local vecRef, rotRef, _ = coor.decomposite(ref.transf)
         local iRot = coor.inv(cov(rotRef))
@@ -155,7 +155,19 @@ local assembly = function()
                     params = ref.params,
                     transf = ref.transf
                 },
-                children = rest
+                children = rest,
+                entries = en
+                * pipe.map(function(entry)
+                    local vec, rot, _ = coor.decomposite(entry.transf)
+                    return {
+                        params = entry.params,
+                        id = entry.id,
+                        fileName = entry.fileName,
+                        m = iRot * rot * coor.trans((vec - vecRef) .. iRot),
+                        transf = entry.transf,
+                        name = entry.name,
+                    }
+                end)
             }
         )
         return reset()
