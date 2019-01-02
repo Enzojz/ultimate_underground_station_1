@@ -83,7 +83,7 @@ local applyResult = function(mpt, mvec, mirrored)
                 models = result.models and func.map(result.models, mapModel) or {},
                 terrainAlignmentLists = result.terrainAlignmentLists and func.map(result.terrainAlignmentLists, mapTerrainList) or {},
                 groundFaces = result.groundFaces and func.map(result.groundFaces, mapGroundFaces) or {},
-                connectors = result.connectors and func.map(result.connectors, function(pt) return coor.apply(pt, mpt) end) or {}
+                connectors = result.connectors and func.map(result.connectors, function(pt) return func.with(coor.apply(pt, mpt), {parent = pt.parent, toUpLevel = pt.toUpLevel}) end) or {}
             })
     end
 end

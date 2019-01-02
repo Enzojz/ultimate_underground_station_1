@@ -26,8 +26,6 @@ local log10 = log(10)
 local prefixM = "uus/1990/"
 local models = uus.models(prefixM)
 
-local radiusList = {50, 100, 200, 300, 400}
-
 justReset = justReset or false
 
 local pure = function(pa)
@@ -38,23 +36,6 @@ local pure = function(pa)
         end
     end
     return params
-end
-
-local function params()
-    local sp = "·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·\n"
-    return
-        {
-            {
-                key = "mode",
-                name = _("Function"),
-                values = {_("Mark Station"), _("Assembly"), _("Reset")},
-            },
-            {
-                key = "radius",
-                name = _("Effective radius"),
-                values = func.map(radiusList, tostring)
-            }
-        }
 end
 
 local function findMarkers()
@@ -89,7 +70,6 @@ local reset = function()
     if (not justReset) then
         local markers = findMarkers()
         func.forEach(findMarkers(), function(m)
-            game.interface.setZone(tostring(m.id), nil)
             game.interface.bulldoze(m.id)
         end)
         justReset = true
@@ -153,7 +133,8 @@ local assembly = function()
                     name = ref.name,
                     fileName = ref.fileName,
                     params = ref.params,
-                    transf = ref.transf
+                    transf = ref.transf,
+                    id = ref.id
                 },
                 children = rest,
                 entries = en
@@ -176,27 +157,6 @@ local assembly = function()
     return placeMarker()
 end
 
-local updateFn = function(params)
-    if (params.mode == 0) then
-        local st = allStations() * pipe.forEach(
-            function(e)
-                local r = radiusList[params.radius + 1]
-                game.interface.setZone(tostring(e.params.seed), {
-                    polygon = func.seqMap({1, 19},
-                        function(i)
-                            local rad = i * pi / 10;
-                            return {sin(rad) * r + e.position[1], cos(rad) * r + e.position[2]}
-                        end
-                    ),
-                    draw = true,
-                    drawColor = {0.3, 0.3, 1, 1}
-                })
-            end)
-    end
-    justReset = justReset and params.mode == 2
-    return ({placeMarker, assembly, reset})[params.mode + 1](params)
-end
-
 function data()
     return {
         type = "RAIL_STATION",
@@ -212,7 +172,6 @@ function data()
         order = 5011,
         skipCollision = true,
         autoRemovable = false,
-        params = params(),
-        updateFn = updateFn
+        updateFn = assembly
     }
 end

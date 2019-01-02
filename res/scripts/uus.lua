@@ -400,24 +400,21 @@ end
 local stepsLanePos = function(config)
     return function(c)
         local c = c - 1
-        return config.hasDown
-            and {{pos = floor(c * 0.25) + 1, vec = -1}, {pos = ceil(c * 0.75), vec = 1}}
-            or {{pos = floor(c * 0.25) + 1, vec = -2}, {pos = ceil(c * 0.75), vec = 2}}
+        return
+            pipe.new
+            + (config.hasDown and {{pos = floor(c * 0.25) + 3, vec = -1, z = -3}, {pos = ceil(c * 0.75) - 2, vec = 1, z = -3}} or {})
+            + (config.hasUp and {{pos = floor(c * 0.25) + 1, vec = -2, z = 6}, {pos = ceil(c * 0.75), vec = 2, z = 6}} or {})
     end
 end
 
 local isStepsPos = function(config)
     return function(c)
-        return config.hasDown
-            and function(i)
-                return i == floor(c * 0.25) or i == ceil(c * 0.75)
-            end
-            or function(i)
-                return
-                    i == floor(c * 0.25) or i == ceil(c * 0.75),
-                    i == floor(c * 0.25) - 1 or i == ceil(c * 0.75) + 1
-            
-            end
+        return function(i)
+            return
+                config.hasDown and (i == floor(c * 0.25) + 2 or i == ceil(c * 0.75) - 2),
+                config.hasUp and (i == floor(c * 0.25) or i == ceil(c * 0.75)),
+                config.hasUp and (i == floor(c * 0.25) - 1 or i == ceil(c * 0.75) + 1)
+        end
     end
 end
 
@@ -429,9 +426,8 @@ uus.generateTerminals = function(config)
         
         local newLanePos = func.map(
             stepsLanePos(2 * arcs.count - 1),
-            function(i) return {f = arcs.platform.lane.mc[i.pos], t = arcs.platform.lane.mc[i.pos + i.vec] + coor.xyz(0, 0, config.hasDown and -3 or 6)} end
+            function(i) return {f = arcs.platform.lane.mc[i.pos], t = arcs.platform.lane.mc[i.pos + i.vec] + coor.xyz(0, 0, i.z)} end
         )
-
         local newTerminals = pipe.new
             * pipe.mapn(
                 func.seq(1, 2 * arcs.count - 2),
@@ -508,35 +504,6 @@ local buildSurface = function(fitModel, config, platformZ, tZ)
     end
 end
 
-local function buildChairs(config, platformZ, tZ)
-    return function(lc, rc, mc, c, f, t)
-        local platformChairs = pipe.new
-            * hIndices
-            * pipe.map(function(i)
-                return c > 3 and i ~= 2 and i % floor(c * 0.5) ~= 2 and i ~= c - 1 and (i % 6 == 4 or (i - 1) % 6 == 4 or (i + 1) % 6 == 4) and
-                    (i % 3 ~= 1 and config.models.chair .. ".mdl" or config.models.trash .. ".mdl")
-            end)
-            * (function(ls) return ls * pipe.rev() + {c < 6 and config.models.chair .. ".mdl"} + ls end)
-        local r = pipe.range(f, t)
-        return
-            pipe.mapn(
-                r(lc),
-                r(rc),
-                r(mc),
-                r(platformChairs)
-            )
-            (function(lc, rc, mc, m)
-                return m
-                    and {
-                        station.newModel(m,
-                            quat.byVec(coor.xyz(0, i == 1 and 1 or -1, 0), (rc - lc):withZ(0) .. coor.rotZ(0.5 * pi)):mRot(),
-                            coor.trans(mc))
-                    }
-                    or {}
-            end)
-    end
-end
-
 uus.generateSideWalls = function(fitModel, config)
     local platformZ = config.hPlatform + 0.53
     return function(arcRef, isLeft, filter)
@@ -575,18 +542,15 @@ uus.generateModels = function(fitModel, config)
         local cModels = 2 * c - 2
         local indices = func.seq(1, cModels)
         local stepPos = isStepsPos(cModels)
-        local fnModels = function(downNormal, down)
-            return function(upNormal, upA, upB)
-                local fn = config.hasDown
-                    and function(i) if stepPos(i) then return down else return downNormal end end
-                    or function(i)
-                        local posA, posB = stepPos(i)
-                        if posA then return upA
-                        elseif posB then return upB
-                        else return upNormal end
-                    end
-                return pipe.new * indices * pipe.map(fn)
+        local fnModels = function(normal, down, upA, upB)
+            local fn = function(i)
+                local posD, posA, posB = stepPos(i)
+                if posD then return down
+                elseif posA then return upA
+                elseif posB then return upB
+                else return normal end
             end
+            return pipe.new * indices * pipe.map(fn)
         end
         
         local models = {
@@ -594,26 +558,26 @@ uus.generateModels = function(fitModel, config)
                 left = pipe.rep(cModels)(config.models.platform.left),
                 right = pipe.rep(cModels)(config.models.platform.right),
                 edge = pipe.rep(cModels)(config.models.platform.edge),
-                central = fnModels(config.models.platform.central, false)(config.models.platform.central, false, false)
+                central = fnModels(config.models.platform.central, false, false, false)
             },
             
             stair = {
-                central = fnModels(false, config.models.downstep.central)(false, config.models.upstep.a, config.models.upstep.b),
-                left = fnModels(false, config.models.downstep.left)(false, config.models.upstep.aLeft, config.models.upstep.bLeft),
-                right = fnModels(false, config.models.downstep.right)(false, config.models.upstep.aRight, config.models.upstep.bRight),
-                back = fnModels(false, false)(false, false, config.models.upstep.back),
+                central = fnModels(false, config.models.downstep.central, config.models.upstep.a, config.models.upstep.b),
+                left = fnModels(false, config.models.downstep.left, config.models.upstep.aLeft, config.models.upstep.bLeft),
+                right = fnModels(false, config.models.downstep.right, config.models.upstep.aRight, config.models.upstep.bRight),
+                back = fnModels(false, false, false, config.models.upstep.back),
             
             },
             
             ceil = {
-                left = fnModels(config.models.ceil.left, config.models.ceil.left)(config.models.ceil.left, config.models.ceil.aLeft, config.models.ceil.bLeft),
-                right = fnModels(config.models.ceil.right, config.models.ceil.right)(config.models.ceil.right, config.models.ceil.aRight, config.models.ceil.bRight),
+                left = fnModels(config.models.ceil.left, config.models.ceil.left, config.models.ceil.aLeft, config.models.ceil.bLeft),
+                right = fnModels(config.models.ceil.right, config.models.ceil.right, config.models.ceil.aRight, config.models.ceil.bRight),
                 edge = pipe.rep(cModels)(config.models.ceil.edge),
-                central = fnModels(config.models.ceil.central, config.models.ceil.central)(config.models.ceil.central, false, false)
+                central = fnModels(config.models.ceil.central, config.models.ceil.central, false, false)
             },
             
             top = {
-                central = fnModels(config.models.top.platform.central, config.models.top.platform.central)(config.models.top.platform.central, false, false),
+                central = fnModels(config.models.top.platform.central, config.models.top.platform.central, false, false),
                 left = pipe.rep(cModels)(config.models.top.platform.left),
                 right = pipe.rep(cModels)(config.models.top.platform.right)
             }
@@ -929,16 +893,16 @@ end
 uus.generateLanes = function(config)
     return function(allLanePos)
         local nTransversal = allLanePos * pipe.map(function(l) return #l end) * pipe.max()
-        local transversal = 
-        pipe.new
-        * func.seq(1, nTransversal)
-        * pipe.map(function(t)
-            local pts = allLanePos * pipe.map(pipe.select(t)) * pipe.filter(pipe.noop())
-            return func.map(il(pts), function(pt) return station.newModel("uus/standard_lane.mdl", uus.mRot(pt.s - pt.i), coor.trans(pt.i)) end)
-        end)
-        * pipe.flatten()
-
-        local centre = allLanePos * pipe.flatten() * function(pts) return pts[1]:avg(unpack(func.range(pts, 2, #pts))) end
+        local transversal =
+            pipe.new
+            * func.seq(1, nTransversal)
+            * pipe.map(function(t)
+                local pts = allLanePos * pipe.map(pipe.select(t)) * pipe.filter(pipe.noop())
+                return func.map(il(pts), function(pt) return station.newModel("uus/standard_lane.mdl", uus.mRot(pt.s - pt.i), coor.trans(pt.i)) end)
+            end)
+            * pipe.flatten()
+        
+        local centre = allLanePos * pipe.flatten() * function(pts) return #pts > 0 and pts[1]:avg(unpack(func.range(pts, 2, #pts))) or nil end
         local lineCentre = allLanePos * pipe.flatten() * pipe.map(function(pt)
             return station.newModel("uus/standard_lane.mdl", uus.mRot(centre - pt), coor.trans(pt)) end)
         return transversal + lineCentre, allLanePos * pipe.flatten() / centre * pipe.rev()
@@ -959,11 +923,15 @@ uus.build = function(config, fitModel, generateEdges)
         local isRightmost = #{...} == 0
         
         if (gr == nil) then
-            local lanes, connectors = generateLanes(lanePos)
+            local upLanePos = lanePos * pipe.map(pipe.filter(function(p) return p.z > config.hPlatform end))
+            local downLanePos = lanePos * pipe.map(pipe.filter(function(p) return p.z < config.hPlatform end))
+            local upLanes, upConnectors = generateLanes(upLanePos)
+            local downLanes, downConnectors = generateLanes(downLanePos)
             return edges, mockEdges, terminals, terminalsGroup,
-                (models + lanes) * pipe.filter(pipe.noop()),
+                (models + upLanes + downLanes) * pipe.filter(pipe.noop()),
                 terrain,
-                connectors
+                upConnectors * pipe.map(function(c) return func.with(c, {toUpLevel = true}) end)
+                + downConnectors * pipe.map(function(c) return func.with(c, {toUpLevel = false}) end)
         elseif (#gr == 3 and gr[1].isTrack and gr[2].isPlatform and gr[3].isTrack) then
             local edges = generateEdges(edges, true, gr[1][1])
             local edges = generateEdges(edges, false, gr[3][1])

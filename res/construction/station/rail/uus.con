@@ -95,9 +95,8 @@ local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreL
     local middleGroup = ptListI * pipe.filter(function(p) return p.i == middlePos end)
     local rightGroup = ptListI * pipe.filter(function(p) return p.i > middlePos end)
     -- local platformArcGen = uus.platformArcGen(tW, pW)(arcPacker)
-    
     local lengthFn = function(posPct) return 1 - (1 - config.lExtPlatform) * uus.varFn(config.lExtPlatform)[config.varModelLength](posPct) end
-
+    
     local function generateArcs(init, initDr, initX)
         local function arcGen(result, r, o, isRight)
             return isRight
@@ -165,47 +164,45 @@ local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreL
         ) else
             -- local isVar = config.varNbUnaffected == 0
             -- if (not isVar) then
-                return generateArcs(
-                    {
-                        i = middlePos,
-                        a = {
-                            arcPacker(config.r + 0.5 * pW, o),
-                            arcPacker(config.r - 0.5 * pW, o),
-                            arcPacker(config.r, o)
-                        }
-                    },
-                    {
-                        config.r - (-0.5 * pW + 0.5 * tW),
-                        config.r - (0.5 * pW - 0.5 * tW)
-                    }, {o}
-            )
-            -- else
-            --     local rR, oR, a = platformArcGen(config.r + 0.5 * pW, o, 1, 0, pW, true)
-            --     return generateArcs(
-            --         {
-            --             i = middlePos,
-            --             a = a
-            --         },
-            --         {
-            --             config.r - (0.5 * tW),
-            --             rR
-            --         }, {o, oR}
-            -- )
-            -- end
+            return generateArcs(
+                {
+                    i = middlePos,
+                    a = {
+                        arcPacker(config.r + 0.5 * pW, o),
+                        arcPacker(config.r - 0.5 * pW, o),
+                        arcPacker(config.r, o)
+                    }
+                },
+                {
+                    config.r - (-0.5 * pW + 0.5 * tW),
+                    config.r - (0.5 * pW - 0.5 * tW)
+                }, {o}
+        )
+        -- else
+        --     local rR, oR, a = platformArcGen(config.r + 0.5 * pW, o, 1, 0, pW, true)
+        --     return generateArcs(
+        --         {
+        --             i = middlePos,
+        --             a = a
+        --         },
+        --         {
+        --             config.r - (0.5 * tW),
+        --             rR
+        --         }, {o, oR}
+        -- )
+        -- end
         end
     end
     * function(arcs)
-        local minLength = arcs 
-            * pipe.filter(function(a) return #a == 1 end) 
-            * pipe.map(function(a) return a[1]()()()() * function(l) return l[1]:length() + l[2]:length() end end) 
+        local minLength = arcs
+            * pipe.filter(function(a) return #a == 1 end)
+            * pipe.map(function(a) return a[1]()()()() * function(l) return l[1]:length() + l[2]:length() end end)
             * pipe.min()
         return arcs * pipe.map(pipe.map(function(a) return a(minLength) end))
     end
     * uus.allArcs(config)
     
     local arcCoords = allArcs * pipe.filter(function(a) return a.isPlatform end)
-    -- dump()(allArcs)
-    -- dump()({uus.trackGrouping(pipe.new, table.unpack(allArcs))})
     local build = uus.build(config, fitModel)
     return build(pipe.new, pipe.new, pipe.new, pipe.new, pipe.new, pipe.new, pipe.new, uus.trackGrouping(pipe.new, table.unpack(allArcs)))
 end
@@ -226,7 +223,7 @@ local function updateFn()
         local slope = uusm.slopeList[params.slope + 1] * 0.001 * (params.slopeSign == 0 and 1 or -1)
         
         local length = min(uusm.trackLengths[params.length + 1], abs(radius * pi * 1.5))
-        
+
         local edge, mockEdge, terminals, terminalsGroup, models, terrain, connectors =
             buildStation(nbTracks,
                 uus.arcPacker(length, slope, radius),
@@ -241,23 +238,24 @@ local function updateFn()
                     yOffsetPlatform = 0, --uusm.yOffsetList[params.yOffsetPlatform + 1] * (params.yOffsetPlatformSign == 0 and 0.01 or -0.01),
                     varRefPos = -1, --params.varRefPos - 1,
                     varRefIsTrack = true, -- params.varRefType == 0,
-                    varNbUnaffected = 0,-- uusm.varUnaffectedList[params.varNbUnaffected + 1] * 0.01,
+                    varNbUnaffected = 0, -- uusm.varUnaffectedList[params.varNbUnaffected + 1] * 0.01,
                     varModelLength = 1, --params.varModelLength + 1,
                     wTrack = trackWidth,
                     roofLength = 1,
                     slope = slope,
                     models = models,
-                    hasDown = true
+                    hasDown = (params.hasDown == nil) and true or params.hasDown,
+                    hasUp = (params.hasUp == nil) and true or params.hasUp
                 },
                 params.hasLeftPlatform == 0,
                 params.hasRightPlatform == 0
         )
         local coffset = coor.xyz(-4.3, 0, hPlatform + 0.53)
         
-        local result = 
+        local result =
             pipe.new
             * {
-                edgeLists = pipe.new 
+                edgeLists = pipe.new
                 / (pipe.new * {edge * station.mergeEdges} * station.prepareEdges * trackBuilder.tunnel("railroad_old.lua"))
                 / (pipe.new * {mockEdge * station.mergeEdges} * station.prepareEdges * mockTrackBuilder.tunnel("railroad_old.lua"))
                 ,
@@ -269,9 +267,9 @@ local function updateFn()
                         type = "EQUAL",
                         faces = {}
                     }
-                } --station.mergePoly(table.unpack(terrain))()
+                }--station.mergePoly(table.unpack(terrain))()
             }
-            -- * station.setHeight(-15)
+        -- * station.setHeight(-15)
         return result
     end)
 end
