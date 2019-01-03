@@ -609,13 +609,14 @@ uus.generateModels = function(fitModel, config)
                 il(arcs.stairs.inner.lc),
                 il(arcs.stairs.outer.rc),
                 il(arcs.stairs.inner.rc)
-            )(
-            (config.hasDown and buildPlatform or buildWall)(c, 0.25, function(i, loc, lic, roc, ric) return
-                i >= c
-                and uus.assembleSize(loc, lic)
-                or uus.assembleSize({s = roc.i, i = roc.s}, {s = ric.i, i = ric.s})
+            )(function(i, ...)
+                local _, posA, posB = stepPos(i)
+                return ((posA or posB) and buildWall or buildPlatform)(c, 0.25, function(i, loc, lic, roc, ric) return
+                    i >= c
+                    and uus.assembleSize(loc, lic)
+                    or uus.assembleSize({s = roc.i, i = roc.s}, {s = ric.i, i = ric.s})
+                end)(i, ...)
             end
-            )
             )
             + pipe.mapn(
                 indices,
@@ -624,14 +625,16 @@ uus.generateModels = function(fitModel, config)
                 il(arcs.stairs.inner.lc),
                 il(arcs.stairs.outer.rc),
                 il(arcs.stairs.inner.rc)
-            )(
-            (config.hasDown and buildPlatform or buildWall)(c, 0.25, function(i, loc, lic, roc, ric) return
-                i >= c
-                and uus.assembleSize(ric, roc)
-                or uus.assembleSize({s = lic.i, i = lic.s}, {s = loc.i, i = loc.s})
+            )(function(i, ...)
+                local _, posA, posB = stepPos(i)
+                return ((posA or posB) and buildWall or buildPlatform)(c, 0.25, function(i, loc, lic, roc, ric) return
+                    i >= c
+                    and uus.assembleSize(ric, roc)
+                    or uus.assembleSize({s = lic.i, i = lic.s}, {s = loc.i, i = loc.s})
+                end)(i, ...)
             end
         )
-        )
+        
         local platforms = pipe.new
             + pipe.mapn(
                 indices,

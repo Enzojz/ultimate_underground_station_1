@@ -134,7 +134,7 @@ local updateFn = function(params)
     
     local allConn = pipe.new * children / result * pipe.map(function(e) return func.map(e.connectors, function(p) return func.with(p, {parent = e.id}) end) end)
     
-    local conn, ctable = generateConnectionNetwork(pipe.new, pipe.new, unpack(allConn))
+    local conn, ctable = generateConnectionNetwork(pipe.new * {}, pipe.new * {}, unpack(allConn))
     
     local conn = conn
         * pipe.map(function(c)

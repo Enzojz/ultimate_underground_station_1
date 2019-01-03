@@ -209,6 +209,7 @@ end
 
 local function updateFn()
     return uus.safeBuild(params, function(params)
+        
         local trackType = uusm.trackList[params.trackType + 1]
         local trackWidth = uusm.trackWidthList[params.trackType + 1]
         local catenary = params.catenary == 1
@@ -251,7 +252,6 @@ local function updateFn()
                 params.hasRightPlatform == 0
         )
         local coffset = coor.xyz(-4.3, 0, hPlatform + 0.53)
-        
         local result =
             pipe.new
             * {
