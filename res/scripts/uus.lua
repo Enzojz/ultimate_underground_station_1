@@ -5,6 +5,7 @@ local line = require "uus/coorline"
 local quat = require "uus/quaternion"
 local station = require "uus/stationlib"
 local pipe = require "uus/pipe"
+local livetext = require "livetext"
 dump = require "luadump"
 local uus = {}
 
@@ -409,6 +410,7 @@ end
 
 local isStepsPos = function(config)
     return function(c)
+        local c = c + 1
         return function(i)
             return
                 config.hasDown and (i == floor(c * 0.25) + 2 or i == ceil(c * 0.75) - 2),
@@ -510,7 +512,7 @@ uus.generateSideWalls = function(fitModel, config)
         local filter = filter and filter(isLeft, isTrack) or function(_) return true end
         local isTrack = arcRef.isTrack
         local c = arcRef.isTrack and
-            (isLeft and arcRef.ceil.edge.lc or arcRef.ceil.edge.rc) or
+            (isLeft and arcRef.ceil.lc or arcRef.ceil.rc) or
             (isLeft and arcRef.stairs.inner.lc or arcRef.stairs.inner.rc)
         local newModels =
             pipe.new * il(c)
@@ -527,6 +529,125 @@ uus.generateSideWalls = function(fitModel, config)
         return newModels
     end
 end
+
+local placeSign = function(name, transBoard)
+    local signColor = "C00257E"
+    local decoColor = "CF2F2F2"
+    local textColor = "CF2F2F2"
+    
+    local font = "alte_din_1451_mittelschrift"
+    local livetext = livetext(font, nil, textColor)
+    local nameModelsF, width = table.unpack({livetext(0.35)(name or "?")} or {})
+    
+    return
+        pipe.new
+        / station.newModel("platform_signs/" .. signColor .. "/platform_signs.mdl",
+            coor.scale(coor.xyz(width, 1, 1)),
+            transBoard
+        )
+        / station.newModel("platform_signs/" .. signColor .. "/platform_signs_left.mdl",
+            coor.transX(-width * 0.5),
+            transBoard
+        )
+        / station.newModel("platform_signs/" .. signColor .. "/platform_signs_right.mdl",
+            coor.transX(width * 0.5),
+            transBoard
+        )
+        + nameModelsF(function(w) return coor.trans(coor.xyz(-0.5 * w, -0.055, 0.175 * 3 / 4)) * transBoard end)
+
+end
+
+uus.generatePlatformSigns = function(config)
+    local isStepsPos = isStepsPos(config)
+    local sign = function(arcs, isLeftmost, isRightmost)
+        if (arcs.isTrack and not isLeftmost and not isRightmost) then return false end
+        local c = arcs.count
+        local cModels = 2 * c - 2
+        
+        local stepPos = isStepsPos(cModels)
+        local indices = func.seq(1, cModels)
+        
+        local indicesN = pipe.new * indices * pipe.map(function(i) local posD, posA, posB = stepPos(i) if (posD or posA or posB) then return false else return i end end)
+            * pipe.fold({pipe.new}, function(r, i) return i and func.with(r, {[#r] = r[#r] / i}) or func.with(r, {[#r + 1] = pipe.new}) end)
+            * pipe.filter(function(g) return #g > 6 end)
+            * pipe.map(
+                function(g)
+                    local n = floor(#g / 6)
+                    local length = #g / n
+                    return
+                        pipe.new
+                        * func.seq(1, n)
+                        * pipe.map(function(i) return g[1] + length * (i - 0.5) end)
+                        * pipe.map(function(p) return p < c and floor(p) or ceil(p) end)
+                end)
+            * pipe.flatten()
+        
+        local fn = arcs.isTrack and function()
+            return pipe.mapn(
+                indices,
+                il(arcs.ceil.lc),
+                il(arcs.ceil.rc)
+            )
+            (function(i, lc, rc)
+                local posD, posA, posB = stepPos(i)
+                if (posA) then
+                    local transL = quat.byVec(coor.xyz(-1, 0, 0), lc.i - lc.s):mRot() * coor.trans((i < c and lc.s or lc.i) + coor.xyz(0, 0, 2.25))
+                    local transR = quat.byVec(coor.xyz(1, 0, 0), rc.i - rc.s):mRot() * coor.trans((i < c and rc.s or rc.i) + coor.xyz(0, 0, 2.25))
+                    return
+                        pipe.new
+                        / (isLeftmost and placeSign("test", transL) or nil)
+                        / (isRightmost and placeSign("test", transR) or nil)
+                else
+                    return false
+                end
+            end)
+        end
+        or
+        function()
+            return pipe.mapn(
+                indices,
+                il(arcs.stairs.outer.lc),
+                il(arcs.stairs.outer.rc),
+                il(arcs.stairs.inner.lc),
+                il(arcs.stairs.inner.rc)
+            )
+            (function(i, lc, rc, lw, rw)
+                local posD, posA, posB = stepPos(i)
+                if (posA) then
+                    local transL = quat.byVec(coor.xyz(1, 0, 0), lc.i - lc.s):mRot() * coor.trans((i < c and lc.s or lc.i) + coor.xyz(0, 0, 2.25))
+                    local transR = quat.byVec(coor.xyz(-1, 0, 0), rc.i - rc.s):mRot() * coor.trans((i < c and rc.s or rc.i) + coor.xyz(0, 0, 2.25))
+                    return
+                        pipe.new
+                        / (not isLeftmost and placeSign("test", transL) or nil)
+                        / (not isRightmost and placeSign("test", transR) or nil)
+                elseif (indicesN * pipe.contains(i)) then
+                    local transL = quat.byVec(coor.xyz(-1, 0, 0), lw.i - lw.s):mRot() * coor.trans((i < c and lw.s or lw.i) + coor.xyz(0, 0, 2.25))
+                    local transR = quat.byVec(coor.xyz(1, 0, 0), rw.i - rw.s):mRot() * coor.trans((i < c and rw.s or rw.i) + coor.xyz(0, 0, 2.25))
+                    return
+                        pipe.new
+                        / (isLeftmost and placeSign("test", transL) or nil)
+                        / (isRightmost and placeSign("test", transR) or nil)
+                else
+                    return false
+                end
+            end)
+        end
+        
+        return pipe.new * fn()
+            * pipe.filter(pipe.noop())
+            * pipe.flatten()
+            * pipe.flatten()
+    
+    end
+    
+    return function(arcs, isLeftmost, isRightmost)
+        return pipe.new * arcs
+            * pipe.mapi(function(a, i) return sign(a, isLeftmost and i == 1, isRightmost and i == #arcs) end)
+            * pipe.filter(pipe.noop())
+            * pipe.flatten()
+    end
+end
+
 
 uus.generateModels = function(fitModel, config)
     local tZ = coor.transZ(config.hPlatform - 1.4)-- model height = 1.93 - 1.4 -> 0.53 -> adjust model level to rail level
@@ -634,7 +755,6 @@ uus.generateModels = function(fitModel, config)
                 end)(i, ...)
             end
         )
-        
         local platforms = pipe.new
             + pipe.mapn(
                 indices,
@@ -886,6 +1006,7 @@ uus.allArcs = function(config)
             
             return {
                 [1] = arc,
+                count = c,
                 ceil = func.with(ceil, {lc = lpc, rc = rpc, mc = mc(lpc, rpc), c = c}),
                 isTrack = true
             }
@@ -920,6 +1041,7 @@ uus.build = function(config, fitModel, generateEdges)
     local generateTrackTerrain = uus.generateTrackTerrain(config)
     local generateSideWalls = uus.generateSideWalls(fitModel, config)
     local generateLanes = uus.generateLanes(config)
+    local generatePlatformSigns = uus.generatePlatformSigns(config)
     
     local function build(edges, mockEdges, terminals, terminalsGroup, lanePos, models, terrain, gr, ...)
         local isLeftmost = #models == 0
@@ -947,6 +1069,7 @@ uus.build = function(config, fitModel, generateEdges)
                 terminalsGroup,
                 lanePos,
                 models + generateModels(gr)
+                + generatePlatformSigns(gr, isLeftmost, isRightmost)
                 + (isLeftmost and generateSideWalls(gr[1], true) or {})
                 + (isRightmost and generateSideWalls(gr[3], false) or {}),
                 terrain,
@@ -962,6 +1085,7 @@ uus.build = function(config, fitModel, generateEdges)
                 terminalsGroup,
                 lanePos,
                 models + generateModels(gr)
+                + generatePlatformSigns(gr, isLeftmost, isRightmost)
                 + (isLeftmost and generateSideWalls(gr[1], true) or {})
                 + (isRightmost and generateSideWalls(gr[2], false) or {}),
                 terrain,
@@ -977,6 +1101,7 @@ uus.build = function(config, fitModel, generateEdges)
                 terminalsGroup,
                 lanePos,
                 models + generateModels(gr)
+                + generatePlatformSigns(gr, isLeftmost, isRightmost)
                 + (isLeftmost and generateSideWalls(gr[1], true) or {})
                 + (isRightmost and generateSideWalls(gr[2], false) or {}),
                 terrain,
@@ -991,6 +1116,7 @@ uus.build = function(config, fitModel, generateEdges)
                 terminalsGroup,
                 lanePos,
                 models + generateModels(gr)
+                + generatePlatformSigns(gr, isLeftmost, isRightmost)
                 + (isLeftmost and generateSideWalls(gr[1], true) or {})
                 + (isRightmost and generateSideWalls(gr[1], false) or {}),
                 terrain,
@@ -1004,6 +1130,7 @@ uus.build = function(config, fitModel, generateEdges)
                 terminalsGroup,
                 lanePos,
                 models + generateModels(gr)
+                + generatePlatformSigns(gr, isLeftmost, isRightmost)
                 + (isLeftmost and generateSideWalls(gr[1], true) or {})
                 + (isRightmost and generateSideWalls(gr[1], false) or {}),
                 terrain,
