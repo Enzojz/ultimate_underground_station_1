@@ -1,0 +1,27 @@
+function data() return {
+  animations = {  },
+  matConfigs = {
+    { 0 }
+  },
+  subMeshes = {
+    {
+      indices = {
+        normal   = { count = 720, offset = 10080 },
+        position = { count = 720, offset = 10080 },
+        tangent  = { count = 720, offset = 10080 },
+        uv0      = { count = 720, offset = 10080 },
+        uv1      = { count = 720, offset = 10080 }
+      },
+      materials = {
+        "uus/text_emissive.mtl"
+      }
+    }
+  },
+  vertexAttr = {
+    normal   = { count = 2160, numComp = 3, offset = 3600 },
+    position = { count = 2160, numComp = 3, offset = 0 },
+    tangent  = { count = 2880, numComp = 4, offset = 5760 },
+    uv0      = { count = 1440, numComp = 2, offset = 2160 },
+    uv1      = { count = 1440, numComp = 2, offset = 8640 }
+  }
+} end

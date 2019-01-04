@@ -16,8 +16,8 @@ function data()
                 wrapT = "REPEAT",			
             },
             polygon_offset = {
-                factor = -1.0,
-                units = -1.0,
+                factor = 0.0,
+                units = 0.0,
                 
             },
             two_sided = {

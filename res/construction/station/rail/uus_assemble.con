@@ -158,7 +158,6 @@ local updateFn = function(params)
                     } end)
                     * pipe.min(function(l, r) return l.distance < r.distance end)
             end)
-            dump(targets)
             return (targets[1].pt - targets[2].pt):length() > 0.5
                 and {func.map(targets, pipe.select("conn")), result, func.map(targets, function(t) return t.pt.parent, t.pt.toUpLevel end)}
                 or (targets[1].distance < targets[2].distance)

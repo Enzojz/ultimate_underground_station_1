@@ -530,31 +530,59 @@ uus.generateSideWalls = function(fitModel, config)
     end
 end
 
-local placeSign = function(name, transBoard)
+local placeSign = function(name, transBoard, hasPole)
     local signColor = "C00257E"
     local decoColor = "CF2F2F2"
-    local textColor = "CF2F2F2"
+    local textColor = "CFFFFFF_emissive"
     
     local font = "alte_din_1451_mittelschrift"
     local livetext = livetext(font, nil, textColor)
     local nameModelsF, width = table.unpack({livetext(0.35)(name or "?")} or {})
+    local height = 0.5
+    local thickness = 0.1
     
     return
         pipe.new
-        / station.newModel("platform_signs/" .. signColor .. "/platform_signs.mdl",
-            coor.scale(coor.xyz(width, 1, 1)),
+        / station.newModel("uus/1990/signs/platform_signs.mdl",
+            coor.scale(coor.xyz(width + 1, thickness, height)),
+            coor.trans(coor.xyz(0, 0, 0.25)),
             transBoard
         )
-        / station.newModel("platform_signs/" .. signColor .. "/platform_signs_left.mdl",
-            coor.transX(-width * 0.5),
+        / station.newModel("uus/1990/signs/platform_signs_left.mdl",
+            coor.scale(coor.xyz(1, thickness, (height + 0.04) / 1.04)),
+            coor.trans(coor.xyz(-width * 0.5 - 0.5, 0, 0.25)),
             transBoard
         )
-        / station.newModel("platform_signs/" .. signColor .. "/platform_signs_right.mdl",
-            coor.transX(width * 0.5),
+        / station.newModel("uus/1990/signs/platform_signs_right.mdl",
+            coor.scale(coor.xyz(1, thickness, (height + 0.04) / 1.04)),
+            coor.trans(coor.xyz(width * 0.5 + 0.5, 0, 0.25)),
+            transBoard
+        )
+        / station.newModel("uus/1990/signs/platform_signs_top.mdl",
+            coor.scale(coor.xyz(width + 1, thickness, 1)),
+            coor.trans(coor.xyz(0, 0, height * 0.5 + 0.25)),
+            transBoard
+        )
+        / station.newModel("uus/1990/signs/platform_signs_bottom.mdl",
+            coor.scale(coor.xyz(width + 1, thickness, 1)),
+            coor.trans(coor.xyz(0, 0, -height * 0.5 + 0.25)),
             transBoard
         )
         + nameModelsF(function(w) return coor.trans(coor.xyz(-0.5 * w, -0.055, 0.175 * 3 / 4)) * transBoard end)
-
+        + (hasPole and nameModelsF(function(w) return coor.trans(coor.xyz(-0.5 * w, -0.055, 0.175 * 3 / 4)) * coor.rotZ(pi) * transBoard end) or {})
+        + (
+        hasPole
+        and
+        func.map({width * 0.5 + 0.575, -width * 0.5 - 0.575}, function(p)
+            return station.newModel("platform_signs/pole_cuboid.mdl",
+                coor.scaleZ(1.125),
+                coor.trans(coor.xyz(p, 0, -2.25)),
+                transBoard
+        )
+        end)
+        or
+        {}
+)
 end
 
 uus.generatePlatformSigns = function(config)
@@ -608,10 +636,11 @@ uus.generatePlatformSigns = function(config)
                 indices,
                 il(arcs.stairs.outer.lc),
                 il(arcs.stairs.outer.rc),
+                il(arcs.platform.central.mc),
                 il(arcs.stairs.inner.lc),
                 il(arcs.stairs.inner.rc)
             )
-            (function(i, lc, rc, lw, rw)
+            (function(i, lc, rc, mc, lw, rw)
                 local posD, posA, posB = stepPos(i)
                 if (posA) then
                     local transL = quat.byVec(coor.xyz(1, 0, 0), lc.i - lc.s):mRot() * coor.trans((i < c and lc.s or lc.i) + coor.xyz(0, 0, 2.25))
@@ -623,10 +652,12 @@ uus.generatePlatformSigns = function(config)
                 elseif (indicesN * pipe.contains(i)) then
                     local transL = quat.byVec(coor.xyz(-1, 0, 0), lw.i - lw.s):mRot() * coor.trans((i < c and lw.s or lw.i) + coor.xyz(0, 0, 2.25))
                     local transR = quat.byVec(coor.xyz(1, 0, 0), rw.i - rw.s):mRot() * coor.trans((i < c and rw.s or rw.i) + coor.xyz(0, 0, 2.25))
+                    local transM = quat.byVec(coor.xyz(1, 0, 0), mc.i - mc.s):mRot() * coor.trans((i < c and mc.s or mc.i) + coor.xyz(0, 0, 2.25))
                     return
                         pipe.new
                         / (isLeftmost and placeSign("test", transL) or nil)
                         / (isRightmost and placeSign("test", transR) or nil)
+                        / (not (isRightmost or isLeftmost) and placeSign("test", transM, true) or nil)
                 else
                     return false
                 end
