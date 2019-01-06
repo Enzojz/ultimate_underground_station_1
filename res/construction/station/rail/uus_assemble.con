@@ -48,13 +48,23 @@ end
 
 local function dissassemble(params)
     local pa = pipe.new
-        * game.interface.getEntities({pos = {0, 0}, radius = 900000}, {type = "CONSTRUCTION", includeData = true})
+        * game.interface.getEntities({pos = game.gui.getTerrainPos(), radius = 1000}, {type = "CONSTRUCTION", includeData = false})
+        * pipe.map(game.interface.getEntity)
         * pipe.values()
         * pipe.filter(function(data) return data.params.seed == params.seed end)
     assert(#pa == 1)
     local params = pa[1].params
     local player = game.interface.getPlayer()
     func.forEach(params.children, function(data)
+        local id = game.interface.buildConstruction(
+            data.fileName,
+            func.with(pure(data.params), {state = params.state}),
+            data.transf
+        )
+        game.interface.setPlayer(id, player)
+        game.interface.setName(id, data.name)
+    end)
+    func.forEach(params.entries, function(data)
         local id = game.interface.buildConstruction(
             data.fileName,
             func.with(pure(data.params), {state = params.state}),
@@ -146,7 +156,7 @@ local updateFn = function(params)
         * pipe.map(function(data)
             game.interface.bulldoze(data.id)
             local result = pipe.new
-                * game.config.construction[data.fileName](func.with(data.params, {state = params.state}))
+                * game.config.construction[data.fileName](func.with(data.params, {state = params.state, stationName = params.name}))
                 * station.setTransform(data.m)
             local targets = func.map(result.connectors, function(pt)
                 return allConn
@@ -164,14 +174,14 @@ local updateFn = function(params)
                 and {
                     {targets[1].conn},
                     pipe.new
-                    * game.config.construction[data.fileName](func.with(data.params, {state = params.state, isLeftOpen = true, isRightOpen = false}))
+                    * game.config.construction[data.fileName](func.with(data.params, {state = params.state, stationName = params.name, isLeftOpen = true, isRightOpen = false}))
                     * station.setTransform(data.m),
                     {{targets[1].pt.parent, targets[1].pt.toUpLevel}}
                 }
                 or {
                     {targets[2].conn},
                     pipe.new
-                    * game.config.construction[data.fileName](func.with(data.params, {state = params.state, isLeftOpen = false, isRightOpen = true}))
+                    * game.config.construction[data.fileName](func.with(data.params, {state = params.state, stationName = params.name, isLeftOpen = false, isRightOpen = true}))
                     * station.setTransform(data.m),
                     {{targets[2].pt.parent, targets[2].pt.toUpLevel}}
                 }
@@ -192,10 +202,10 @@ local updateFn = function(params)
     end)
     
     local result = game.config.construction[params.major.fileName]
-        (func.with(params.major.params, {state = params.state, hasUp = ctable[params.major.id][1], hasDown = ctable[params.major.id][2]}))
+        (func.with(params.major.params, {state = params.state, stationName = params.name, hasUp = ctable[params.major.id][1], hasDown = ctable[params.major.id][2]}))
     local children = func.map(params.children, function(data)
         return pipe.new
-            * game.config.construction[data.fileName](func.with(data.params, {state = params.state, hasUp = ctable[data.id][1], hasDown = ctable[data.id][2]}))
+            * game.config.construction[data.fileName](func.with(data.params, {state = params.state, stationName = params.name, hasUp = ctable[data.id][1], hasDown = ctable[data.id][2]}))
             * station.setTransform(data.m)
     end)
     

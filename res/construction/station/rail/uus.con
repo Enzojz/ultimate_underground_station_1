@@ -209,7 +209,7 @@ end
 
 local function updateFn()
     return uus.safeBuild(params, function(params)
-        
+        dump()(params)
         local trackType = uusm.trackList[params.trackType + 1]
         local trackWidth = uusm.trackWidthList[params.trackType + 1]
         local catenary = params.catenary == 1
@@ -247,7 +247,7 @@ local function updateFn()
                     models = models,
                     hasDown = (params.hasDown == nil) and true or params.hasDown,
                     hasUp = (params.hasUp == nil) and true or params.hasUp,
-                    name = params.name
+                    name = params.stationName
                 },
                 params.hasLeftPlatform == 0,
                 params.hasRightPlatform == 0

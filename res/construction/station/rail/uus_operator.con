@@ -129,6 +129,7 @@ local assembly = function()
             "station/rail/uus_assemble.con",
             {
                 mode = 0,
+                name = #en > 0 and en[1].name or #st > 0 and st[1].name or nil,
                 major = {
                     name = ref.name,
                     fileName = ref.fileName,

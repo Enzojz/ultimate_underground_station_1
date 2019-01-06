@@ -1,18 +1,15 @@
 function data()
     return {
-        numLanes = 2,
-        streetWidth = 2.0,
-        sidewalkWidth = 2.0,
-        sidewalkHeight = .0,
-        yearFrom = 1849,
-        yearTo = 1849,
+        numLanes = 0,
+        streetWidth = 1.0,
+        sidewalkWidth = 1.0,
+        sidewalkHeight = .00,
+        yearFrom = 1925,
+        yearTo = 0,
         upgrade = false,
         country = false,
         speed = 30.0,
-        embankmentSlopeHigh = 1e5,
-        tunnelWallMaterial = "street/transparent.mtl",
-        tunnelHullMaterial = "street/transparent.mtl",
-        type = "station new small",
+        type = "new small",
         name = _("Small street"),
         desc = _("Two-lane street with a speed limit of %2%"),
         materials = {
@@ -39,18 +36,26 @@ function data()
             
             },
             streetTram = {
-                name = "street/new_medium_tram.mtl",
+                name = "street/new_medium_tram_paving.mtl",
+                size = { 2.0, 2.0 }
+            },
+            streetTramTrack = {
+                name = "street/new_medium_tram_track.mtl",
                 size = { 2.0, 2.0 }
             },
             crossingLane = {
-                name = "street/new_small_lane.mtl",
+                name = "street/new_small_crossing_lane.mtl",
                 size = { 3.0, 3.0 }
             },
             crossingBus = {
                 name = ""		
             },
             crossingTram = {
-                name = "street/new_medium_tram.mtl",
+                name = "street/new_medium_tram_paving.mtl",
+                size = { 2.0, 2.0 }
+            },
+            crossingTramTrack = {
+                name = "street/new_medium_tram_track.mtl",
                 size = { 2.0, 2.0 }
             },
             crossingCrosswalk = {
@@ -84,6 +89,29 @@ function data()
             }
         },
         assets = {
+            {
+                name = "asset/lamp_new.mdl",
+                offset = 5.0,
+                distance = 12.0,
+                prob = 1.0,
+                offsetOrth = 0.1,
+                randRot = false,
+                oneSideOnly = true,
+                alignToElevation = false,
+                avoidFaceEdges = false,
+                placeOnBridge = true,
+            }, 
+            {
+                name = "asset/hydrant_new.mdl",
+                offset = 20.0,
+                distance = 70.0,
+                prob = 1.0,
+                offsetOrth = 0.2,
+                randRot = false,
+                oneSideOnly = false,
+                alignToElevation = true,
+                avoidFaceEdges = false,
+            }, 
         },
         catenary = {
             pole = {

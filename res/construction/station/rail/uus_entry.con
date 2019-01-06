@@ -48,6 +48,21 @@ local updateFn = function(params)
     local holeFace = station.surfaceOf(coor.xyz(width + 0.25, 6.85, 0.0), coor.xyz(0.0, -1.575, 0))
     local terrainFace = station.surfaceOf(coor.xyz(width + 2, 8, 0.0), coor.xyz(0.0, -1.575, 0))
     return {
+        edgeLists = {
+            {
+                type = "STREET",
+                params =
+                {
+                    type = "uus_entry.lua",
+                    tramTrackType = tram
+                },
+                edges = {
+                    {{0.0, -5, .0}, {.0, -5, .0}},
+                    {{0.0, -10, .0}, {.0, -5, .0}},
+                },
+                snapNodes = {1}
+            }
+        },
         models = {
             station.newModel("uus/entry/entry_left.mdl", transL),
             station.newModel("uus/entry/entry_right.mdl", transR),

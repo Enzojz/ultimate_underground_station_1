@@ -6,11 +6,11 @@ function data() return {
   subMeshes = {
     {
       indices = {
-        normal   = { count = 24, offset = 288 },
-        position = { count = 24, offset = 288 },
-        tangent  = { count = 24, offset = 288 },
-        uv0      = { count = 24, offset = 288 },
-        uv1      = { count = 24, offset = 288 }
+        normal   = { count = 24, offset = 336 },
+        position = { count = 24, offset = 336 },
+        tangent  = { count = 24, offset = 336 },
+        uv0      = { count = 24, offset = 336 },
+        uv1      = { count = 24, offset = 336 }
       },
       materials = {
         "livetext/C00FFFFFF.mtl"
@@ -22,6 +22,6 @@ function data() return {
     position = { count = 72, numComp = 3, offset = 0 },
     tangent  = { count = 96, numComp = 4, offset = 192 },
     uv0      = { count = 48, numComp = 2, offset = 72 },
-    uv1      = { count = 0, numComp = 2, offset = 288 }
+    uv1      = { count = 48, numComp = 2, offset = 288 }
   }
 } end
