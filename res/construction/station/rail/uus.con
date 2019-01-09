@@ -209,7 +209,7 @@ end
 
 local function updateFn()
     return uus.safeBuild(params, function(params)
-        dump()(params)
+        
         local trackType = uusm.trackList[params.trackType + 1]
         local trackWidth = uusm.trackWidthList[params.trackType + 1]
         local catenary = params.catenary == 1

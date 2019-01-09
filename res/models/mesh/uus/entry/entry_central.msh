@@ -6,10 +6,10 @@ function data() return {
   subMeshes = {
     {
       indices = {
-        normal   = { count = 1440, offset = 17280 },
-        position = { count = 1440, offset = 17280 },
-        tangent  = { count = 1440, offset = 17280 },
-        uv0      = { count = 1440, offset = 17280 }
+        normal   = { count = 1512, offset = 18144 },
+        position = { count = 1512, offset = 18144 },
+        tangent  = { count = 1512, offset = 18144 },
+        uv0      = { count = 1512, offset = 18144 }
       },
       materials = {
         "uus/entry_concrete.mtl"
@@ -17,9 +17,9 @@ function data() return {
     }
   },
   vertexAttr = {
-    normal   = { count = 4320, numComp = 3, offset = 7200 },
-    position = { count = 4320, numComp = 3, offset = 0 },
-    tangent  = { count = 5760, numComp = 4, offset = 11520 },
-    uv0      = { count = 2880, numComp = 2, offset = 4320 }
+    normal   = { count = 4536, numComp = 3, offset = 7560 },
+    position = { count = 4536, numComp = 3, offset = 0 },
+    tangent  = { count = 6048, numComp = 4, offset = 12096 },
+    uv0      = { count = 3024, numComp = 2, offset = 4536 }
   }
 } end

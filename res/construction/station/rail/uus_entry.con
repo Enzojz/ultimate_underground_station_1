@@ -8,6 +8,7 @@ local quat = require "uus/quaternion"
 local pipe = require "uus/pipe"
 local uus = require "uus"
 local uusm = require "uus_menu"
+local livetext = require "livetext"
 local ma = math
 
 local abs = ma.abs
@@ -38,15 +39,71 @@ local function params()
         }
 end
 
+
+local placeSign = function(name, transBoard, hasPole)
+    local signColor = "C00257E"
+    local decoColor = "CF2F2F2"
+    local textColor = "CFFFFFF_emissive"
+    
+    local font = "alte_din_1451_mittelschrift"
+    local livetext = livetext(font, nil, textColor)
+    local nameModelsF, width = table.unpack({livetext(0.35)(name or "?")} or {})
+    local height = 0.5
+    local thickness = 0.1
+    
+    return
+        pipe.new
+        / station.newModel("uus/1990/signs/platform_signs.mdl",
+            coor.scale(coor.xyz(width + 1, thickness, height)),
+            coor.trans(coor.xyz(0, 0, 0.25)),
+            transBoard
+        )
+        / station.newModel("uus/1990/signs/platform_signs_left.mdl",
+            coor.scale(coor.xyz(1, thickness, (height + 0.04) / 1.04)),
+            coor.trans(coor.xyz(-width * 0.5 - 0.5, 0, 0.25)),
+            transBoard
+        )
+        / station.newModel("uus/1990/signs/platform_signs_right.mdl",
+            coor.scale(coor.xyz(1, thickness, (height + 0.04) / 1.04)),
+            coor.trans(coor.xyz(width * 0.5 + 0.5, 0, 0.25)),
+            transBoard
+        )
+        / station.newModel("uus/1990/signs/platform_signs_top.mdl",
+            coor.scale(coor.xyz(width + 1, thickness, 1)),
+            coor.trans(coor.xyz(0, 0, height * 0.5 + 0.25)),
+            transBoard
+        )
+        / station.newModel("uus/1990/signs/platform_signs_bottom.mdl",
+            coor.scale(coor.xyz(width + 1, thickness, 1)),
+            coor.trans(coor.xyz(0, 0, -height * 0.5 + 0.25)),
+            transBoard
+        )
+        + nameModelsF(function(w) return coor.trans(coor.xyz(-0.5 * w, -0.055, 0.175 * 3 / 4)) * transBoard end)
+        + nameModelsF(function(w) return coor.trans(coor.xyz(-0.5 * w, -0.055, 0.175 * 3 / 4)) * coor.rotZ(pi) * transBoard end)
+        +
+        func.map({width * 0.5 + 0.25, -width * 0.5 - 0.25}, function(p)
+            return station.newModel("platform_signs/pole_cuboid.mdl",
+                coor.scale(coor.xyz(0.8, 0.8, 1)),
+                coor.trans(coor.xyz(p, 0, -2.5)),
+                transBoard
+        )
+        end)
+end
+
+
 local updateFn = function(params)
     local width = (widthList[params.width + 1] or 5) - 0.5
-    local transL = coor.transX(-0.5 * width)
-    local transR = coor.transX(0.5 * width)
+    local transL = coor.trans(coor.xyz(-0.5 * width, 0, 0.3))
+    local transR = coor.trans(coor.xyz(0.5 * width, 0, 0.3))
     local isLeftOpen = (params.isLeftOpen == nil) and true or params.isLeftOpen
     local isRightOpen = (params.isRightOpen == nil) and true or params.isRightOpen
     
     local holeFace = station.surfaceOf(coor.xyz(width + 0.25, 6.85, 0.0), coor.xyz(0.0, -1.575, 0))
-    local terrainFace = station.surfaceOf(coor.xyz(width + 2, 8, 0.0), coor.xyz(0.0, -1.575, 0))
+    local terrainFace = station.surfaceOf(coor.xyz(width + 2, 13, 0.3), coor.xyz(0.0, -3.5, 0.3))
+    local aboveFace = station.surfaceOf(coor.xyz(width + 2, 5.25, 0.3), coor.xyz(0.0, 4.625, 0.3))
+    
+    local sign = params.stationName and placeSign(params.stationName, coor.trans(coor.xyz(0, 1.85, 2.5))) or {}
+    
     return {
         edgeLists = {
             {
@@ -57,23 +114,29 @@ local updateFn = function(params)
                     tramTrackType = tram
                 },
                 edges = {
-                    {{0.0, -5, .0}, {.0, -5, .0}},
-                    {{0.0, -10, .0}, {.0, -5, .0}},
+                    {{0.0, -7.5, .0}, {.0, -12.5, .0}},
+                    {{0.0, -20, .0}, {.0, -12.5, .0}},
                 },
                 snapNodes = {1}
             }
         },
-        models = {
-            station.newModel("uus/entry/entry_left.mdl", transL),
-            station.newModel("uus/entry/entry_right.mdl", transR),
-            station.newModel("uus/entry/entry_central.mdl", coor.scaleX(width / 4.5)),
-            station.newModel(isLeftOpen and "uus/entry/entry_open_side.mdl" or "uus/entry/entry_closed_side.mdl", transL),
-            station.newModel(isRightOpen and "uus/entry/entry_open_side.mdl" or "uus/entry/entry_closed_side.mdl", coor.rotZ(pi) * coor.transY(2 * 5.2085) * transR),
-        },
+        models = pipe.new
+        / station.newModel("uus/entry/entry_left.mdl", transL)
+        / station.newModel("uus/entry/entry_right.mdl", transR)
+        / station.newModel("uus/entry/entry_central.mdl", coor.transZ(0.3), coor.scaleX(width / 4.5))
+        / station.newModel(isLeftOpen and "uus/entry/entry_open_side.mdl" or "uus/entry/entry_closed_side.mdl", transL)
+        / station.newModel(isRightOpen and "uus/entry/entry_open_side.mdl" or "uus/entry/entry_closed_side.mdl", coor.rotZ(pi) * coor.transY(2 * 5.2085) * transR)
+        / uus.unitLane(coor.xyz(width / 4.5, -5, 0.3), coor.xyz(1.5, -7.5, 0.3))
+        / uus.unitLane(coor.xyz(-width / 4.5, -5, 0.3), coor.xyz(-1.5, -7.5, 0.3))
+        + sign,
         terrainAlignmentLists = {
             {
                 type = "EQUAL",
                 faces = {terrainFace}
+            },
+            {
+                type = "GREATER",
+                faces = {aboveFace}
             }
         },
         groundFaces = {

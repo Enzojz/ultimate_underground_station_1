@@ -44,7 +44,7 @@ return {
 			
 		},
 		two_sided = {
-			twoSided = true,
+			twoSided = false,
 			
 		},
 		

@@ -25,7 +25,7 @@ function data()
                 
             },
             light_scale = {
-                lightScale = 15.0           -- scale RGB-texture-value of emissive materials
+                lightScale = 10.0           -- scale RGB-texture-value of emissive materials
               }
         },
         type = "EMISSIVE",	

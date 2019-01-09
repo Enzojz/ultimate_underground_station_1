@@ -31,8 +31,8 @@ function data()
             map_ao = {
                 compressionAllowed = true,
                 fileName = "models/uus/platform_ao1.dds",
-                magFilter = "NEAREST",
-                minFilter = "NEAREST",
+                magFilter = "LINEAR",
+                minFilter = "LINEAR_MIPMAP_LINEAR",
                 mipmapAlphaScale = 0,
                 type = "TWOD",
                 wrapS = "REPEAT",
@@ -59,6 +59,17 @@ function data()
                 twoSided = false,
             
             },
+			map_op_1 = {
+				fileName = "models/uus/op_noshadow.dds",
+				magFilter = "LINEAR",
+				minFilter = "LINEAR_MIPMAP_LINEAR",
+			},
+			operation_1 = {
+				op = "MULTIPLICATION",
+				mode = "NORMAL",
+				scale = { 1.0, 1.0 },
+				opacity = 0.0
+			}, 
         
         },
         type = "PHYSICAL_NRML_MAP_UV1_AO",

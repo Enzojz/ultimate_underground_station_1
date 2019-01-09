@@ -107,7 +107,14 @@ end
 local assembly = function()
     local st = allStations()
     local en = allEntries()
+    
     if (#st + #en > 1) then
+        local stationName = (st + en)
+            * pipe.map(function(e) return {name = e.name, sp = e.name:match('^#') and 0 or 1, oc = #{e.name:find("%s")}} end)
+            * pipe.sort(function(l, r) return l.sp < r.sp or l.oc < r.oc end)
+            * pipe.select(1)
+            * pipe.select("name")
+        
         local ref = st[1]
         local vecRef, rotRef, _ = coor.decomposite(ref.transf)
         local iRot = coor.inv(cov(rotRef))
@@ -129,7 +136,7 @@ local assembly = function()
             "station/rail/uus_assemble.con",
             {
                 mode = 0,
-                name = #en > 0 and en[1].name or #st > 0 and st[1].name or nil,
+                name = stationName,
                 major = {
                     name = ref.name,
                     fileName = ref.fileName,

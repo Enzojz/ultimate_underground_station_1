@@ -31,8 +31,8 @@ function data()
             map_ao = {
                 compressionAllowed = true,
                 fileName = "models/uus/platform_ao1.dds",
-                magFilter = "NEAREST",
-                minFilter = "NEAREST",
+                magFilter = "LINEAR",
+                minFilter = "LINEAR_MIPMAP_LINEAR",
                 mipmapAlphaScale = 0,
                 type = "TWOD",
                 wrapS = "REPEAT",
