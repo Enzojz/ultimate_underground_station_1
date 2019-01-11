@@ -1,19 +1,43 @@
 function data() return {
   animations = {  },
   matConfigs = {
-    { 0 }
+    { 0, 0, 0 }
   },
   subMeshes = {
     {
       indices = {
-        normal   = { count = 2304, offset = 32256 },
-        position = { count = 2304, offset = 32256 },
-        tangent  = { count = 2304, offset = 32256 },
-        uv0      = { count = 2304, offset = 32256 },
-        uv1      = { count = 2304, offset = 32256 }
+        normal   = { count = 36, offset = 32256 },
+        position = { count = 36, offset = 32256 },
+        tangent  = { count = 36, offset = 32256 },
+        uv0      = { count = 36, offset = 32256 },
+        uv1      = { count = 36, offset = 32256 }
       },
       materials = {
         "uus/upstep.mtl"
+      }
+    },
+    {
+      indices = {
+        normal   = { count = 1344, offset = 32292 },
+        position = { count = 1344, offset = 32292 },
+        tangent  = { count = 1344, offset = 32292 },
+        uv0      = { count = 1344, offset = 32292 },
+        uv1      = { count = 1344, offset = 32292 }
+      },
+      materials = {
+        "uus/step_armrest.mtl"
+      }
+    },
+    {
+      indices = {
+        normal   = { count = 924, offset = 33636 },
+        position = { count = 924, offset = 33636 },
+        tangent  = { count = 924, offset = 33636 },
+        uv0      = { count = 924, offset = 33636 },
+        uv1      = { count = 924, offset = 33636 }
+      },
+      materials = {
+        "uus/marble_upstep.mtl"
       }
     }
   },

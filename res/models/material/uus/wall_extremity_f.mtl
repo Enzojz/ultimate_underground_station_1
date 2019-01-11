@@ -8,7 +8,7 @@ function data()
             },
             map_albedo = {
                 compressionAllowed = true,
-                fileName = "models/uus/concrete_flat.dds",
+                fileName = "models/uus/albedo/tiles.dds",
                 magFilter = "LINEAR",
                 minFilter = "LINEAR_MIPMAP_LINEAR",
                 mipmapAlphaScale = 0,
@@ -19,7 +19,7 @@ function data()
             },
             map_metal_gloss_ao = {
                 compressionAllowed = true,
-                fileName = "models/uus/concrete_ao.dds",
+                fileName = "models/uus/gloss_ao/tiles.dds",
                 magFilter = "LINEAR",
                 minFilter = "LINEAR_MIPMAP_LINEAR",
                 mipmapAlphaScale = 0,
@@ -30,7 +30,7 @@ function data()
             },
             map_ao = {
                 compressionAllowed = true,
-                fileName = "models/uus/wall_extremity_ao1.dds",
+                fileName = "models/uus/uv1/wall_extremity.dds",
                 magFilter = "LINEAR",
                 minFilter = "LINEAR_MIPMAP_LINEAR",
                 mipmapAlphaScale = 0,
@@ -41,7 +41,7 @@ function data()
             },
             map_normal = {
                 compressionAllowed = true,
-                fileName = "models/uus/concrete_normals.dds",
+                fileName = "models/uus/normal/tiles.dds",
                 magFilter = "LINEAR",
                 minFilter = "LINEAR_MIPMAP_LINEAR",
                 mipmapAlphaScale = 0,
@@ -56,12 +56,12 @@ function data()
             
             },
             two_sided = {
-                flipNormal = true,
+                flipNormal = false,
                 twoSided = false,
             
             },
 			map_op_1 = {
-				fileName = "models/uus/op_noshadow_uz.dds",
+				fileName = "models/uus/op/uz.dds",
 				magFilter = "LINEAR",
 				minFilter = "LINEAR_MIPMAP_LINEAR",
 			},
@@ -69,7 +69,7 @@ function data()
 				op = "MULTIPLICATION",
 				mode = "NORMAL",
 				scale = { 1.0, 0.4 },
-				opacity = 0.0
+				opacity = -256.0
 			}, 
         
         },

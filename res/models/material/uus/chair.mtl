@@ -7,7 +7,7 @@ function data()
             },
             map_albedo = {
                 compressionAllowed = true,
-                fileName = "models/uus/chair_albedo.dds",
+                fileName = "models/uus/albedo/chair.dds",
                 magFilter = "LINEAR",
                 minFilter = "LINEAR_MIPMAP_LINEAR",
                 mipmapAlphaScale = 0,
@@ -48,7 +48,7 @@ function data()
             
             },
 			map_op_1 = {
-				fileName = "models/uus/op_noshadow.dds",
+				fileName = "models/uus/op/uv.dds",
 				magFilter = "LINEAR",
 				minFilter = "LINEAR_MIPMAP_LINEAR",
 			},
@@ -56,7 +56,7 @@ function data()
 				op = "MULTIPLICATION",
 				mode = "NORMAL",
 				scale = { 1.0, 1.0 },
-				opacity = 0.0
+				opacity = -128.0
 			}, 
         },
         type = "PHYSICAL_NRML_MAP_OP",
