@@ -819,11 +819,14 @@ uus.generateModels = function(fitModel, config)
                 indices,
                 models.stair.back,
                 il(arcs.stairs.inner.lc), il(arcs.stairs.inner.rc)
-            )(((posA or posB) and buildWall or buildPlatform)(c, 4.5, function(i, lc, rc) return
-                i >= c
-                and uus.assembleSize(lc, rc)
-                or uus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s})
-            end))
+            )(function(i, ...)
+                local _, posA, posB = stepPos(i)
+                return ((posA or posB) and buildWall or buildPlatform)(c, 4.5, function(i, lc, rc) return
+                    i >= c
+                    and uus.assembleSize(lc, rc)
+                    or uus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s})
+                end)(i, ...) 
+            end)
             + pipe.mapn(
                 indices,
                 models.stair.left,
@@ -1278,8 +1281,8 @@ end
 
 uus.trackGrouping = trackGrouping
 
-uus.models = function(pSet, wSet)
-    local c = "uus/ceil/"
+uus.models = function(pSet, wSet, cSet)
+    local c = "uus/ceil/" .. (cSet or "") .. "/" 
     local t = "uus/top/"
     local p = "uus/platform/" .. pSet .. "/"
     local w = "uus/wall/" .. wSet .. "/"
