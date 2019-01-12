@@ -10,7 +10,7 @@ function data()
             {
                 children = {
                     {
-                        id = "uus/platform/platform_upstep_inner_b_tl.msh",
+                        id = "uus/platform/platform_upstep_b_inner_tl.msh",
                         transf = {
                             1, 0, 0, 0,
                             0, 1, 0, 0,

@@ -817,6 +817,15 @@ uus.generateModels = function(fitModel, config)
             end))
             + pipe.mapn(
                 indices,
+                models.stair.inner,
+                il(arcs.stairs.inner.lc), il(arcs.stairs.inner.rc)
+            )(buildPlatform(c, 4.5, function(i, lc, rc) return
+                i >= c
+                and uus.assembleSize(lc, rc)
+                or uus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s})
+            end))
+            + pipe.mapn(
+                indices,
                 models.stair.back,
                 il(arcs.stairs.inner.lc), il(arcs.stairs.inner.rc)
             )(function(i, ...)
@@ -1281,11 +1290,11 @@ end
 
 uus.trackGrouping = trackGrouping
 
-uus.models = function(pSet, wSet, cSet)
-    local c = "uus/ceil/" .. (cSet or "") .. "/" 
-    local t = "uus/top/"
-    local p = "uus/platform/" .. pSet .. "/"
-    local w = "uus/wall/" .. wSet .. "/"
+uus.models = function(set)
+    local c = "uus/ceil/" .. (set.ceil or "") .. "/"
+    local t = "uus/top/" .. (set.top or "") .. "/"
+    local p = "uus/platform/" .. set.platform .. "/"
+    local w = "uus/wall/" .. set.wall .. "/"
     return {
         platform = {
             edgeLeft =  p .. "platform_edge_left",

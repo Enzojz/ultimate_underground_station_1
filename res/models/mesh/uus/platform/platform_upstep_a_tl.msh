@@ -6,11 +6,11 @@ function data() return {
   subMeshes = {
     {
       indices = {
-        normal   = { count = 924, offset = 31080 },
-        position = { count = 924, offset = 31080 },
-        tangent  = { count = 924, offset = 31080 },
-        uv0      = { count = 924, offset = 31080 },
-        uv1      = { count = 924, offset = 31080 }
+        normal   = { count = 924, offset = 30072 },
+        position = { count = 924, offset = 30072 },
+        tangent  = { count = 924, offset = 30072 },
+        uv0      = { count = 924, offset = 30072 },
+        uv1      = { count = 924, offset = 30072 }
       },
       materials = {
         "uus/marble_upstep.mtl"
@@ -18,11 +18,11 @@ function data() return {
     },
     {
       indices = {
-        normal   = { count = 1296, offset = 32004 },
-        position = { count = 1296, offset = 32004 },
-        tangent  = { count = 1296, offset = 32004 },
-        uv0      = { count = 1296, offset = 32004 },
-        uv1      = { count = 1296, offset = 32004 }
+        normal   = { count = 1224, offset = 30996 },
+        position = { count = 1224, offset = 30996 },
+        tangent  = { count = 1224, offset = 30996 },
+        uv0      = { count = 1224, offset = 30996 },
+        uv1      = { count = 1224, offset = 30996 }
       },
       materials = {
         "uus/step_armrest.mtl"
@@ -30,10 +30,10 @@ function data() return {
     }
   },
   vertexAttr = {
-    normal   = { count = 6660, numComp = 3, offset = 11100 },
-    position = { count = 6660, numComp = 3, offset = 0 },
-    tangent  = { count = 8880, numComp = 4, offset = 17760 },
-    uv0      = { count = 4440, numComp = 2, offset = 6660 },
-    uv1      = { count = 4440, numComp = 2, offset = 26640 }
+    normal   = { count = 6444, numComp = 3, offset = 10740 },
+    position = { count = 6444, numComp = 3, offset = 0 },
+    tangent  = { count = 8592, numComp = 4, offset = 17184 },
+    uv0      = { count = 4296, numComp = 2, offset = 6444 },
+    uv1      = { count = 4296, numComp = 2, offset = 25776 }
   }
 } end
