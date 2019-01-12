@@ -13,7 +13,7 @@ function data() return {
         uv1      = { count = 36, offset = 504 }
       },
       materials = {
-        "uus/top_platform.mtl",
+        "uus/top_platform.mtl"
       }
     }
   },

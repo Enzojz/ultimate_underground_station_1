@@ -61,7 +61,7 @@ function data()
             
             },
 			map_op_1 = {
-				fileName = "models/uus/op/nx.dds",
+				fileName = "models/uus/op/xy.dds",
 				magFilter = "LINEAR",
 				minFilter = "LINEAR_MIPMAP_LINEAR",
 			},

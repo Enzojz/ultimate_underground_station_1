@@ -18,26 +18,26 @@ function data() return {
     },
     {
       indices = {
-        normal   = { count = 12, offset = 1584 },
-        position = { count = 12, offset = 1584 },
-        tangent  = { count = 12, offset = 1584 },
-        uv0      = { count = 12, offset = 1584 },
-        uv1      = { count = 12, offset = 1584 }
+        normal   = { count = 24, offset = 1584 },
+        position = { count = 24, offset = 1584 },
+        tangent  = { count = 24, offset = 1584 },
+        uv0      = { count = 24, offset = 1584 },
+        uv1      = { count = 24, offset = 1584 }
       },
       materials = {
-        "uus/tactile.mtl"
+        "uus/platform_base.mtl"
       }
     },
     {
       indices = {
-        normal   = { count = 24, offset = 1596 },
-        position = { count = 24, offset = 1596 },
-        tangent  = { count = 24, offset = 1596 },
-        uv0      = { count = 24, offset = 1596 },
-        uv1      = { count = 24, offset = 1596 }
+        normal   = { count = 12, offset = 1608 },
+        position = { count = 12, offset = 1608 },
+        tangent  = { count = 12, offset = 1608 },
+        uv0      = { count = 12, offset = 1608 },
+        uv1      = { count = 12, offset = 1608 }
       },
       materials = {
-        "uus/platform_base.mtl"
+        "uus/tactile.mtl"
       }
     }
   },

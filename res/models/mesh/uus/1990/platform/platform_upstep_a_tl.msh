@@ -6,11 +6,11 @@ function data() return {
   subMeshes = {
     {
       indices = {
-        normal   = { count = 36, offset = 34272 },
-        position = { count = 36, offset = 34272 },
-        tangent  = { count = 36, offset = 34272 },
-        uv0      = { count = 36, offset = 34272 },
-        uv1      = { count = 36, offset = 34272 }
+        normal   = { count = 36, offset = 31584 },
+        position = { count = 36, offset = 31584 },
+        tangent  = { count = 36, offset = 31584 },
+        uv0      = { count = 36, offset = 31584 },
+        uv1      = { count = 36, offset = 31584 }
       },
       materials = {
         "uus/upstep.mtl"
@@ -18,34 +18,34 @@ function data() return {
     },
     {
       indices = {
-        normal   = { count = 1488, offset = 34308 },
-        position = { count = 1488, offset = 34308 },
-        tangent  = { count = 1488, offset = 34308 },
-        uv0      = { count = 1488, offset = 34308 },
-        uv1      = { count = 1488, offset = 34308 }
-      },
-      materials = {
-        "uus/step_armrest.mtl"
-      }
-    },
-    {
-      indices = {
-        normal   = { count = 924, offset = 35796 },
-        position = { count = 924, offset = 35796 },
-        tangent  = { count = 924, offset = 35796 },
-        uv0      = { count = 924, offset = 35796 },
-        uv1      = { count = 924, offset = 35796 }
+        normal   = { count = 924, offset = 31620 },
+        position = { count = 924, offset = 31620 },
+        tangent  = { count = 924, offset = 31620 },
+        uv0      = { count = 924, offset = 31620 },
+        uv1      = { count = 924, offset = 31620 }
       },
       materials = {
         "uus/marble_upstep.mtl"
       }
+    },
+    {
+      indices = {
+        normal   = { count = 1296, offset = 32544 },
+        position = { count = 1296, offset = 32544 },
+        tangent  = { count = 1296, offset = 32544 },
+        uv0      = { count = 1296, offset = 32544 },
+        uv1      = { count = 1296, offset = 32544 }
+      },
+      materials = {
+        "uus/step_armrest.mtl"
+      }
     }
   },
   vertexAttr = {
-    normal   = { count = 7344, numComp = 3, offset = 12240 },
-    position = { count = 7344, numComp = 3, offset = 0 },
-    tangent  = { count = 9792, numComp = 4, offset = 19584 },
-    uv0      = { count = 4896, numComp = 2, offset = 7344 },
-    uv1      = { count = 4896, numComp = 2, offset = 29376 }
+    normal   = { count = 6768, numComp = 3, offset = 11280 },
+    position = { count = 6768, numComp = 3, offset = 0 },
+    tangent  = { count = 9024, numComp = 4, offset = 18048 },
+    uv0      = { count = 4512, numComp = 2, offset = 6768 },
+    uv1      = { count = 4512, numComp = 2, offset = 27072 }
   }
 } end

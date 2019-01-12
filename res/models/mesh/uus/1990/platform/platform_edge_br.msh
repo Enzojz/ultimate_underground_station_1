@@ -13,7 +13,7 @@ function data() return {
         uv1      = { count = 24, offset = 1176 }
       },
       materials = {
-        "uus/marble_edge.mtl"
+        "uus/tactile.mtl"
       }
     },
     {
@@ -25,7 +25,7 @@ function data() return {
         uv1      = { count = 24, offset = 1200 }
       },
       materials = {
-        "uus/tactile.mtl"
+        "uus/marble_edge.mtl"
       }
     },
     {

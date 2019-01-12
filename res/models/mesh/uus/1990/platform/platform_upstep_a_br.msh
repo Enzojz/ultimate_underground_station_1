@@ -6,23 +6,23 @@ function data() return {
   subMeshes = {
     {
       indices = {
-        normal   = { count = 36, offset = 32256 },
-        position = { count = 36, offset = 32256 },
-        tangent  = { count = 36, offset = 32256 },
-        uv0      = { count = 36, offset = 32256 },
-        uv1      = { count = 36, offset = 32256 }
+        normal   = { count = 948, offset = 30912 },
+        position = { count = 948, offset = 30912 },
+        tangent  = { count = 948, offset = 30912 },
+        uv0      = { count = 948, offset = 30912 },
+        uv1      = { count = 948, offset = 30912 }
       },
       materials = {
-        "uus/upstep.mtl"
+        "uus/marble_upstep.mtl"
       }
     },
     {
       indices = {
-        normal   = { count = 1344, offset = 32292 },
-        position = { count = 1344, offset = 32292 },
-        tangent  = { count = 1344, offset = 32292 },
-        uv0      = { count = 1344, offset = 32292 },
-        uv1      = { count = 1344, offset = 32292 }
+        normal   = { count = 1224, offset = 31860 },
+        position = { count = 1224, offset = 31860 },
+        tangent  = { count = 1224, offset = 31860 },
+        uv0      = { count = 1224, offset = 31860 },
+        uv1      = { count = 1224, offset = 31860 }
       },
       materials = {
         "uus/step_armrest.mtl"
@@ -30,22 +30,22 @@ function data() return {
     },
     {
       indices = {
-        normal   = { count = 924, offset = 33636 },
-        position = { count = 924, offset = 33636 },
-        tangent  = { count = 924, offset = 33636 },
-        uv0      = { count = 924, offset = 33636 },
-        uv1      = { count = 924, offset = 33636 }
+        normal   = { count = 36, offset = 33084 },
+        position = { count = 36, offset = 33084 },
+        tangent  = { count = 36, offset = 33084 },
+        uv0      = { count = 36, offset = 33084 },
+        uv1      = { count = 36, offset = 33084 }
       },
       materials = {
-        "uus/marble_upstep.mtl"
+        "uus/upstep.mtl"
       }
     }
   },
   vertexAttr = {
-    normal   = { count = 6912, numComp = 3, offset = 11520 },
-    position = { count = 6912, numComp = 3, offset = 0 },
-    tangent  = { count = 9216, numComp = 4, offset = 18432 },
-    uv0      = { count = 4608, numComp = 2, offset = 6912 },
-    uv1      = { count = 4608, numComp = 2, offset = 27648 }
+    normal   = { count = 6624, numComp = 3, offset = 11040 },
+    position = { count = 6624, numComp = 3, offset = 0 },
+    tangent  = { count = 8832, numComp = 4, offset = 17664 },
+    uv0      = { count = 4416, numComp = 2, offset = 6624 },
+    uv1      = { count = 4416, numComp = 2, offset = 26496 }
   }
 } end

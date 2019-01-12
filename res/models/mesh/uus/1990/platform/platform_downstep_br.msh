@@ -6,23 +6,11 @@ function data() return {
   subMeshes = {
     {
       indices = {
-        normal   = { count = 72, offset = 25872 },
-        position = { count = 72, offset = 25872 },
-        tangent  = { count = 72, offset = 25872 },
-        uv0      = { count = 72, offset = 25872 },
-        uv1      = { count = 72, offset = 25872 }
-      },
-      materials = {
-        "uus/downstep.mtl"
-      }
-    },
-    {
-      indices = {
-        normal   = { count = 624, offset = 25944 },
-        position = { count = 624, offset = 25944 },
-        tangent  = { count = 624, offset = 25944 },
-        uv0      = { count = 624, offset = 25944 },
-        uv1      = { count = 624, offset = 25944 }
+        normal   = { count = 624, offset = 25872 },
+        position = { count = 624, offset = 25872 },
+        tangent  = { count = 624, offset = 25872 },
+        uv0      = { count = 624, offset = 25872 },
+        uv1      = { count = 624, offset = 25872 }
       },
       materials = {
         "uus/marble_downstep.mtl"
@@ -30,14 +18,26 @@ function data() return {
     },
     {
       indices = {
-        normal   = { count = 1152, offset = 26568 },
-        position = { count = 1152, offset = 26568 },
-        tangent  = { count = 1152, offset = 26568 },
-        uv0      = { count = 1152, offset = 26568 },
-        uv1      = { count = 1152, offset = 26568 }
+        normal   = { count = 1152, offset = 26496 },
+        position = { count = 1152, offset = 26496 },
+        tangent  = { count = 1152, offset = 26496 },
+        uv0      = { count = 1152, offset = 26496 },
+        uv1      = { count = 1152, offset = 26496 }
       },
       materials = {
         "uus/step_armrest.mtl"
+      }
+    },
+    {
+      indices = {
+        normal   = { count = 72, offset = 27648 },
+        position = { count = 72, offset = 27648 },
+        tangent  = { count = 72, offset = 27648 },
+        uv0      = { count = 72, offset = 27648 },
+        uv1      = { count = 72, offset = 27648 }
+      },
+      materials = {
+        "uus/downstep.mtl"
       }
     }
   },
