@@ -778,7 +778,8 @@ uus.generateModels = function(fitModel, config)
             platform = {
                 left = pipe.rep(cModels)(config.models.platform.left),
                 right = pipe.rep(cModels)(config.models.platform.right),
-                edge = pipe.rep(cModels)(config.models.platform.edge),
+                edgeLeft = pipe.rep(cModels)(config.models.platform.edgeLeft),
+                edgeRight = pipe.rep(cModels)(config.models.platform.edgeRight),
                 central = fnModels(config.models.platform.central, false, false, false)
             },
             
@@ -877,13 +878,13 @@ uus.generateModels = function(fitModel, config)
             )(buildPlatform(c, 1.7))
             + pipe.mapn(
                 indices,
-                models.platform.edge,
+                models.platform.edgeLeft,
                 il(arcs.platform.edge.lc), il(arcs.platform.central.lc)
             )(buildPlatform(c, 0.8))
             + pipe.mapn(
                 indices,
-                models.platform.edge,
-                il(func.rev(arcs.platform.edge.rc)), il(func.rev(arcs.platform.central.rc))
+                models.platform.edgeRight,
+                il(arcs.platform.central.rc), il(arcs.platform.edge.rc)
             )(buildPlatform(c, 0.8))
         
         local ceils =
@@ -941,8 +942,8 @@ uus.generateModels = function(fitModel, config)
                 {arcs.ceil.edge.rc[c * 2 - 1], arcs.ceil.central.rc[c * 2 - 1]},
             },
             {
-                config.models.wallExtremityEdge .. "_l", config.models.wallExtremity, config.models.wallExtremityEdge .. "_r",
-                config.models.wallExtremityEdge .. "_l", config.models.wallExtremity, config.models.wallExtremityEdge .. "_r"
+                config.models.wallExtremityEdge .. "_left", config.models.wallExtremity, config.models.wallExtremityEdge .. "_right",
+                config.models.wallExtremityEdge .. "_left", config.models.wallExtremity, config.models.wallExtremityEdge .. "_right"
             },
             {
                 0.7, 8.6, 0.7,
@@ -1281,7 +1282,8 @@ uus.models = function(prefixM)
     local prefixM = function(p) return prefixM .. p end
     return {
         platform = {
-            edge = prefixM("platform/platform_edge"),
+            edgeLeft = prefixM("platform/platform_edge_left"),
+            edgeRight = prefixM("platform/platform_edge_right"),
             central = prefixM("platform/platform_central"),
             left = prefixM("platform/platform_left"),
             right = prefixM("platform/platform_right"),

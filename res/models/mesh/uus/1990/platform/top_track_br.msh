@@ -1,7 +1,7 @@
 function data() return {
   animations = {  },
   matConfigs = {
-    { 0 }
+    { 0 }, { 1 }, { 2 }
   },
   subMeshes = {
     {
@@ -13,7 +13,9 @@ function data() return {
         uv1      = { count = 12, offset = 168 }
       },
       materials = {
-        "uus/top_center.mtl"
+        "uus/top_center.mtl",
+        "uus/top_left.mtl",
+        "uus/top_right.mtl"
       }
     }
   },

@@ -10,9 +10,9 @@ function data()
             {
                 children = {
                     {
-                        id = "uus/1990/platform/wall_extremity_edge.msh",
+                        id = "uus/1990/platform/platform_edge_left_br.msh",
                         transf = {
-                            -1, 0, 0, 0,
+                            1, 0, 0, 0,
                             0, 1, 0, 0,
                             0, 0, 1, 0,
                             0, 0, 0, 1
@@ -21,7 +21,7 @@ function data()
                     },
                 },
                 matConfigs = {
-                    {1, },
+                    {0, },
                 },
                 static = false,
                 visibleFrom = 0,

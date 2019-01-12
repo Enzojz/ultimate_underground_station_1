@@ -10,7 +10,7 @@ function data()
             {
                 children = {
                     {
-                        id = "uus/1990/platform/wall_extremity_edge.msh",
+                        id = "uus/1990/platform/wall_extremity_edge_left.msh",
                         transf = {
                             1, 0, 0, 0,
                             0, 1, 0, 0,

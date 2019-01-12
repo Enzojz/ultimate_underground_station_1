@@ -41,7 +41,7 @@ function data()
             },
             map_normal = {
                 compressionAllowed = true,
-                fileName = "models/uus/op/uz.dds",
+                fileName = "models/uus/normal/concrete.dds",
                 magFilter = "LINEAR",
                 minFilter = "LINEAR_MIPMAP_LINEAR",
                 mipmapAlphaScale = 0,
