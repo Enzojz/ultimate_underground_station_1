@@ -543,27 +543,27 @@ local placeSign = function(name, transBoard, hasPole)
     
     return
         pipe.new
-        / station.newModel("uus/1990/signs/platform_signs.mdl",
+        / station.newModel("uus/signs/platform_signs.mdl",
             coor.scale(coor.xyz(width + 1, thickness, height)),
             coor.trans(coor.xyz(0, 0, 0.25)),
             transBoard
         )
-        / station.newModel("uus/1990/signs/platform_signs_left.mdl",
+        / station.newModel("uus/signs/platform_signs_left.mdl",
             coor.scale(coor.xyz(1, thickness, (height + 0.04) / 1.04)),
             coor.trans(coor.xyz(-width * 0.5 - 0.5, 0, 0.25)),
             transBoard
         )
-        / station.newModel("uus/1990/signs/platform_signs_right.mdl",
+        / station.newModel("uus/signs/platform_signs_right.mdl",
             coor.scale(coor.xyz(1, thickness, (height + 0.04) / 1.04)),
             coor.trans(coor.xyz(width * 0.5 + 0.5, 0, 0.25)),
             transBoard
         )
-        / station.newModel("uus/1990/signs/platform_signs_top.mdl",
+        / station.newModel("uus/signs/platform_signs_top.mdl",
             coor.scale(coor.xyz(width + 1, thickness, 1)),
             coor.trans(coor.xyz(0, 0, height * 0.5 + 0.25)),
             transBoard
         )
-        / station.newModel("uus/1990/signs/platform_signs_bottom.mdl",
+        / station.newModel("uus/signs/platform_signs_bottom.mdl",
             coor.scale(coor.xyz(width + 1, thickness, 1)),
             coor.trans(coor.xyz(0, 0, -height * 0.5 + 0.25)),
             transBoard
@@ -574,7 +574,7 @@ local placeSign = function(name, transBoard, hasPole)
         hasPole
         and
         func.map({width * 0.5 + 0.25, -width * 0.5 - 0.25}, function(p)
-            return station.newModel("uus/1990/signs/platform_signs_arm.mdl",
+            return station.newModel("uus/signs/platform_signs_arm.mdl",
                 coor.scale(coor.xyz(0.05, 0.05, 2)),
                 coor.trans(coor.xyz(p, 0, 0.5)),
                 transBoard
@@ -787,8 +787,8 @@ uus.generateModels = function(fitModel, config)
                 central = fnModels(false, config.models.downstep.central, config.models.upstep.a, config.models.upstep.b),
                 left = fnModels(false, config.models.downstep.left, config.models.upstep.aLeft, config.models.upstep.bLeft),
                 right = fnModels(false, config.models.downstep.right, config.models.upstep.aRight, config.models.upstep.bRight),
-                back = fnModels(false, false, false, config.models.upstep.back),
-            
+                inner = fnModels(false, false, config.models.upstep.aInner, config.models.upstep.bInner),
+                back = fnModels(false, config.models.downstep.back, false, config.models.upstep.back)
             },
             
             ceil = {
@@ -819,7 +819,7 @@ uus.generateModels = function(fitModel, config)
                 indices,
                 models.stair.back,
                 il(arcs.stairs.inner.lc), il(arcs.stairs.inner.rc)
-            )(buildWall(c, 4.5, function(i, lc, rc) return
+            )(((posA or posB) and buildWall or buildPlatform)(c, 4.5, function(i, lc, rc) return
                 i >= c
                 and uus.assembleSize(lc, rc)
                 or uus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s})
@@ -1278,61 +1278,65 @@ end
 
 uus.trackGrouping = trackGrouping
 
-uus.models = function(prefixM)
-    local prefixM = function(p) return prefixM .. p end
+uus.models = function(pSet, wSet)
+    local c = "uus/ceil/"
+    local t = "uus/top/"
+    local p = "uus/platform/" .. pSet .. "/"
+    local w = "uus/wall/" .. wSet .. "/"
     return {
         platform = {
-            edgeLeft = prefixM("platform/platform_edge_left"),
-            edgeRight = prefixM("platform/platform_edge_right"),
-            central = prefixM("platform/platform_central"),
-            left = prefixM("platform/platform_left"),
-            right = prefixM("platform/platform_right"),
+            edgeLeft =  p .. "platform_edge_left",
+            edgeRight = p .. "platform_edge_right",
+            central =   p .. "platform_central",
+            left =      p .. "platform_left",
+            right =     p .. "platform_right",
         },
         upstep = {
-            a = prefixM("platform/platform_upstep_a"),
-            b = prefixM("platform/platform_upstep_b"),
-            aLeft = prefixM("platform/platform_upstep_a_left"),
-            aRight = prefixM("platform/platform_upstep_a_right"),
-            bLeft = prefixM("platform/platform_upstep_b_left"),
-            bRight = prefixM("platform/platform_upstep_b_right"),
-            back = prefixM("platform/platform_upstep_back")
+            a =      p .. "platform_upstep_a",
+            b =      p .. "platform_upstep_b",
+            aLeft =  w .. "platform_upstep_a_left",
+            aRight = w .. "platform_upstep_a_right",
+            aInner = w .. "platform_upstep_a_inner",
+            bLeft =  w .. "platform_upstep_b_left",
+            bRight = w .. "platform_upstep_b_right",
+            bInner = w .. "platform_upstep_b_inner",
+            back =   w .. "platform_upstep_back"
         },
         downstep = {
-            right = prefixM("platform/platform_downstep_left"),
-            left = prefixM("platform/platform_downstep_right"),
-            central = prefixM("platform/platform_downstep")
+            right =   w .. "platform_downstep_left",
+            left =    w .. "platform_downstep_right",
+            central = p .. "platform_downstep",
+            back =    w .. "platform_downstep_back"
         },
         ceil = {
-            edge = prefixM("platform/ceil_edge"),
-            central = prefixM("platform/ceil_central"),
-            left = prefixM("platform/ceil_left"),
-            right = prefixM("platform/ceil_right"),
-            aLeft = prefixM("platform/ceil_upstep_a_left"),
-            aRight = prefixM("platform/ceil_upstep_a_right"),
-            bLeft = prefixM("platform/ceil_upstep_b_left"),
-            bRight = prefixM("platform/ceil_upstep_b_right"),
+            edge =    c .. "ceil_edge",
+            central = c .. "ceil_central",
+            left =    c .. "ceil_left",
+            right =   c .. "ceil_right",
+            aLeft =   c .. "ceil_upstep_a_left",
+            aRight =  c .. "ceil_upstep_a_right",
+            bLeft =   c .. "ceil_upstep_b_left",
+            bRight =  c .. "ceil_upstep_b_right",
         },
         top = {
             track = {
-                left = prefixM("platform/top_track_left"),
-                right = prefixM("platform/top_track_right"),
-                central = prefixM("platform/top_track_central")
+                left =    t .. "top_track_left",
+                right =   t .. "top_track_right",
+                central = t .. "top_track_central"
             },
             platform = {
-                left = prefixM("platform/top_platform_left"),
-                right = prefixM("platform/top_platform_right"),
-                central = prefixM("platform/top_platform_central")
+                left =    t .. "top_platform_left",
+                right =   t .. "top_platform_right",
+                central = t .. "top_platform_central"
             },
         },
-        wallTrack = prefixM("platform/wall_track"),
-        wallPlatform = prefixM("platform/wall_platform"),
-        wallExtremity = prefixM("platform/wall_extremity"),
-        wallExtremityEdge = prefixM("platform/wall_extremity_edge"),
-        wallExtremityPlatform = prefixM("platform/wall_extremity_platform"),
-        wallExtremityTop = prefixM("platform/wall_extremity_top"),
-        trash = prefixM("platform/platform_trash"),
-        chair = prefixM("platform/platform_chair"),
-        underground = prefixM("underground_entry.mdl")
+        wallTrack =             w .. "wall_track",
+        wallPlatform =          w .. "wall_platform",
+        wallExtremity =         w .. "wall_extremity",
+        wallExtremityEdge =     w .. "wall_extremity_edge",
+        wallExtremityPlatform = w .. "wall_extremity_platform",
+        wallExtremityTop =      w .. "wall_extremity_top",
+        chair =                 p .. "platform_chair"
     }
 end
 

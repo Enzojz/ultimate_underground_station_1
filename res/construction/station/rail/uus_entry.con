@@ -53,27 +53,27 @@ local placeSign = function(name, transBoard, hasPole)
     
     return
         pipe.new
-        / station.newModel("uus/1990/signs/platform_signs.mdl",
+        / station.newModel("uus/signs/platform_signs.mdl",
             coor.scale(coor.xyz(width + 1, thickness, height)),
             coor.trans(coor.xyz(0, 0, 0.25)),
             transBoard
         )
-        / station.newModel("uus/1990/signs/platform_signs_left.mdl",
+        / station.newModel("uus/signs/platform_signs_left.mdl",
             coor.scale(coor.xyz(1, thickness, (height + 0.04) / 1.04)),
             coor.trans(coor.xyz(-width * 0.5 - 0.5, 0, 0.25)),
             transBoard
         )
-        / station.newModel("uus/1990/signs/platform_signs_right.mdl",
+        / station.newModel("uus/signs/platform_signs_right.mdl",
             coor.scale(coor.xyz(1, thickness, (height + 0.04) / 1.04)),
             coor.trans(coor.xyz(width * 0.5 + 0.5, 0, 0.25)),
             transBoard
         )
-        / station.newModel("uus/1990/signs/platform_signs_top.mdl",
+        / station.newModel("uus/signs/platform_signs_top.mdl",
             coor.scale(coor.xyz(width + 1, thickness, 1)),
             coor.trans(coor.xyz(0, 0, height * 0.5 + 0.25)),
             transBoard
         )
-        / station.newModel("uus/1990/signs/platform_signs_bottom.mdl",
+        / station.newModel("uus/signs/platform_signs_bottom.mdl",
             coor.scale(coor.xyz(width + 1, thickness, 1)),
             coor.trans(coor.xyz(0, 0, -height * 0.5 + 0.25)),
             transBoard

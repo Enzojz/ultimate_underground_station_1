@@ -23,9 +23,6 @@ local e = ma.exp(1)
 local log = ma.log
 local log10 = log(10)
 
-local prefixM = "uus/1990/"
-local models = uus.models(prefixM)
-
 justReset = justReset or false
 
 local pure = function(pa)

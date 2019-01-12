@@ -1,0 +1,45 @@
+function data()
+    return {
+        collider = {
+            params = {
+            
+            },
+            type = "MESH",
+        },
+        lods = {
+            {
+                children = {
+                    {
+                        id = "uus/platform/ceil_right_tl.msh",
+                        transf = {
+                            1, 0, 0, 0,
+                            0, 1, 0, 0,
+                            0, 0, 1, 0,
+                            0, 0, 0, 1
+                        },
+                        type = "MESH",
+                    },
+                    {
+                        id = "uus/platform/ceil_upstep_a_right.msh",
+                        transf = {
+                            1, 0, 0, 0,
+                            0, 1, 0, 0,
+                            0, 0, 1, 0,
+                            0, 0, 0, 1
+                        },
+                        type = "MESH",
+                    }
+                },
+                matConfigs = {
+                    {0 }, {0 }
+                },
+                static = false,
+                visibleFrom = 0,
+                visibleTo = 5000,
+            },
+        },
+        metadata = {
+        },
+    
+    }
+end
