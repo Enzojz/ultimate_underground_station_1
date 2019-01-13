@@ -1,18 +1,40 @@
 function data() return {
   animations = {  },
   matConfigs = {
-    { 0 }
+    { 0, 0, 0 }
   },
   subMeshes = {
     {
       indices = {
-        normal   = { count = 228, offset = 2736 },
-        position = { count = 228, offset = 2736 },
-        tangent  = { count = 228, offset = 2736 },
-        uv0      = { count = 228, offset = 2736 }
+        normal   = { count = 72, offset = 2736 },
+        position = { count = 72, offset = 2736 },
+        tangent  = { count = 72, offset = 2736 },
+        uv0      = { count = 72, offset = 2736 }
+      },
+      materials = {
+        "uus/entry_tiles.mtl"
+      }
+    },
+    {
+      indices = {
+        normal   = { count = 132, offset = 2808 },
+        position = { count = 132, offset = 2808 },
+        tangent  = { count = 132, offset = 2808 },
+        uv0      = { count = 132, offset = 2808 }
       },
       materials = {
         "uus/entry_concrete.mtl"
+      }
+    },
+    {
+      indices = {
+        normal   = { count = 24, offset = 2940 },
+        position = { count = 24, offset = 2940 },
+        tangent  = { count = 24, offset = 2940 },
+        uv0      = { count = 24, offset = 2940 }
+      },
+      materials = {
+        "uus/entry_steps.mtl"
       }
     }
   },

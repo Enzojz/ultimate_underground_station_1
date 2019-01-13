@@ -1,0 +1,69 @@
+function data() return {
+  animations = {  },
+  matConfigs = {
+    { 0, 0, 0, 0, 0 }
+  },
+  subMeshes = {
+    {
+      indices = {
+        normal   = { count = 2184, offset = 149616 },
+        position = { count = 2184, offset = 149616 },
+        tangent  = { count = 2184, offset = 149616 },
+        uv0      = { count = 2184, offset = 149616 }
+      },
+      materials = {
+        "uus/entry_armrest.mtl"
+      }
+    },
+    {
+      indices = {
+        normal   = { count = 48, offset = 151800 },
+        position = { count = 48, offset = 151800 },
+        tangent  = { count = 48, offset = 151800 },
+        uv0      = { count = 48, offset = 151800 }
+      },
+      materials = {
+        "uus/entry_tiles.mtl"
+      }
+    },
+    {
+      indices = {
+        normal   = { count = 132, offset = 151848 },
+        position = { count = 132, offset = 151848 },
+        tangent  = { count = 132, offset = 151848 },
+        uv0      = { count = 132, offset = 151848 }
+      },
+      materials = {
+        "uus/entry_marble.mtl"
+      }
+    },
+    {
+      indices = {
+        normal   = { count = 120, offset = 151980 },
+        position = { count = 120, offset = 151980 },
+        tangent  = { count = 120, offset = 151980 },
+        uv0      = { count = 120, offset = 151980 }
+      },
+      materials = {
+        "uus/entry_concrete.mtl"
+      }
+    },
+    {
+      indices = {
+        normal   = { count = 9984, offset = 152100 },
+        position = { count = 9984, offset = 152100 },
+        tangent  = { count = 9984, offset = 152100 },
+        uv0      = { count = 9984, offset = 152100 }
+      },
+      materials = {
+        "uus/entry_fence.mtl"
+      }
+    }
+  },
+  vertexAttr = {
+    normal   = { count = 37404, numComp = 3, offset = 62340 },
+    position = { count = 37404, numComp = 3, offset = 0 },
+    tangent  = { count = 49872, numComp = 4, offset = 99744 },
+    uv0      = { count = 24936, numComp = 2, offset = 37404 }
+  }
+} end

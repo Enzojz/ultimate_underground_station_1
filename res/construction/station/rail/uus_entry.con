@@ -92,7 +92,7 @@ end
 
 
 local updateFn = function(params)
-    local width = (widthList[params.width + 1] or 5) - 0.5
+    local width = (widthList[params.width + 1] or 5)
     local transL = coor.trans(coor.xyz(-0.5 * width, 0, 0.3))
     local transR = coor.trans(coor.xyz(0.5 * width, 0, 0.3))
     local isLeftOpen = (params.isLeftOpen == nil) and true or params.isLeftOpen
@@ -103,7 +103,6 @@ local updateFn = function(params)
     local aboveFace = station.surfaceOf(coor.xyz(width + 2, 5.25, 0.3), coor.xyz(0.0, 4.625, 0.3))
     
     local sign = params.stationName and placeSign(params.stationName, coor.trans(coor.xyz(0, 1.85, 2.5))) or {}
-    
     return {
         edgeLists = {
             {
@@ -123,11 +122,11 @@ local updateFn = function(params)
         models = pipe.new
         / station.newModel("uus/entry/entry_left.mdl", transL)
         / station.newModel("uus/entry/entry_right.mdl", transR)
-        / station.newModel("uus/entry/entry_central.mdl", coor.transZ(0.3), coor.scaleX(width / 4.5))
         / station.newModel(isLeftOpen and "uus/entry/entry_open_side.mdl" or "uus/entry/entry_closed_side.mdl", transL)
-        / station.newModel(isRightOpen and "uus/entry/entry_open_side.mdl" or "uus/entry/entry_closed_side.mdl", coor.rotZ(pi) * coor.transY(2 * 5.2085) * transR)
+        / station.newModel(isRightOpen and "uus/entry/entry_open_side.mdl" or "uus/entry/entry_closed_side.mdl", coor.rotZ(pi) * coor.transY(2 * 5.208) * transR)
         / uus.unitLane(coor.xyz(width / 4.5, -5, 0.3), coor.xyz(1.5, -7.5, 0.3))
         / uus.unitLane(coor.xyz(-width / 4.5, -5, 0.3), coor.xyz(-1.5, -7.5, 0.3))
+        + func.seqMap({1, width}, function(x) return station.newModel("uus/entry/entry_central.mdl", coor.transZ(0.3), coor.transX(x - width * 0.5 - 0.5)) end)
         + sign,
         terrainAlignmentLists = {
             {

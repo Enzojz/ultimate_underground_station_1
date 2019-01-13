@@ -1,15 +1,37 @@
 function data() return {
   animations = {  },
   matConfigs = {
-    { 0 }
+    { 0, 0, 0 }
   },
   subMeshes = {
     {
       indices = {
-        normal   = { count = 504, offset = 6048 },
-        position = { count = 504, offset = 6048 },
-        tangent  = { count = 504, offset = 6048 },
-        uv0      = { count = 504, offset = 6048 }
+        normal   = { count = 384, offset = 6048 },
+        position = { count = 384, offset = 6048 },
+        tangent  = { count = 384, offset = 6048 },
+        uv0      = { count = 384, offset = 6048 }
+      },
+      materials = {
+        "uus/entry_armrest.mtl"
+      }
+    },
+    {
+      indices = {
+        normal   = { count = 24, offset = 6432 },
+        position = { count = 24, offset = 6432 },
+        tangent  = { count = 24, offset = 6432 },
+        uv0      = { count = 24, offset = 6432 }
+      },
+      materials = {
+        "uus/entry_tiles.mtl"
+      }
+    },
+    {
+      indices = {
+        normal   = { count = 96, offset = 6456 },
+        position = { count = 96, offset = 6456 },
+        tangent  = { count = 96, offset = 6456 },
+        uv0      = { count = 96, offset = 6456 }
       },
       materials = {
         "uus/entry_concrete.mtl"

@@ -1,15 +1,48 @@
 function data() return {
   animations = {  },
   matConfigs = {
-    { 0 }
+    { 0, 0, 0, 0 }
   },
   subMeshes = {
     {
       indices = {
-        normal   = { count = 2472, offset = 29664 },
-        position = { count = 2472, offset = 29664 },
-        tangent  = { count = 2472, offset = 29664 },
-        uv0      = { count = 2472, offset = 29664 }
+        normal   = { count = 2184, offset = 29808 },
+        position = { count = 2184, offset = 29808 },
+        tangent  = { count = 2184, offset = 29808 },
+        uv0      = { count = 2184, offset = 29808 }
+      },
+      materials = {
+        "uus/entry_armrest.mtl"
+      }
+    },
+    {
+      indices = {
+        normal   = { count = 48, offset = 31992 },
+        position = { count = 48, offset = 31992 },
+        tangent  = { count = 48, offset = 31992 },
+        uv0      = { count = 48, offset = 31992 }
+      },
+      materials = {
+        "uus/entry_tiles.mtl"
+      }
+    },
+    {
+      indices = {
+        normal   = { count = 132, offset = 32040 },
+        position = { count = 132, offset = 32040 },
+        tangent  = { count = 132, offset = 32040 },
+        uv0      = { count = 132, offset = 32040 }
+      },
+      materials = {
+        "uus/entry_marble.mtl"
+      }
+    },
+    {
+      indices = {
+        normal   = { count = 120, offset = 32172 },
+        position = { count = 120, offset = 32172 },
+        tangent  = { count = 120, offset = 32172 },
+        uv0      = { count = 120, offset = 32172 }
       },
       materials = {
         "uus/entry_concrete.mtl"
@@ -17,9 +50,9 @@ function data() return {
     }
   },
   vertexAttr = {
-    normal   = { count = 7416, numComp = 3, offset = 12360 },
-    position = { count = 7416, numComp = 3, offset = 0 },
-    tangent  = { count = 9888, numComp = 4, offset = 19776 },
-    uv0      = { count = 4944, numComp = 2, offset = 7416 }
+    normal   = { count = 7452, numComp = 3, offset = 12420 },
+    position = { count = 7452, numComp = 3, offset = 0 },
+    tangent  = { count = 9936, numComp = 4, offset = 19872 },
+    uv0      = { count = 4968, numComp = 2, offset = 7452 }
   }
 } end
