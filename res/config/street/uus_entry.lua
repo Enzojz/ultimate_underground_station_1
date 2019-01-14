@@ -1,30 +1,25 @@
 function data()
     return {
         numLanes = 0,
-        streetWidth = 0.0,
-        sidewalkWidth = 3.0,
-        sidewalkHeight = 0.3,
-        yearFrom = 1925,
-        yearTo = 0,
+        streetWidth = 0.5,
+        sidewalkWidth = 2,
+        sidewalkHeight = 0.0,
+        yearFrom = 1800,
+        yearTo = 1800,
         upgrade = false,
         country = false,
         speed = 30.0,
         type = "new small",
-        name = _("Small street"),
-        desc = _("Two-lane street with a speed limit of %2%"),
+        name = _("Underground entry street"),
+        desc = "",
         materials = {
             streetPaving = {
-                name = "street/new_small_paving.mtl",
-                size = { 6.0, 6.0 }
-            },		
-            --streetBorder = {
-                --name = "street/new_small_border.mtl",
-                --size = { 1.5, 0.625 }
-            
-            --},			
+                name = "uus/street_paving.mtl",
+                size = { 1.0, 1.0 }
+            },	
             streetLane = {
-                name = "street/new_small_lane.mtl",
-                size = { 3.0, 3.0 }
+                name = "uus/street_paving.mtl",
+                size = { 1.0, 1.0 }
             },
             streetStripe = {
     
@@ -62,8 +57,8 @@ function data()
                 name = ""		
             },
             sidewalkPaving = {
-                name = "street/new_small_paving.mtl",
-                size = { 6.0, 6.0 }
+                name = "uus/street_paving.mtl",
+                size = { 1.0, 1.0 }
             },
             sidewalkLane = {	
     

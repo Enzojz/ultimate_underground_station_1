@@ -222,8 +222,8 @@ function data()
             yearTo = 1800
         },
         description = {
-            name = _("Underground station assembler"),
-            description = _("A tool that unify all un-conntected underground level and entries near the viewport together.")
+            name = "Something",
+            description = "that you only need to read if you want to work with this mod."
         },
         order = 5011,
         params = params(),
