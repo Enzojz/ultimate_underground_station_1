@@ -1,0 +1,37 @@
+local laneutil = require "laneutil"
+
+function data()
+    return {
+        collider = {
+            params = {
+            
+            },
+            type = "MESH",
+        },
+        lods = {
+            {
+                children = {
+                    {
+                        id = "uus/entry/entry_open_side_floor.msh",
+                        transf = {
+                            1, 0, 0, 0,
+                            0, 1, 0, 0,
+                            0, 0, 1, 0,
+                            0, 0, 0, 1
+                        },
+                        type = "MESH",
+                    },
+                },
+                matConfigs = {
+                    {0, },
+                },
+                static = true,
+                visibleFrom = 0,
+                visibleTo = 5000,
+            },
+        },
+        metadata = {
+        },
+    
+    }
+end

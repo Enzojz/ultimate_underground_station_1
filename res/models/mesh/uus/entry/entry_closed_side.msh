@@ -1,7 +1,8 @@
 function data() return {
   animations = {  },
   matConfigs = {
-    { 0, 0, 0 }
+    { 0, 0, 0 },
+    { 0, 1, 0 }
   },
   subMeshes = {
     {
@@ -23,7 +24,8 @@ function data() return {
         uv0      = { count = 24, offset = 6432 }
       },
       materials = {
-        "uus/entry/wall/tiles.mtl"
+        "uus/entry_tiles.mtl",
+        "uus/entry_tiles_classic.mtl"
       }
     },
     {

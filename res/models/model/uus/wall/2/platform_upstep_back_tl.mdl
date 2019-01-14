@@ -1,0 +1,22 @@
+function data()
+    return {
+        collider = {
+            params = {
+            
+            },
+            type = "MESH",
+        },
+        lods = {
+            {
+                children = {},
+                matConfigs = {},
+                static = false,
+                visibleFrom = 0,
+                visibleTo = 5000,
+            },
+        },
+        metadata = {
+        },
+    
+    }
+end

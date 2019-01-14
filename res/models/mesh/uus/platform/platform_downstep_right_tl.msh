@@ -1,7 +1,7 @@
 function data() return {
   animations = {  },
   matConfigs = {
-    { 0 }
+    { 0 }, { 1 }
   },
   subMeshes = {
     {
@@ -13,7 +13,8 @@ function data() return {
         uv1      = { count = 60, offset = 840 }
       },
       materials = {
-        "uus/downstep/tiles.mtl"
+        "uus/downstep/tiles.mtl"，
+        "uus/downstep/tiles_classic.mtl"
       }
     }
   },

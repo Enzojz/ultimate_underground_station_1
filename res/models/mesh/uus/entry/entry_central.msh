@@ -1,15 +1,15 @@
 function data() return {
   animations = {  },
   matConfigs = {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0 }
   },
   subMeshes = {
     {
       indices = {
-        normal   = { count = 72, offset = 18720 },
-        position = { count = 72, offset = 18720 },
-        tangent  = { count = 72, offset = 18720 },
-        uv0      = { count = 72, offset = 18720 }
+        normal   = { count = 72, offset = 17280 },
+        position = { count = 72, offset = 17280 },
+        tangent  = { count = 72, offset = 17280 },
+        uv0      = { count = 72, offset = 17280 }
       },
       materials = {
         "uus/entry_marble.mtl"
@@ -17,21 +17,10 @@ function data() return {
     },
     {
       indices = {
-        normal   = { count = 96, offset = 18792 },
-        position = { count = 96, offset = 18792 },
-        tangent  = { count = 96, offset = 18792 },
-        uv0      = { count = 96, offset = 18792 }
-      },
-      materials = {
-        "uus/entry/wall/tiles.mtl"
-      }
-    },
-    {
-      indices = {
-        normal   = { count = 1272, offset = 18888 },
-        position = { count = 1272, offset = 18888 },
-        tangent  = { count = 1272, offset = 18888 },
-        uv0      = { count = 1272, offset = 18888 }
+        normal   = { count = 1272, offset = 17352 },
+        position = { count = 1272, offset = 17352 },
+        tangent  = { count = 1272, offset = 17352 },
+        uv0      = { count = 1272, offset = 17352 }
       },
       materials = {
         "uus/entry_steps.mtl"
@@ -39,21 +28,10 @@ function data() return {
     },
     {
       indices = {
-        normal   = { count = 24, offset = 20160 },
-        position = { count = 24, offset = 20160 },
-        tangent  = { count = 24, offset = 20160 },
-        uv0      = { count = 24, offset = 20160 }
-      },
-      materials = {
-        "uus/entry/floor/marble.mtl"
-      }
-    },
-    {
-      indices = {
-        normal   = { count = 96, offset = 20184 },
-        position = { count = 96, offset = 20184 },
-        tangent  = { count = 96, offset = 20184 },
-        uv0      = { count = 96, offset = 20184 }
+        normal   = { count = 96, offset = 18624 },
+        position = { count = 96, offset = 18624 },
+        tangent  = { count = 96, offset = 18624 },
+        uv0      = { count = 96, offset = 18624 }
       },
       materials = {
         "uus/entry_concrete.mtl"
@@ -61,9 +39,9 @@ function data() return {
     }
   },
   vertexAttr = {
-    normal   = { count = 4680, numComp = 3, offset = 7800 },
-    position = { count = 4680, numComp = 3, offset = 0 },
-    tangent  = { count = 6240, numComp = 4, offset = 12480 },
-    uv0      = { count = 3120, numComp = 2, offset = 4680 }
+    normal   = { count = 4320, numComp = 3, offset = 7200 },
+    position = { count = 4320, numComp = 3, offset = 0 },
+    tangent  = { count = 5760, numComp = 4, offset = 11520 },
+    uv0      = { count = 2880, numComp = 2, offset = 4320 }
   }
 } end

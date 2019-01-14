@@ -1,47 +1,38 @@
 function data() return {
   animations = {  },
   matConfigs = {
-    { 0, 0, 0 }
+    { 0, 0 },
+    { 1, 0 }
   },
   subMeshes = {
     {
       indices = {
-        normal   = { count = 72, offset = 2736 },
-        position = { count = 72, offset = 2736 },
-        tangent  = { count = 72, offset = 2736 },
-        uv0      = { count = 72, offset = 2736 }
+        normal   = { count = 72, offset = 2448 },
+        position = { count = 72, offset = 2448 },
+        tangent  = { count = 72, offset = 2448 },
+        uv0      = { count = 72, offset = 2448 }
       },
       materials = {
-        "uus/entry/wall/tiles.mtl"
+        "uus/entry_tiles.mtl",
+        "uus/entry_tiles_classic.mtl"
       }
     },
     {
       indices = {
-        normal   = { count = 132, offset = 2808 },
-        position = { count = 132, offset = 2808 },
-        tangent  = { count = 132, offset = 2808 },
-        uv0      = { count = 132, offset = 2808 }
+        normal   = { count = 132, offset = 2520 },
+        position = { count = 132, offset = 2520 },
+        tangent  = { count = 132, offset = 2520 },
+        uv0      = { count = 132, offset = 2520 }
       },
       materials = {
         "uus/entry_concrete.mtl"
       }
-    },
-    {
-      indices = {
-        normal   = { count = 24, offset = 2940 },
-        position = { count = 24, offset = 2940 },
-        tangent  = { count = 24, offset = 2940 },
-        uv0      = { count = 24, offset = 2940 }
-      },
-      materials = {
-        "uus/entry/floor/marble.mtl"
-      }
     }
   },
   vertexAttr = {
-    normal   = { count = 684, numComp = 3, offset = 1140 },
-    position = { count = 684, numComp = 3, offset = 0 },
-    tangent  = { count = 912, numComp = 4, offset = 1824 },
-    uv0      = { count = 456, numComp = 2, offset = 684 }
+    normal   = { count = 612, numComp = 3, offset = 1020 },
+    position = { count = 612, numComp = 3, offset = 0 },
+    tangent  = { count = 816, numComp = 4, offset = 1632 },
+    uv0      = { count = 408, numComp = 2, offset = 612 }
   }
 } end
