@@ -1,0 +1,80 @@
+function data() return {
+  animations = {  },
+  matConfigs = {
+    { 0, 0, 0, 0, 0, 0 }
+  },
+  subMeshes = {
+    {
+      indices = {
+        normal   = { count = 2184, offset = 96624 },
+        position = { count = 2184, offset = 96624 },
+        tangent  = { count = 2184, offset = 96624 },
+        uv0      = { count = 2184, offset = 96624 }
+      },
+      materials = {
+        "uus/entry_armrest.mtl"
+      }
+    },
+    {
+      indices = {
+        normal   = { count = 48, offset = 98808 },
+        position = { count = 48, offset = 98808 },
+        tangent  = { count = 48, offset = 98808 },
+        uv0      = { count = 48, offset = 98808 }
+      },
+      materials = {
+        "uus/entry/wall/tiles.mtl"
+      }
+    },
+    {
+      indices = {
+        normal   = { count = 132, offset = 98856 },
+        position = { count = 132, offset = 98856 },
+        tangent  = { count = 132, offset = 98856 },
+        uv0      = { count = 132, offset = 98856 }
+      },
+      materials = {
+        "uus/entry_marble.mtl"
+      }
+    },
+    {
+      indices = {
+        normal   = { count = 120, offset = 98988 },
+        position = { count = 120, offset = 98988 },
+        tangent  = { count = 120, offset = 98988 },
+        uv0      = { count = 120, offset = 98988 }
+      },
+      materials = {
+        "uus/entry_concrete.mtl"
+      }
+    },
+    {
+      indices = {
+        normal   = { count = 5472, offset = 99108 },
+        position = { count = 5472, offset = 99108 },
+        tangent  = { count = 5472, offset = 99108 },
+        uv0      = { count = 5472, offset = 99108 }
+      },
+      materials = {
+        "uus/entry_fence.mtl"
+      }
+    },
+    {
+      indices = {
+        normal   = { count = 96, offset = 104580 },
+        position = { count = 96, offset = 104580 },
+        tangent  = { count = 96, offset = 104580 },
+        uv0      = { count = 96, offset = 104580 }
+      },
+      materials = {
+        "uus/entry_glass.mtl"
+      }
+    }
+  },
+  vertexAttr = {
+    normal   = { count = 24156, numComp = 3, offset = 40260 },
+    position = { count = 24156, numComp = 3, offset = 0 },
+    tangent  = { count = 32208, numComp = 4, offset = 64416 },
+    uv0      = { count = 16104, numComp = 2, offset = 24156 }
+  }
+} end

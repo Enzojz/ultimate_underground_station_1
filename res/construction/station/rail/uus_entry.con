@@ -120,13 +120,13 @@ local updateFn = function(params)
             }
         },
         models = pipe.new
-        / station.newModel("uus/entry/entry_left.mdl", transL)
-        / station.newModel("uus/entry/entry_right.mdl", transR)
+        / station.newModel("uus/entry/entry_glass_left.mdl", transL)
+        / station.newModel("uus/entry/entry_glass_right.mdl", transR)
         / station.newModel(isLeftOpen and "uus/entry/entry_open_side.mdl" or "uus/entry/entry_closed_side.mdl", transL)
-        / station.newModel(isRightOpen and "uus/entry/entry_open_side.mdl" or "uus/entry/entry_closed_side.mdl", coor.rotZ(pi) * coor.transY(2 * 5.208) * transR)
+        / station.newModel(isRightOpen and "uus/entry/entry_open_side.mdl" or "uus/entry/entry_closed_side.mdl", coor.rotZ(pi) * coor.transY(2 * 5.2085) * transR)
         / uus.unitLane(coor.xyz(width / 4.5, -5, 0.3), coor.xyz(1.5, -7.5, 0.3))
         / uus.unitLane(coor.xyz(-width / 4.5, -5, 0.3), coor.xyz(-1.5, -7.5, 0.3))
-        + func.seqMap({1, width}, function(x) return station.newModel("uus/entry/entry_central.mdl", coor.transZ(0.3), coor.transX(x - width * 0.5 - 0.5)) end)
+        + func.seqMap({1, width}, function(x) return station.newModel("uus/entry/entry_glass_central.mdl", coor.transZ(0.3), coor.transX(x - width * 0.5 - 0.5)) end)
         + sign,
         terrainAlignmentLists = {
             {

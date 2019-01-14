@@ -13,7 +13,7 @@ function data() return {
         uv1      = { count = 72, offset = 1008 }
       },
       materials = {
-        "uus/downstep.mtl"
+        "uus/downstep/tiles.mtl"
       }
     }
   },

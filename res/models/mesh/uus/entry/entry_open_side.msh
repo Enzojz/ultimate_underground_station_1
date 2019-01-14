@@ -12,7 +12,7 @@ function data() return {
         uv0      = { count = 72, offset = 2736 }
       },
       materials = {
-        "uus/entry_tiles.mtl"
+        "uus/entry/wall/tiles.mtl"
       }
     },
     {
@@ -34,7 +34,7 @@ function data() return {
         uv0      = { count = 24, offset = 2940 }
       },
       materials = {
-        "uus/entry_steps.mtl"
+        "uus/entry/floor/marble.mtl"
       }
     }
   },

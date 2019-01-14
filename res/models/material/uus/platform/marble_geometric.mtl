@@ -8,7 +8,7 @@ function data()
             },
             map_albedo = {
                 compressionAllowed = true,
-                fileName = "models/uus/albedo/platform.dds",
+                fileName = "models/uus/albedo/marble_geometric.dds",
                 magFilter = "LINEAR",
                 minFilter = "LINEAR_MIPMAP_LINEAR",
                 mipmapAlphaScale = 0,
@@ -19,7 +19,7 @@ function data()
             },
             map_metal_gloss_ao = {
                 compressionAllowed = true,
-                fileName = "models/uus/gloss_ao/platform.dds",
+                fileName = "models/uus/gloss_ao/marble_geometric.dds",
                 magFilter = "LINEAR",
                 minFilter = "LINEAR_MIPMAP_LINEAR",
                 mipmapAlphaScale = 0,
@@ -30,7 +30,7 @@ function data()
             },
             map_ao = {
                 compressionAllowed = true,
-                fileName = "models/uus/uv1/platform_upstep_b.dds",
+                fileName = "models/uus/uv1/platform.dds",
                 magFilter = "LINEAR",
                 minFilter = "LINEAR_MIPMAP_LINEAR",
                 mipmapAlphaScale = 0,
@@ -41,7 +41,7 @@ function data()
             },
             map_normal = {
                 compressionAllowed = true,
-                fileName = "models/uus/normal/platform.dds",
+                fileName = "models/uus/normal/marble_geometric.dds",
                 magFilter = "LINEAR",
                 minFilter = "LINEAR_MIPMAP_LINEAR",
                 mipmapAlphaScale = 0,
@@ -60,15 +60,15 @@ function data()
             
             },
 			map_op_1 = {
-				fileName = "models/uus/op/uv.dds",
+				fileName = "models/uus/op/xy.dds",
 				magFilter = "LINEAR",
 				minFilter = "LINEAR_MIPMAP_LINEAR",
 			},
 			operation_1 = {
 				op = "MULTIPLICATION",
 				mode = "NORMAL",
-				scale = { 1.0, 1.0 },
-				opacity = -128.0
+				scale = { 0.2, 0.2 },
+				opacity = -256.0
 			}, 
         
         },
