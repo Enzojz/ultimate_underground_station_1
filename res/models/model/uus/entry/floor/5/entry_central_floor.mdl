@@ -1,3 +1,5 @@
+local laneutil = require "laneutil"
+
 function data()
     return {
         collider = {
@@ -10,7 +12,7 @@ function data()
             {
                 children = {
                     {
-                        id = "uus/entry/entry_closed_side.msh",
+                        id = "uus/entry/entry_central_floor.msh",
                         transf = {
                             1, 0, 0, 0,
                             0, 1, 0, 0,

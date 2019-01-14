@@ -12,7 +12,7 @@ function data()
             {
                 children = {
                     {
-                        id = "uus/entry/entry_central_wall.msh",
+                        id = "uus/entry/entry_open_side_floor.msh",
                         transf = {
                             1, 0, 0, 0,
                             0, 1, 0, 0,
@@ -23,7 +23,7 @@ function data()
                     },
                 },
                 matConfigs = {
-                    {3, },
+                    {4, },
                 },
                 static = true,
                 visibleFrom = 0,

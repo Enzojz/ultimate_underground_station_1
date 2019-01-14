@@ -55,7 +55,7 @@ return {
 		operation_1 = {
 			op = "MULTIPLICATION",
 			mode = "NORMAL",
-			scale = { 1.0, 1.0 },
+			scale = { 0.4, 0.4 },
 			opacity = -1025.0
 		}, 
 		

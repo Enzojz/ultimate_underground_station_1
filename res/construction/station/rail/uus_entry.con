@@ -31,6 +31,24 @@ local function params()
     return
         {
             {
+                key = "style",
+                name = _("Style"),
+                values = {_("Glass fence"), _("Normal fence"), _("Concrete fence")},
+                defaultIndex = 0
+            },
+            {
+                key = "wall",
+                name = _("Wall"),
+                values = {_("Tiles 1"), _("Tiles 2")},
+                defaultIndex = 0
+            },
+            {
+                key = "floor",
+                name = _("Floor style"),
+                values = {_("Marble 1"), _("Honeycomb"), _("Marble 2"), _("Concrete"), _("Tiles")},
+                defaultIndex = 0
+            },
+            {
                 key = "width",
                 name = _("Width"),
                 values = func.map(widthList, tostring),
@@ -124,7 +142,7 @@ local updateFn = function(params)
     local aboveFace = station.surfaceOf(coor.xyz(width + 2, 5.25, 0.3), coor.xyz(0.0, 4.625, 0.3))
     
 
-    local models = models({wall = 1, floor = 1, style = 1})
+    local models = models({wall = params.wall + 1, floor = params.floor + 1, style = params.style + 1})
 
     local sign = params.stationName and placeSign(params.stationName, coor.trans(coor.xyz(0, 1.85, 2.5))) or {}
     return {

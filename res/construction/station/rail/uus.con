@@ -23,12 +23,26 @@ local e = ma.exp(1)
 local log = ma.log
 local log10 = log(10)
 
-local models = uus.models({platform = 1, wall = 1})
-
 local function params()
     local sp = "·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·\n"
     return
         pipe.new
+        +
+        {
+            
+            {
+                key = "wall",
+                name = _("Wall"),
+                values = {_("Tiles 1"), _("Tiles 2")},
+                defaultIndex = 0
+            },
+            {
+                key = "floor",
+                name = _("Floor style"),
+                values = {_("Marble 1"), _("Honeycomb"), _("Marble 2"), _("Concrete"), _("Tiles")},
+                defaultIndex = 0
+            }
+        }
         + uusm.trackType
         +
         {
@@ -209,6 +223,7 @@ end
 local function updateFn()
     return uus.safeBuild(params, function(params)
         
+        local models = uus.models({platform = params.floor + 1, wall = params.wall + 1})
         local trackType = uusm.trackList[params.trackType + 1]
         local trackWidth = uusm.trackWidthList[params.trackType + 1]
         local catenary = params.catenary == 1

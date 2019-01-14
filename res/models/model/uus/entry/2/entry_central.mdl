@@ -12,7 +12,7 @@ function data()
             {
                 children = {
                     {
-                        id = "uus/entry/entry_glass_central.msh",
+                        id = "uus/entry/entry_low_central.msh",
                         transf = {
                             1, 0, 0, 0,
                             0, 1, 0, 0,
