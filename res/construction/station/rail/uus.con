@@ -293,8 +293,8 @@ function data()
     return {
         type = "RAIL_STATION",
         description = {
-            name = _("Generic Station"),
-            description = _("Station that platform and track parameters can be fine-tuned, with single reference radius.")
+            name = _("Underground Level"),
+            description = _("An underground level for a station, width adjustable platform width and radius.")
         },
         availability = {
             yearFrom = 1850,

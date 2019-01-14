@@ -400,11 +400,11 @@ end
 
 local stepsLanePos = function(config)
     return function(c)
-        local c = c - 1
+        local c = c + 1
         return
             pipe.new
-            + (config.hasDown and {{pos = floor(c * 0.25) + 3, vec = -1, z = -3}, {pos = ceil(c * 0.75) - 2, vec = 1, z = -3}} or {})
-            + (config.hasUp and {{pos = floor(c * 0.25) + 1, vec = -2, z = 6}, {pos = ceil(c * 0.75), vec = 2, z = 6}} or {})
+            + (config.hasDown and {{pos = floor(c * 0.25) + 3, vec = -1, z = -3}, {pos = ceil(c * 0.75) - 3, vec = 1, z = -3}} or {})
+            + (config.hasUp and {{pos = floor(c * 0.25) + 1, vec = -2, z = 6}, {pos = ceil(c * 0.75) - 1, vec = 2, z = 6}} or {})
     end
 end
 
