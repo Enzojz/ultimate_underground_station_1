@@ -48,36 +48,40 @@ end
 
 local function dissassemble(params)
     local pa = pipe.new
-        * game.interface.getEntities({pos = game.gui.getTerrainPos(), radius = 1000}, {type = "CONSTRUCTION", includeData = false})
+        * game.interface.getEntities({pos = game.gui.getTerrainPos(), radius = 9999}, {type = "CONSTRUCTION", includeData = false})
         * pipe.map(game.interface.getEntity)
         * pipe.values()
-        * pipe.filter(function(data) return data.params.seed == params.seed end)
-    assert(#pa == 1)
-    local params = pa[1].params
-    local player = game.interface.getPlayer()
-    func.forEach(params.children, function(data)
-        local id = game.interface.buildConstruction(
-            data.fileName,
-            func.with(pure(data.params), {state = params.state}),
-            data.transf
+        * pipe.filter(function(data) return data.params.seed == params.seed and data.fileName == "station/rail/uus_assemble.con" end)
+    if (#pa == 1) then
+        local params = pa[1].params
+        local player = game.interface.getPlayer()
+        
+        func.forEach(params.children or {}, function(data)
+            local id = game.interface.buildConstruction(
+                data.fileName,
+                func.with(pure(data.params), {state = params.state}),
+                data.transf
+            )
+            game.interface.setPlayer(id, player)
+            game.interface.setName(id, data.name)
+        end)
+
+        func.forEach(params.entries or {}, function(data)
+            local id = game.interface.buildConstruction(
+                data.fileName,
+                func.with(pure(data.params), {state = params.state}),
+                data.transf
+            )
+            game.interface.setPlayer(id, player)
+            game.interface.setName(id, data.name)
+        end)
+
+        game.interface.upgradeConstruction(
+            pa[1].id,
+            params.major.fileName,
+            func.with(pure(params.major.params), {state = params.state})
         )
-        game.interface.setPlayer(id, player)
-        game.interface.setName(id, data.name)
-    end)
-    func.forEach(params.entries, function(data)
-        local id = game.interface.buildConstruction(
-            data.fileName,
-            func.with(pure(data.params), {state = params.state}),
-            data.transf
-        )
-        game.interface.setPlayer(id, player)
-        game.interface.setName(id, data.name)
-    end)
-    game.interface.upgradeConstruction(
-        pa[1].id,
-        params.major.fileName,
-        func.with(pure(params.major.params), {state = params.state})
-    )
+    end
     return {models = {}}
 end
 
