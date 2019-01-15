@@ -45,7 +45,7 @@ local function params()
             {
                 key = "floor",
                 name = _("Floor style"),
-                values = {_("Marble 1"), _("Honeycomb"), _("Marble 2"), _("Concrete"), _("Tiles")},
+                values = {_("Marble 1"), _("Honeycomb"), _("Marble 2"), _("Concrete"), _("Asphalt")},
                 defaultIndex = 0
             },
             {
@@ -242,7 +242,10 @@ local updateFn = function(params)
         connectors = {
             coor.xyz(-3.5 - width * 0.5, 5.2085, -3.9 + dz),
             coor.xyz(3.5 + width * 0.5, 5.2085, -3.9 + dz)
-        }
+        },
+        interconnection = { 
+            isStation = false
+         },
     }
 end
 

@@ -20,7 +20,7 @@ function data() return {
         "uus/entry/floor/honeycomb.mtl",
         "uus/entry/floor/marble_geometric.mtl",
         "uus/entry/floor/concrete_tiles2.mtl",
-        "uus/entry/floor/tiles.mtl"
+        "uus/entry/floor/asphalt.mtl"
       }
     }
   },

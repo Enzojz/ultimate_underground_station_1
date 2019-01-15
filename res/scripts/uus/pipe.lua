@@ -269,7 +269,7 @@ end
 local pipeMeta = {
     __mul = function(lhs, rhs)
         local result = rhs(lhs)
-        if (type(result) == "table") then setmetatable(result, getmetatable(lhs)) end
+        if (type(result) == "table" and not getmetatable(result)) then setmetatable(result, getmetatable(lhs)) end
         return result
     end
     ,

@@ -150,7 +150,7 @@ local updateFn = function(params)
         * pipe.map(function(c)
             return station.newModel("uus/standard_lane.mdl", uus.mRot(c[2] - c[1]), coor.trans(c[1]))
         end)
-    
+        
     local entryConn = pipe.new
         * params.entries
         * pipe.map(function(data)
@@ -158,18 +158,25 @@ local updateFn = function(params)
             local result = pipe.new
                 * game.config.construction[data.fileName](func.with(data.params, {state = params.state, stationName = params.name}))
                 * station.setTransform(data.m)
+
             local targets = func.map(result.connectors, function(pt)
                 return allConn
                     * pipe.flatten()
-                    * pipe.map(function(p) return {
+                    * pipe.map(function(p) 
+                        return {
                         pt = p,
                         distance = (p - pt):length(),
                         conn = station.newModel("uus/standard_lane.mdl", uus.mRot(pt - p), coor.trans(p))
                     } end)
                     * pipe.min(function(l, r) return l.distance < r.distance end)
             end)
+            
             return (targets[1].pt - targets[2].pt):length() > 0.5
-                and {func.map(targets, pipe.select("conn")), result, func.map(targets, function(t) return t.pt.parent, t.pt.toUpLevel end)}
+                and {
+                    func.map(targets, pipe.select("conn")), 
+                    result, 
+                    func.map(targets, function(t) return t.pt.parent, t.pt.toUpLevel end)
+                }
                 or (targets[1].distance < targets[2].distance)
                 and {
                     {targets[1].conn},
@@ -187,6 +194,7 @@ local updateFn = function(params)
                 }
         end
     )
+    
     local entryResults = entryConn * pipe.map(pipe.select(2))
     local entryConns = entryConn
         * pipe.map(pipe.select(1))

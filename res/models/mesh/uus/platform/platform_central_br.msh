@@ -21,7 +21,7 @@ function data() return {
         "uus/platform/honeycomb.mtl",
         "uus/platform/marble_geometric.mtl",
         "uus/platform/concrete_tiles2.mtl",
-        "uus/platform/tiles.mtl"
+        "uus/platform/asphalt.mtl"
       }
     }
   },

@@ -39,7 +39,7 @@ local function params()
             {
                 key = "floor",
                 name = _("Floor style"),
-                values = {_("Marble 1"), _("Honeycomb"), _("Marble 2"), _("Concrete"), _("Tiles")},
+                values = {_("Marble 1"), _("Honeycomb"), _("Marble 2"), _("Concrete"), _("Asphalt")},
                 defaultIndex = 0
             }
         }
@@ -277,6 +277,7 @@ local function updateFn()
                 models = terminals + models,
                 terminalGroups = terminalsGroup,
                 connectors = connectors,
+                interconnection = { isStation = true },
                 terrainAlignmentLists = {
                     {
                         type = "EQUAL",
