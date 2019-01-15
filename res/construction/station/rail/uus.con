@@ -229,7 +229,7 @@ local function updateFn()
         local trackWidth = uusm.trackWidthList[params.trackType + 1]
         local catenary = params.catenary == 1
         local trackBuilder = trackEdge.builder(catenary, trackType)
-        local mockTrackBuilder = trackEdge.builder(false, "zzz_mock_4.lua")
+        local mockTrackBuilder = trackEdge.builder(false, "uus_mock.lua")
         local hPlatform = uusm.hPlatformList[params.hPlatform + 1] * 0.001
         local wPlatform = uusm.wPlatformList[params.wPlatform + 1]
         local wStairs = uusm.wStairsList[params.wPlatform + 1]
@@ -297,7 +297,7 @@ function data()
             yearFrom = 1850,
             yearTo = 0,
         },
-        order = 5011,
+        order = 5016,
         params = params(),
         updateFn = updateFn()
     }

@@ -174,7 +174,7 @@ function data()
             name = _("Underground station assembler"),
             description = _("A tool that unify all un-conntected underground level and entries near the viewport as an interconnected and unique station.")
         },
-        order = 5011,
+        order = 5018,
         skipCollision = true,
         autoRemovable = false,
         updateFn = assembly

@@ -261,7 +261,7 @@ function data()
             name = _("Underground Entry"),
             description = _("An underground entry to a station")
         },
-        order = 5011,
+        order = 5017,
         params = params(),
         updateFn = updateFn
     }
