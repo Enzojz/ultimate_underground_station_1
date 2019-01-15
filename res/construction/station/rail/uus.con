@@ -22,6 +22,7 @@ local min = ma.min
 local e = ma.exp(1)
 local log = ma.log
 local log10 = log(10)
+local unpack = table.unpack
 
 local function params()
     local sp = "·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·:·\n"
@@ -50,6 +51,7 @@ local function params()
                 key = "nbTracks",
                 name = _("Number of tracks"),
                 values = func.map(uusm.trackNumberList, tostring),
+                defaultIndex = 1
             },
             {
                 key = "nbTransitTracks",
@@ -84,7 +86,6 @@ local function params()
         }
         + uusm.platform
         + uusm.slope
-        + uusm.alt
 end
 
 local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreLst)
@@ -107,7 +108,7 @@ local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreL
     local leftGroup = ptListI * pipe.filter(function(p) return p.i < middlePos end) * pipe.rev()
     local middleGroup = ptListI * pipe.filter(function(p) return p.i == middlePos end)
     local rightGroup = ptListI * pipe.filter(function(p) return p.i > middlePos end)
-    -- local platformArcGen = uus.platformArcGen(tW, pW)(arcPacker)
+    
     local lengthFn = function(posPct) return 1 - (1 - config.lExtPlatform) * uus.varFn(config.lExtPlatform)[config.varModelLength](posPct) end
     
     local function generateArcs(init, initDr, initX)
@@ -138,7 +139,7 @@ local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreL
                 end
                 or function(t, ...)
                     if t == nil then
-                        return arcGen(result, initDr[#initDr], initX[#initX], true)(table.unpack(rightGroup))
+                        return arcGen(result, initDr[#initDr], initX[#initX], true)(unpack(rightGroup))
                     else
                         local posPct = abs(t.i - middlePos) / (#leftGroup)
                         local isVar = posPct > config.varNbUnaffected
@@ -160,14 +161,14 @@ local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreL
                     end
                 end
         end
-        local rs = arcGen(pipe.new / init, initDr[1], initX[1])(table.unpack(leftGroup))
+        local rs = arcGen(pipe.new / init, initDr[1], initX[1])(unpack(leftGroup))
         return rs
     end
     
     local allArcs = pipe.exec * function()
         local o = coor.xyz(config.r, 0, 0)
         
-        if table.unpack(middleGroup).t then
+        if unpack(middleGroup).t then
             return generateArcs(
                 {
                     i = middlePos,
@@ -217,7 +218,7 @@ local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreL
     
     local arcCoords = allArcs * pipe.filter(function(a) return a.isPlatform end)
     local build = uus.build(config, fitModel)
-    return build(pipe.new, pipe.new, pipe.new, pipe.new, pipe.new, pipe.new, pipe.new, uus.trackGrouping(pipe.new, table.unpack(allArcs)))
+    return build(pipe.new, pipe.new, pipe.new, pipe.new, pipe.new, pipe.new, pipe.new, uus.trackGrouping(pipe.new, unpack(allArcs)))
 end
 
 local function updateFn()
@@ -278,14 +279,9 @@ local function updateFn()
                 terminalGroups = terminalsGroup,
                 connectors = connectors,
                 interconnection = { isStation = true },
-                terrainAlignmentLists = {
-                    {
-                        type = "EQUAL",
-                        faces = {}
-                    }
-                }--station.mergePoly(table.unpack(terrain))()
+                terrainAlignmentLists = station.mergePoly(unpack(terrain))(),
             }
-        -- * station.setHeight(-15)
+        * station.setHeight(-10)
         return result
     end)
 end

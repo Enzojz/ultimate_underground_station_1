@@ -26,6 +26,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 --]]
 local pipe = {}
+local unpack = table.unpack
 
 function pipe.fold(init, fun)
     return function(ls)
@@ -133,7 +134,7 @@ function pipe.mapn(...)
         local result = {}
         for i = 1, #ls[1] do
             params = ls * pipe.map(pipe.select(i)) 
-            result[i] = fun(table.unpack(params))
+            result[i] = fun(unpack(params))
         end
         return result
     end
@@ -146,7 +147,7 @@ function pipe.mapx(...)
             local result = {}
             for i = 1, #l do
                 params = ls * pipe.map(pipe.select(i)) 
-                result[i] = fun(l[i], table.unpack(params))
+                result[i] = fun(l[i], unpack(params))
             end
             return result
         end
@@ -312,7 +313,7 @@ pipe.from = function(...)
     setmetatable(retVal,
         {
             __mul = function(lhs, rhs)
-                local result = rhs(table.unpack(lhs))
+                local result = rhs(unpack(lhs))
                 setmetatable(result, pipeMeta)
                 return result
             end,

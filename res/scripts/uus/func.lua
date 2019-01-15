@@ -25,6 +25,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 --]]
+local unpack = table.unpack
 local func = {}
 
 func.pi = require "uus/pipe"
@@ -121,7 +122,7 @@ function func.seqValue(n, value)
 end
 
 function func.seqMap(range, fun)
-    return func.map(func.seq(table.unpack(range)), fun)
+    return func.map(func.seq(unpack(range)), fun)
 end
 
 
@@ -137,7 +138,7 @@ function func.bind(fun, ...)
                 table.insert(args, rest[i])
             end
         end
-        return fun(table.unpack(func.concat(args, param)))
+        return fun(unpack(func.concat(args, param)))
     end
 end
 

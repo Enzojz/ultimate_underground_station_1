@@ -834,7 +834,7 @@ uus.generateModels = function(fitModel, config)
                     i >= c
                     and uus.assembleSize(lc, rc)
                     or uus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s})
-                end)(i, ...) 
+                end)(i, ...)
             end)
             + pipe.mapn(
                 indices,
@@ -1024,22 +1024,18 @@ uus.generateModels = function(fitModel, config)
     end
 end
 
-uus.generateTrackTerrain = function(config)
-    return function(arc)
-        local ar = arc()()
-        local arl = ar(-0.5 * config.wTrack)
-        local arr = ar(0.5 * config.wTrack)
-        local lc, rc, c = uus.biLatCoords(5)(arl, arr)
+uus.generateTerrain = function(config)
+    return pipe.mapFlatten(function(arcs)
         return pipe.new
             / {
-                equal = pipe.new
-                * pipe.mapn(il(lc), il(rc))
+                greater = pipe.new
+                * pipe.mapn(il(arcs.terrain.lc), il(arcs.terrain.rc))
                 (function(lc, rc)
                     local size = assembleSize(lc, rc)
                     return pipe.new / size.lt / size.lb / size.rb / size.rt * station.finalizePoly
                 end)
             }
-    end
+    end)
 end
 
 local arcGen = function(p, o) return {
@@ -1073,7 +1069,11 @@ uus.allArcs = function(config)
                 stairs = {
                     outer = arcGen(general, (config.wPlatform - config.wStairs) * 0.5 + 0.3),
                     inner = arcGen(general, (config.wPlatform - config.wStairs) * 0.5 + 0.55)
-                }
+                },
+                terrain = arcGen({
+                    l = arcL(refZ + 7.75)(function(l) return l + 5 end),
+                    r = arcR(refZ + 7.75)(function(l) return l + 5 end)
+                }, -0.5)
             }
             
             local lsc, rsc, lsuc, rsuc, lc, rc, lpc, rpc, lpic, rpic, lsoc, rsoc, lsic, rsic, c = uus.biLatCoords(5)(
@@ -1085,6 +1085,7 @@ uus.allArcs = function(config)
                 arcs.stairs.outer.l, arcs.stairs.outer.r,
                 arcs.stairs.inner.l, arcs.stairs.inner.r
             )
+            local tlc, trc, tc = uus.biLatCoords(5)(arcs.terrain.l, arcs.terrain.r)
             return {
                 [1] = arcL,
                 [2] = arcR,
@@ -1103,24 +1104,34 @@ uus.allArcs = function(config)
                     outer = func.with(arcs.stairs.outer, {lc = lsoc, rc = rsoc, mc = mc(lsoc, rsoc), c = c}),
                     inner = func.with(arcs.stairs.inner, {lc = lsic, rc = rsic, mc = mc(lsic, rsic), c = c}),
                 },
+                terrain = func.with(arcs.terrain, {lc = tlc, rc = trc, mc = mc(tlc, trc), c = tc}),
                 isPlatform = true
             }
         else
             local arc = p[1]
             
-            local general = {
-                l = arc(refZ)(),
-                r = arc(refZ)()
-            }
+            local ceil = arcGen(
+                {
+                    l = arc(refZ)(),
+                    r = arc(refZ)()
+                },
+                -config.wTrack * 0.5)
             
-            local ceil = arcGen(general, -config.wTrack * 0.5)
+            local terrain = arcGen(
+                {
+                    l = arc(refZ + 7.75)(function(l) return l + 5 end),
+                    r = arc(refZ + 7.75)(function(l) return l + 5 end)
+                },
+                -config.wTrack * 0.5)
             
             local lpc, rpc, c = uus.biLatCoords(5)(ceil.l, ceil.r)
+            local ltc, rtc, tc = uus.biLatCoords(5)(terrain.l, terrain.r)
             
             return {
                 [1] = arc,
                 count = c,
                 ceil = func.with(ceil, {lc = lpc, rc = rpc, mc = mc(lpc, rpc), c = c}),
+                terrain = func.with(terrain, {lc = ltc, rc = rtc, mc = mc(ltc, rtc), c = tc}),
                 isTrack = true
             }
         end
@@ -1151,7 +1162,7 @@ uus.build = function(config, fitModel, generateEdges)
     local generateMockEdges = uus.generateMockEdges(config)
     local generateModels = uus.generateModels(fitModel, config)
     local generateTerminals = uus.generateTerminals(config)
-    local generateTrackTerrain = uus.generateTrackTerrain(config)
+    local generateTerrain = uus.generateTerrain(config)
     local generateSideWalls = uus.generateSideWalls(fitModel, config)
     local generateLanes = uus.generateLanes(config)
     local generatePlatformSigns = uus.generatePlatformSigns(config)
@@ -1187,7 +1198,7 @@ uus.build = function(config, fitModel, generateEdges)
                 + generatePlatformChairs(gr, isLeftmost, isRightmost)
                 + (isLeftmost and generateSideWalls(gr[1], true) or {})
                 + (isRightmost and generateSideWalls(gr[3], false) or {}),
-                terrain,
+                terrain + generateTerrain(gr),
                 ...)
         elseif (#gr == 2 and gr[1].isTrack and gr[2].isPlatform) then
             local edges = generateEdges(edges, true, gr[1][1])
@@ -1204,7 +1215,7 @@ uus.build = function(config, fitModel, generateEdges)
                 + generatePlatformChairs(gr, isLeftmost, isRightmost)
                 + (isLeftmost and generateSideWalls(gr[1], true) or {})
                 + (isRightmost and generateSideWalls(gr[2], false) or {}),
-                terrain,
+                terrain + generateTerrain(gr),
                 ...)
         elseif (#gr == 2 and gr[1].isPlatform and gr[2].isTrack) then
             local edges = generateEdges(edges, false, gr[2][1])
@@ -1221,7 +1232,7 @@ uus.build = function(config, fitModel, generateEdges)
                 + generatePlatformChairs(gr, isLeftmost, isRightmost)
                 + (isLeftmost and generateSideWalls(gr[1], true) or {})
                 + (isRightmost and generateSideWalls(gr[2], false) or {}),
-                terrain,
+                terrain + generateTerrain(gr),
                 ...)
         elseif (#gr == 1 and gr[1].isPlatform) then
             local terminals, terminalsGroup, lanePos = generateTerminals(edges, terminals, terminalsGroup, lanePos, gr[1], {false, false})
@@ -1237,7 +1248,7 @@ uus.build = function(config, fitModel, generateEdges)
                 + generatePlatformChairs(gr, isLeftmost, isRightmost)
                 + (isLeftmost and generateSideWalls(gr[1], true) or {})
                 + (isRightmost and generateSideWalls(gr[1], false) or {}),
-                terrain,
+                terrain + generateTerrain(gr),
                 ...)
         else
             local edges = generateEdges(edges, false, gr[1][1])
@@ -1251,7 +1262,7 @@ uus.build = function(config, fitModel, generateEdges)
                 + generatePlatformSigns(gr, isLeftmost, isRightmost)
                 + (isLeftmost and generateSideWalls(gr[1], true) or {})
                 + (isRightmost and generateSideWalls(gr[1], false) or {}),
-                terrain,
+                terrain + generateTerrain(gr),
                 ...)
         end
     end
@@ -1297,58 +1308,58 @@ uus.models = function(set)
     local w = "uus/wall/" .. set.wall .. "/"
     return {
         platform = {
-            edgeLeft =  p .. "platform_edge_left",
+            edgeLeft = p .. "platform_edge_left",
             edgeRight = p .. "platform_edge_right",
-            central =   p .. "platform_central",
-            left =      p .. "platform_left",
-            right =     p .. "platform_right",
+            central = p .. "platform_central",
+            left = p .. "platform_left",
+            right = p .. "platform_right",
         },
         upstep = {
-            a =      p .. "platform_upstep_a",
-            b =      p .. "platform_upstep_b",
-            aLeft =  w .. "platform_upstep_a_left",
+            a = p .. "platform_upstep_a",
+            b = p .. "platform_upstep_b",
+            aLeft = w .. "platform_upstep_a_left",
             aRight = w .. "platform_upstep_a_right",
             aInner = w .. "platform_upstep_a_inner",
-            bLeft =  w .. "platform_upstep_b_left",
+            bLeft = w .. "platform_upstep_b_left",
             bRight = w .. "platform_upstep_b_right",
             bInner = w .. "platform_upstep_b_inner",
-            back =   w .. "platform_upstep_back"
+            back = w .. "platform_upstep_back"
         },
         downstep = {
-            right =   w .. "platform_downstep_left",
-            left =    w .. "platform_downstep_right",
+            right = w .. "platform_downstep_left",
+            left = w .. "platform_downstep_right",
             central = p .. "platform_downstep",
-            back =    w .. "platform_downstep_back"
+            back = w .. "platform_downstep_back"
         },
         ceil = {
-            edge =    c .. "ceil_edge",
+            edge = c .. "ceil_edge",
             central = c .. "ceil_central",
-            left =    c .. "ceil_left",
-            right =   c .. "ceil_right",
-            aLeft =   c .. "ceil_upstep_a_left",
-            aRight =  c .. "ceil_upstep_a_right",
-            bLeft =   c .. "ceil_upstep_b_left",
-            bRight =  c .. "ceil_upstep_b_right",
+            left = c .. "ceil_left",
+            right = c .. "ceil_right",
+            aLeft = c .. "ceil_upstep_a_left",
+            aRight = c .. "ceil_upstep_a_right",
+            bLeft = c .. "ceil_upstep_b_left",
+            bRight = c .. "ceil_upstep_b_right",
         },
         top = {
             track = {
-                left =    t .. "top_track_left",
-                right =   t .. "top_track_right",
+                left = t .. "top_track_left",
+                right = t .. "top_track_right",
                 central = t .. "top_track_central"
             },
             platform = {
-                left =    t .. "top_platform_left",
-                right =   t .. "top_platform_right",
+                left = t .. "top_platform_left",
+                right = t .. "top_platform_right",
                 central = t .. "top_platform_central"
             },
         },
-        wallTrack =             w .. "wall_track",
-        wallPlatform =          w .. "wall_platform",
-        wallExtremity =         w .. "wall_extremity",
-        wallExtremityEdge =     w .. "wall_extremity_edge",
+        wallTrack = w .. "wall_track",
+        wallPlatform = w .. "wall_platform",
+        wallExtremity = w .. "wall_extremity",
+        wallExtremityEdge = w .. "wall_extremity_edge",
         wallExtremityPlatform = w .. "wall_extremity_platform",
-        wallExtremityTop =      w .. "wall_extremity_top",
-        chair =                 p .. "platform_chair"
+        wallExtremityTop = w .. "wall_extremity_top",
+        chair = p .. "platform_chair"
     }
 end
 

@@ -217,7 +217,7 @@ local updateFn = function(params)
             * station.setTransform(data.m)
     end)
     
-    local newResult = station.mergeResults(result, table.unpack(entryResults + children))
+    local newResult = station.mergeResults(result, unpack(entryResults + children))
     return func.with(newResult, {models = newResult.models + conn + entryConns})
 end
 
