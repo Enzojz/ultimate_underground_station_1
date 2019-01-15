@@ -48,10 +48,10 @@ end
 
 local function dissassemble(params)
     local pa = pipe.new
-        * game.interface.getEntities({pos = game.gui.getTerrainPos(), radius = 9999}, {type = "CONSTRUCTION", includeData = false})
+        * game.interface.getEntities({pos = game.gui.getTerrainPos(), radius = 9999}, {type = "CONSTRUCTION", includeData = false, fileName = "station/rail/uus_assemble.con"})
         * pipe.map(game.interface.getEntity)
         * pipe.values()
-        * pipe.filter(function(data) return data.params.seed == params.seed and data.fileName == "station/rail/uus_assemble.con" end)
+        * pipe.filter(function(data) return data.params.seed == params.seed end)
     if (#pa == 1) then
         local params = pa[1].params
         local player = game.interface.getPlayer()
@@ -179,7 +179,7 @@ local updateFn = function(params)
                 and {
                     func.map(targets, pipe.select("conn")), 
                     result, 
-                    func.map(targets, function(t) return t.pt.parent, t.pt.toUpLevel end)
+                    func.map(targets, function(t) return {t.pt.parent, t.pt.toUpLevel} end)
                 }
                 or (targets[1].distance < targets[2].distance)
                 and {
@@ -203,7 +203,7 @@ local updateFn = function(params)
     local entryConns = entryConn
         * pipe.map(pipe.select(1))
         * pipe.flatten()
-    
+        
     local ctable = (ctable + entryConn * pipe.map(pipe.select(3)) * pipe.flatten()) * pipe.fold({}, function(r, c)
         return func.with(
             r,
