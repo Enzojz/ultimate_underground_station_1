@@ -9,7 +9,6 @@ uusm.hPlatformList = {200, 280, 380, 550, 680, 760, 915, 960, 1100, 1219, 1250, 
 uusm.wPlatformList = {5, 10, 15}
 uusm.wStairsList = {3, 7, 7}
 uusm.hStation = {0, 1, 2, 3, 4, 5, 6}
-uusm.roofLengthList = {100, 95, 80, 75, 50, 25, 0}
 uusm.extWidthList = {100, 75, 50, 25, 10}
 uusm.extLengthList = {100, 90, 80, 75, 70, 65, 60, 55, 50}
 uusm.varUnaffectedList = {0, 10, 25, 50, 75, 90}
@@ -62,21 +61,6 @@ uusm.slope = {
         key = "slope",
         name = _("Slope") .. " " .. "(‰)",
         values = func.map(uusm.slopeList, tostring),
-        defaultIndex = 0
-    }
-}
-
-uusm.alt = {
-    {
-        key = "altitudeSign",
-        name = sp,
-        values = {"+", "-"},
-        defaultIndex = 0
-    },
-    {
-        key = "altitude",
-        name = _("General Altitude") .. "(m)",
-        values = func.map(uusm.hStation, tostring),
         defaultIndex = 0
     }
 }

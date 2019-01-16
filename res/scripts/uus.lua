@@ -116,10 +116,8 @@ uus.generateArcExt = function(arc)
 end
 
 uus.arcPacker = function(length, slope, r)
-    return function(radius, o, lengthVar, dislodge)
-        local dislodge = dislodge and (dislodge * length / radius) or 0
-        local length = lengthVar and (length * lengthVar) or length
-        local initRad = (radius > 0 and pi or 0) + dislodge
+    return function(radius, o)
+        local initRad = (radius > 0 and pi or 0)
         return function(minLength)
             local length = minLength and (length / minLength * length) or length
             return function(z)

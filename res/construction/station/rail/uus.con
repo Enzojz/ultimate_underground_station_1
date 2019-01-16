@@ -86,6 +86,14 @@ local function params()
         }
         + uusm.platform
         + uusm.slope
+        + {
+            {
+                key = "altitude",
+                name = _("Altitude adjustment") .. "(m)",
+                values = func.seqMap({-5, 5}, tostring),
+                defaultIndex = 5
+            }
+        }
 end
 
 local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreLst)
@@ -97,20 +105,15 @@ local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreL
     local ptList = uus.preBuild(totalTracks, config.nbTransitTracks, config.posTransitTracks, ignoreFst, ignoreLst)(totalTracks, pipe.new)
     local ptListI = ptList * pipe.zip(func.seq(1, #ptList), {"t", "i"})
     local refList = ptListI
-        * pipe.filter(function(x) return config.varRefIsTrack and x.t or not x.t end)
+        * pipe.filter(function(x) return x.t end)
         * pipe.map(pipe.select("i"))
         * pipe.sort(function(x, y) return x < y end)
-    local middlePos =
-        config.varRefPos < 0 and refList[1]
-        or config.varRefPos > 0 and refList[#refList]
-        or #refList % 2 == 1 and refList[(#refList + 1) * 0.5] or refList[#refList * 0.5]
+    local middlePos = refList[1]
     
     local leftGroup = ptListI * pipe.filter(function(p) return p.i < middlePos end) * pipe.rev()
     local middleGroup = ptListI * pipe.filter(function(p) return p.i == middlePos end)
     local rightGroup = ptListI * pipe.filter(function(p) return p.i > middlePos end)
-    
-    local lengthFn = function(posPct) return 1 - (1 - config.lExtPlatform) * uus.varFn(config.lExtPlatform)[config.varModelLength](posPct) end
-    
+        
     local function generateArcs(init, initDr, initX)
         local function arcGen(result, r, o, isRight)
             return isRight
@@ -119,19 +122,16 @@ local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreL
                         return result * pipe.sort(function(l, r) return l.i < r.i end) * pipe.map(pipe.select("a"))
                     else
                         local posPct = abs(t.i - middlePos) / (#rightGroup)
-                        local isVar = posPct > config.varNbUnaffected
-                        local lengthPct = isVar and lengthFn(posPct) or 1
-                        local offsetPct = isVar and -posPct * config.yOffsetPlatform or 0
                         if t.t then
-                            return arcGen(result / {i = t.i, a = {arcPacker(r - tW, o, isVar and lengthPct or 1, offsetPct)}},
+                            return arcGen(result / {i = t.i, a = {arcPacker(r - tW, o)}},
                                 r - tW, o, true)(...)
                         else
                             return arcGen(result / {
                                 i = t.i,
                                 a = {
-                                    arcPacker(r - (0.5 * tW), o, lengthPct, offsetPct),
-                                    arcPacker(r - (0.5 * tW + pW), o, lengthPct, offsetPct),
-                                    arcPacker(r - (0.5 * tW + 0.5 * pW), o, lengthPct, offsetPct)
+                                    arcPacker(r - (0.5 * tW), o),
+                                    arcPacker(r - (0.5 * tW + pW), o),
+                                    arcPacker(r - (0.5 * tW + 0.5 * pW), o)
                                 }},
                             r - pW, o, true)(...)
                         end
@@ -142,19 +142,16 @@ local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreL
                         return arcGen(result, initDr[#initDr], initX[#initX], true)(unpack(rightGroup))
                     else
                         local posPct = abs(t.i - middlePos) / (#leftGroup)
-                        local isVar = posPct > config.varNbUnaffected
-                        local lengthPct = isVar and lengthFn(posPct) or 1
-                        local offsetPct = isVar and posPct * config.yOffsetPlatform or 0
                         if t.t then
-                            return arcGen(result / {i = t.i, a = {arcPacker(r + tW, o, lengthPct, offsetPct)}},
+                            return arcGen(result / {i = t.i, a = {arcPacker(r + tW, o)}},
                                 r + tW, o)(...)
                         else
                             return arcGen(result / {
                                 i = t.i,
                                 a = {
-                                    arcPacker(r + (0.5 * tW + pW), o, lengthPct, offsetPct),
-                                    arcPacker(r + (0.5 * tW), o, lengthPct, offsetPct),
-                                    arcPacker(r + (0.5 * tW + 0.5 * pW), o, lengthPct, offsetPct)
+                                    arcPacker(r + (0.5 * tW + pW), o),
+                                    arcPacker(r + (0.5 * tW), o),
+                                    arcPacker(r + (0.5 * tW + 0.5 * pW), o)
                                 }},
                             r + pW, o)(...)
                         end
@@ -176,8 +173,6 @@ local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreL
                 },
                 {config.r}, {o}
         ) else
-            -- local isVar = config.varNbUnaffected == 0
-            -- if (not isVar) then
             return generateArcs(
                 {
                     i = middlePos,
@@ -192,19 +187,6 @@ local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreL
                     config.r - (0.5 * pW - 0.5 * tW)
                 }, {o}
         )
-        -- else
-        --     local rR, oR, a = platformArcGen(config.r + 0.5 * pW, o, 1, 0, pW, true)
-        --     return generateArcs(
-        --         {
-        --             i = middlePos,
-        --             a = a
-        --         },
-        --         {
-        --             config.r - (0.5 * tW),
-        --             rR
-        --         }, {o, oR}
-        -- )
-        -- end
         end
     end
     * function(arcs)
@@ -239,6 +221,7 @@ local function updateFn()
         local slope = uusm.slopeList[params.slope + 1] * 0.001 * (params.slopeSign == 0 and 1 or -1)
         
         local length = min(uusm.trackLengths[params.length + 1], abs(radius * pi * 1.5))
+        local alt = func.seq(-5, 5)[params.altitude + 1]
 
         local edge, mockEdge, terminals, terminalsGroup, models, terrain, connectors =
             buildStation(nbTracks,
@@ -250,14 +233,7 @@ local function updateFn()
                     hPlatform = hPlatform,
                     wPlatform = wPlatform,
                     wStairs = wStairs,
-                    lExtPlatform = 1, -- uusm.extLengthList[params.lExtPlatform + 1] * 0.01,
-                    yOffsetPlatform = 0, --uusm.yOffsetList[params.yOffsetPlatform + 1] * (params.yOffsetPlatformSign == 0 and 0.01 or -0.01),
-                    varRefPos = -1, --params.varRefPos - 1,
-                    varRefIsTrack = true, -- params.varRefType == 0,
-                    varNbUnaffected = 0, -- uusm.varUnaffectedList[params.varNbUnaffected + 1] * 0.01,
-                    varModelLength = 1, --params.varModelLength + 1,
                     wTrack = trackWidth,
-                    roofLength = 1,
                     slope = slope,
                     models = models,
                     hasDown = (params.hasDown == nil) and true or params.hasDown,
@@ -281,7 +257,7 @@ local function updateFn()
                 interconnection = { isStation = true },
                 terrainAlignmentLists = station.mergePoly(unpack(terrain))(),
             }
-        * station.setHeight(-10)
+        * station.setHeight(-10 + alt)
         return result
     end)
 end
