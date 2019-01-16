@@ -135,13 +135,13 @@ end
 local updateFn = function(params)
     if (params.mode == 1) then return dissassemble(params) end
     local result = func.with(
-        game.config.construction[params.major.fileName](func.with(params.major.params, {state = params.state})),
+        game.config.construction[params.major.fileName](func.with(params.major.params, {state = params.state, buildConnectorsOnly = true})),
         {id = params.major.id}
     )
     local children = func.map(params.children, function(data)
         game.interface.bulldoze(data.id)
         return pipe.new
-            * game.config.construction[data.fileName](func.with(data.params, {state = params.state}))
+            * game.config.construction[data.fileName](func.with(data.params, {state = params.state, buildConnectorsOnly = true}))
             * station.setTransform(data.m)
             * pipe.with({id = data.id})
     end)

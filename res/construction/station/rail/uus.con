@@ -96,7 +96,7 @@ local function params()
         }
 end
 
-local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreLst)
+local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreLst, connectorsOnly)
     local pW = config.wPlatform
     local tW = config.wTrack
     local bandWidth = 0.8
@@ -113,7 +113,7 @@ local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreL
     local leftGroup = ptListI * pipe.filter(function(p) return p.i < middlePos end) * pipe.rev()
     local middleGroup = ptListI * pipe.filter(function(p) return p.i == middlePos end)
     local rightGroup = ptListI * pipe.filter(function(p) return p.i > middlePos end)
-        
+    
     local function generateArcs(init, initDr, initX)
         local function arcGen(result, r, o, isRight)
             return isRight
@@ -199,13 +199,15 @@ local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreL
     * uus.allArcs(config)
     
     local arcCoords = allArcs * pipe.filter(function(a) return a.isPlatform end)
-    local build = uus.build(config, fitModel)
-    return build(pipe.new, pipe.new, pipe.new, pipe.new, pipe.new, pipe.new, pipe.new, uus.trackGrouping(pipe.new, unpack(allArcs)))
+    if connectorsOnly then
+        return uus.preBuildConnectors(config, fitModel)(uus.trackGrouping(pipe.new, unpack(allArcs)))
+    else
+        return uus.build(config, fitModel)(pipe.new, pipe.new, pipe.new, pipe.new, pipe.new, pipe.new, pipe.new, uus.trackGrouping(pipe.new, unpack(allArcs)))
+    end
 end
 
 local function updateFn()
     return uus.safeBuild(params, function(params)
-        
         local models = uus.models({platform = params.floor + 1, wall = params.wall + 1})
         local trackType = uusm.trackList[params.trackType + 1]
         local trackWidth = uusm.trackWidthList[params.trackType + 1]
@@ -222,28 +224,49 @@ local function updateFn()
         
         local length = min(uusm.trackLengths[params.length + 1], abs(radius * pi * 1.5))
         local alt = func.seq(-5, 5)[params.altitude + 1]
-
+        
+        local config = {
+            nbTransitTracks = params.nbTransitTracks,
+            posTransitTracks = params.posTransitTracks - 2,
+            r = radius,
+            hPlatform = hPlatform,
+            wPlatform = wPlatform,
+            wStairs = wStairs,
+            wTrack = trackWidth,
+            slope = slope,
+            models = models,
+            hasDown = (params.hasDown == nil) and true or params.hasDown,
+            hasUp = (params.hasUp == nil) and true or params.hasUp,
+            name = params.stationName
+        }
+        
+        local arcPacker = uus.arcPacker(length, slope, radius)
+        
+        if (params.buildConnectorsOnly) then
+            local connectors = buildStation(nbTracks,
+                arcPacker,
+                config,
+                params.hasLeftPlatform == 0,
+                params.hasRightPlatform == 0,
+                true
+            )
+            return pipe.new
+                * {
+                    edgeLists = {},
+                    models = {},
+                    terrainAlignmentLists = {},
+                    connectors = connectors
+                }
+                * station.setHeight(-10 + alt)
+        end
+        
         local edge, mockEdge, terminals, terminalsGroup, models, terrain, connectors =
             buildStation(nbTracks,
-                uus.arcPacker(length, slope, radius),
-                {
-                    nbTransitTracks = params.nbTransitTracks,
-                    posTransitTracks = params.posTransitTracks - 2,
-                    r = radius,
-                    hPlatform = hPlatform,
-                    wPlatform = wPlatform,
-                    wStairs = wStairs,
-                    wTrack = trackWidth,
-                    slope = slope,
-                    models = models,
-                    hasDown = (params.hasDown == nil) and true or params.hasDown,
-                    hasUp = (params.hasUp == nil) and true or params.hasUp,
-                    name = params.stationName
-                },
+                arcPacker,
+                config,
                 params.hasLeftPlatform == 0,
                 params.hasRightPlatform == 0
         )
-        local coffset = coor.xyz(-4.3, 0, hPlatform + 0.53)
         local result =
             pipe.new
             * {
@@ -254,10 +277,10 @@ local function updateFn()
                 models = terminals + models,
                 terminalGroups = terminalsGroup,
                 connectors = connectors,
-                interconnection = { isStation = true },
+                interconnection = {isStation = true},
                 terrainAlignmentLists = station.mergePoly(unpack(terrain))(),
             }
-        * station.setHeight(-10 + alt)
+            * station.setHeight(-10 + alt)
         return result
     end)
 end

@@ -418,16 +418,24 @@ local isStepsPos = function(config)
     end
 end
 
-uus.generateTerminals = function(config)
+uus.generalLanePos = function(config)
     local isStepsPos = isStepsPos(config)
     local stepsLanePos = stepsLanePos(config)
-    return function(edges, terminals, terminalsGroup, lanePos, arcs, enablers)
+    return function(arcs)
         local isStepsPos = isStepsPos(2 * arcs.count - 2)
         
-        local newLanePos = func.map(
+        return func.map(
             stepsLanePos(2 * arcs.count - 1),
             function(i) return {f = arcs.platform.lane.mc[i.pos], t = arcs.platform.lane.mc[i.pos + i.vec] + coor.xyz(0, 0, i.z)} end
-        )
+        ), isStepsPos
+    end
+end
+
+uus.generateTerminals = function(config)
+    local generalLanePos = uus.generalLanePos(config)
+    return function(edges, terminals, terminalsGroup, lanePos, arcs, enablers)
+        local newLanePos, isStepsPos = generalLanePos(arcs)
+        
         local newTerminals = pipe.new
             * pipe.mapn(
                 func.seq(1, 2 * arcs.count - 2),
@@ -1155,7 +1163,7 @@ uus.generateLanes = function(config)
     end
 end
 
-uus.build = function(config, fitModel, generateEdges)
+uus.build = function(config, fitModel)
     local generateEdges = uus.generateEdges
     local generateMockEdges = uus.generateMockEdges(config)
     local generateModels = uus.generateModels(fitModel, config)
@@ -1263,6 +1271,29 @@ uus.build = function(config, fitModel, generateEdges)
                 terrain + generateTerrain(gr),
                 ...)
         end
+    end
+    return build
+end
+
+uus.preBuildConnectors = function(config, fitModel)
+    local generalLanePos = uus.generalLanePos(config)
+    local generateLanes = uus.generateLanes(config)
+    local function build(...)
+        local lanePos =
+            pipe.new
+            * {...}
+            * pipe.flatten()
+            * pipe.filter(pipe.select("isPlatform"))
+            * pipe.map(generalLanePos)
+            * pipe.map(pipe.map(pipe.select("t")))
+        
+        local upLanePos = lanePos * pipe.map(pipe.filter(function(p) return p.z > config.hPlatform end))
+        local downLanePos = lanePos * pipe.map(pipe.filter(function(p) return p.z < config.hPlatform end))
+        local _, upConnectors = generateLanes(upLanePos)
+        local _, downConnectors = generateLanes(downLanePos)
+        
+        return upConnectors * pipe.map(function(c) return func.with(c, {toUpLevel = true}) end)
+            + downConnectors * pipe.map(function(c) return func.with(c, {toUpLevel = false}) end)
     end
     return build
 end
