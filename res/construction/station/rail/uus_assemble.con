@@ -111,13 +111,13 @@ local function generateConnectionNetwork(result, ctable, current, ...)
     if (#allRest == 0) then return result, ctable end
     if (#current == 0) then return generateConnectionNetwork(result, ctable, ...) end
     
-    local x = current
+    local allPairs = current
         * pipe.map(function(pt) return func.mapi(allRest, ptToSetDistance(pt)) end)
         * pipe.map(pipe.filter(pipe.noop()))
         * pipe.flatten()
         * pipe.sort(function(l, r) return l.min < r.min end)
     
-    local shortestPair = x[1]
+    local shortestPair = allPairs[1]
     local rest = allRest * pipe.mapi(function(pts, i) return i ~= shortestPair.order and pts or false end) * pipe.filter(pipe.noop())
     
     local current = current + shortestPair.set

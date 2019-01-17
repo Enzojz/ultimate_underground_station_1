@@ -1,7 +1,7 @@
 function data() return {
   animations = {  },
   matConfigs = {
-    { 0 }
+    { 0 }, { 1 }
   },
   subMeshes = {
     {
@@ -13,7 +13,8 @@ function data() return {
         uv1      = { count = 72, offset = 1008 }
       },
       materials = {
-        "uus/platform_signs_border.mtl"
+        "uus/platform_signs_border.mtl",
+        "uus/entry_fence.mtl"
       }
     }
   },

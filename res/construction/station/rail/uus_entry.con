@@ -52,7 +52,7 @@ local function params()
                 key = "width",
                 name = _("Width"),
                 values = func.map(widthList, tostring),
-                defaultIndex = 3
+                defaultIndex = 2
             },
             {
                 key = "orientation",
@@ -85,7 +85,7 @@ local models = function(set)
     }
 end
 
-local placeSign = function(name, transBoard, hasPole)
+local placeSign = function(name, pos, widthOverride)
     local signColor = "C00257E"
     local decoColor = "CF2F2F2"
     local textColor = "CFFFFFF_emissive"
@@ -95,7 +95,9 @@ local placeSign = function(name, transBoard, hasPole)
     local nameModelsF, width = unpack({livetext(0.35)(name or "?")} or {})
     local height = 0.5
     local thickness = 0.1
-    
+
+    local width = widthOverride or width
+    local transBoard = coor.trans(pos)
     return
         pipe.new
         / station.newModel("uus/signs/platform_signs.mdl",
@@ -103,22 +105,22 @@ local placeSign = function(name, transBoard, hasPole)
             coor.trans(coor.xyz(0, 0, 0.25)),
             transBoard
         )
-        / station.newModel("uus/signs/platform_signs_left.mdl",
+        / station.newModel("uus/entry/entry_signs_left.mdl",
             coor.scale(coor.xyz(1, thickness, (height + 0.04) / 1.04)),
             coor.trans(coor.xyz(-width * 0.5 - 0.5, 0, 0.25)),
             transBoard
         )
-        / station.newModel("uus/signs/platform_signs_right.mdl",
+        / station.newModel("uus/entry/entry_signs_right.mdl",
             coor.scale(coor.xyz(1, thickness, (height + 0.04) / 1.04)),
             coor.trans(coor.xyz(width * 0.5 + 0.5, 0, 0.25)),
             transBoard
         )
-        / station.newModel("uus/signs/platform_signs_top.mdl",
+        / station.newModel("uus/entry/entry_signs_top.mdl",
             coor.scale(coor.xyz(width + 1, thickness, 1)),
             coor.trans(coor.xyz(0, 0, height * 0.5 + 0.25)),
             transBoard
         )
-        / station.newModel("uus/signs/platform_signs_bottom.mdl",
+        / station.newModel("uus/entry/entry_signs_bottom.mdl",
             coor.scale(coor.xyz(width + 1, thickness, 1)),
             coor.trans(coor.xyz(0, 0, -height * 0.5 + 0.25)),
             transBoard
@@ -127,9 +129,9 @@ local placeSign = function(name, transBoard, hasPole)
         + nameModelsF(function(w) return coor.trans(coor.xyz(-0.5 * w, -0.055, 0.175 * 3 / 4)) * coor.rotZ(pi) * transBoard end)
         +
         func.map({width * 0.5 + 0.25, -width * 0.5 - 0.25}, function(p)
-            return station.newModel("platform_signs/pole_cuboid.mdl",
-                coor.scale(coor.xyz(0.8, 0.8, 1)),
-                coor.trans(coor.xyz(p, 0, -2.5)),
+            return station.newModel("uus/entry/entry_signs_pole.mdl",
+                coor.scale(coor.xyz(0.5, 0.5, (pos.z - 1.3) / 2.5)),
+                coor.trans(coor.xyz(p, 0, - pos.z + 1.3)),
                 transBoard
         )
         end)
@@ -151,7 +153,11 @@ local updateFn = function(params)
     
     local models = models({wall = params.wall + 1, floor = params.floor + 1, style = params.style + 1})
     
-    local sign = params.stationName and placeSign(params.stationName, coor.trans(coor.xyz(0, 1.85, 2.5))) or {}
+    local sign = 1 and placeSign(
+        "test", 
+        params.style == 2 and coor.xyz(0, 1.85, 1.8) or coor.xyz(0, -1, 1.8),
+        params.style < 2 and width - 0.25
+    ) or {}
     
     local lanes = pipe.new *
         {-width * 0.2, width * 0.2}
