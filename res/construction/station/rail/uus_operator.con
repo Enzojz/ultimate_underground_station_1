@@ -105,7 +105,7 @@ local assembly = function()
     local st = allStations()
     local en = allEntries()
     
-    if (#st + #en > 1) then
+    if (#st > 0) then
         local stationName = (st + en)
             * pipe.map(function(e) return {name = e.name, sp = e.name:match('^#') and 0 or 1, oc = #{e.name:find("%s")}} end)
             * pipe.sort(function(l, r) return l.sp < r.sp or l.oc < r.oc end)
@@ -120,7 +120,7 @@ local assembly = function()
             * pipe.map(function(st)
                 local vec, rot, _ = coor.decomposite(st.transf)
                 return {
-                    params = st.params,
+                    params = uus.refineParams(st, st.params),
                     id = st.id,
                     fileName = st.fileName,
                     m = iRot * rot * coor.trans((vec - vecRef) .. iRot),
@@ -137,7 +137,7 @@ local assembly = function()
                 major = {
                     name = ref.name,
                     fileName = ref.fileName,
-                    params = ref.params,
+                    params = uus.refineParams(ref, ref.params),
                     transf = ref.transf,
                     id = ref.id
                 },
@@ -156,6 +156,7 @@ local assembly = function()
                 end)
             }
         )
+        game.interface.setName(ref.id, stationName)
         return reset()
     end
     

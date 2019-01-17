@@ -15,10 +15,10 @@ local abs = math.abs
 local ceil = math.ceil
 local floor = math.floor
 local pow = math.pow
+local min = math.min
 local e = math.exp(1)
 local unpack = table.unpack
 
-uus.infi = 1e8
 
 uus.varFn = function(base) return
     {
@@ -1467,6 +1467,61 @@ uus.preBuild = function(totalTracks, nbTransitTracks, posTransitTracks, ignoreFs
         end
     end
     return preBuild
+end
+
+local retriveInfo = function(info)
+    if (info) then
+        return {
+            length = tonumber(info:match("L(%d+)")),
+            radius = tonumber(info:match("R(%d+)")),
+            lengthRoundoff = tonumber(info:match("Lr(%d+)")),
+            radiusRoundoff = tonumber(info:match("Rr(%d+)")),
+            pattern = info:match("([TPt]+)")
+        }
+    else
+        return {}
+    end
+end
+
+uus.refineParams = function(instance, params)
+    local st = pipe.new
+        * instance.stations
+        * pipe.map(game.interface.getEntity)
+        * pipe.map(pipe.select("stationGroup"))
+        * pipe.map(game.interface.getEntity)
+        * pipe.map(pipe.select("name"))
+        * pipe.filter(function(n) return n:find("#", 0, true) == 1 end)
+    
+    if (st and #st > 0) then
+        local info = retriveInfo(st[1])
+        
+        local length = info.length or length
+        local length = info.lengthRoundoff and (length > info.lengthRoundoff and (floor(length / info.lengthRoundoff) * info.lengthRoundoff) or info.lengthRoundoff) or length
+        local length = length < 30 and 30 or length
+        local radius = info.radius or radius
+        local radius = info.radiusRoundoff and ceil(radius / info.radiusRoundoff) * info.radiusRoundoff or radius
+        
+        local patternRef = info.pattern and
+            pipe.new
+            * func.seq(1, info.pattern:len())
+            * pipe.map(function(i) return info.pattern:sub(i, i) end)
+            * pipe.fold(pipe.new, function(r, c)
+                if (c == "P") then
+                    return r[#r].t and r / {t = false, r = false} or r
+                else
+                    return r / {t = true, r = (c == "t")}
+                end
+            end)
+            or pipe.new * {}
+        local pattern = patternRef * pipe.map(pipe.select("t"))
+        
+        params.overrideParams = {
+            length = length,
+            radius = radius,
+            pattern = pattern
+        }
+    end
+    return params
 end
 
 return uus

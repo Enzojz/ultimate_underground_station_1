@@ -30,6 +30,27 @@ local function params()
         pipe.new
         +
         {
+            {
+                key = "lengthOverride",
+                name = _("Override Length"),
+                values = {_("No"), _("Yes")},
+                defaultIndex = 0
+            },
+            {
+                key = "radiusOverride",
+                name = _("Override Radius"),
+                values = {_("No"), _("Yes")},
+                defaultIndex = 0
+            },
+            {
+                key = "layoutOverride",
+                name = _("Override Track Layout"),
+                values = {_("No"), _("Yes")},
+                defaultIndex = 0
+            },
+        }
+        +
+        {
             
             {
                 key = "wall",
@@ -102,7 +123,9 @@ local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreL
     local bandWidth = 0.8
     local fitModel = uus.fitModel
     
-    local ptList = uus.preBuild(totalTracks, config.nbTransitTracks, config.posTransitTracks, ignoreFst, ignoreLst)(totalTracks, pipe.new)
+    local ptList = config.pattern
+        and #config.pattern > 0 and pipe.new * config.pattern
+        or uus.preBuild(totalTracks, config.nbTransitTracks, config.posTransitTracks, ignoreFst, ignoreLst)(totalTracks, pipe.new)
     local ptListI = ptList * pipe.zip(func.seq(1, #ptList), {"t", "i"})
     local refList = ptListI
         * pipe.filter(function(x) return x.t end)
@@ -208,6 +231,18 @@ end
 
 local function updateFn()
     return uus.safeBuild(params, function(params)
+        local radius = (uusm.rList[params.radius + 1] * 1000) * (params.sign == 0 and 1 or -1)
+        local length = min(uusm.trackLengths[params.length + 1], abs(radius * pi * 1.5))
+        
+        local instance = pipe.new
+            * game.interface.getEntities(
+                {pos = game.gui.getTerrainPos(), radius = 1000},
+                {includeData = false, type = "CONSTRUCTION", fileName = "station/rail/uus.con"})
+            * pipe.map(game.interface.getEntity)
+            * pipe.filter(function(data) return data.params and data.params.seed == params.seed end)
+
+        local params = #instance == 1 and uus.refineParams(instance[1], params) or params
+
         local models = uus.models({platform = params.floor + 1, wall = params.wall + 1})
         local trackType = uusm.trackList[params.trackType + 1]
         local trackWidth = uusm.trackWidthList[params.trackType + 1]
@@ -219,10 +254,15 @@ local function updateFn()
         local wStairs = uusm.wStairsList[params.wPlatform + 1]
         
         local nbTracks = uusm.trackNumberList[params.nbTracks + 1]
-        local radius = (uusm.rList[params.radius + 1] * 1000) * (params.sign == 0 and 1 or -1)
-        local slope = uusm.slopeList[params.slope + 1] * 0.001 * (params.slopeSign == 0 and 1 or -1)
         
-        local length = min(uusm.trackLengths[params.length + 1], abs(radius * pi * 1.5))
+        local slope = uusm.slopeList[params.slope + 1] * 0.001 * (params.slopeSign == 0 and 1 or -1)
+        local radius = params.radiusOverride == 1 and params.overrideParams
+            and params.overrideParams.radius
+            or (uusm.rList[params.radius + 1] * 1000) * (params.sign == 0 and 1 or -1)
+        local length = params.lengthOverride == 1 and params.overrideParams
+            and params.overrideParams.length
+            or min(uusm.trackLengths[params.length + 1], abs(radius * pi * 1.5))
+        
         local alt = func.seq(-5, 5)[params.altitude + 1]
         
         local config = {
@@ -237,6 +277,7 @@ local function updateFn()
             models = models,
             hasDown = (params.hasDown == nil) and true or params.hasDown,
             hasUp = (params.hasUp == nil) and true or params.hasUp,
+            pattern = params.layoutOverride == 1 and params.overrideParams and params.overrideParams.pattern or nil,
             name = params.stationName
         }
         
@@ -257,7 +298,7 @@ local function updateFn()
                     terrainAlignmentLists = {},
                     connectors = connectors
                 }
-                * station.setHeight(-10 + alt)
+                * station.setHeight(-12 + alt)
         end
         
         local edge, mockEdge, terminals, terminalsGroup, models, terrain, connectors =
@@ -280,7 +321,7 @@ local function updateFn()
                 interconnection = {isStation = true},
                 terrainAlignmentLists = station.mergePoly(unpack(terrain))(),
             }
-            * station.setHeight(-10 + alt)
+            * station.setHeight(-12 + alt)
         return result
     end)
 end

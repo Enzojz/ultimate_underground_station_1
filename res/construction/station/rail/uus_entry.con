@@ -153,8 +153,8 @@ local updateFn = function(params)
     
     local models = models({wall = params.wall + 1, floor = params.floor + 1, style = params.style + 1})
     
-    local sign = 1 and placeSign(
-        "test", 
+    local sign = params.stationName and placeSign(
+        params.stationName, 
         params.style == 2 and coor.xyz(0, 1.85, 1.8) or coor.xyz(0, -1, 1.8),
         params.style < 2 and width - 0.25
     ) or {}
