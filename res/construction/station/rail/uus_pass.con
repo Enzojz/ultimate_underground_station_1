@@ -48,7 +48,7 @@ end
 
 local function dissassemble(params)
     local pa = pipe.new
-        * game.interface.getEntities({pos = game.gui.getTerrainPos(), radius = 9999}, {type = "CONSTRUCTION", includeData = false, fileName = "station/rail/uus_assemble.con"})
+        * game.interface.getEntities({pos = game.gui.getTerrainPos(), radius = 9999}, {type = "CONSTRUCTION", includeData = false, fileName = "station/rail/uus_pass.con"})
         * pipe.map(game.interface.getEntity)
         * pipe.values()
         * pipe.filter(function(data) return data.params.seed == params.seed end)
@@ -56,7 +56,7 @@ local function dissassemble(params)
         local params = pa[1].params
         local player = game.interface.getPlayer()
         
-        func.forEach(params.children or {}, function(data)
+        func.forEach(func.range(params.entries, 2, #params.entries), function(data)
             local id = game.interface.buildConstruction(
                 data.fileName,
                 func.with(pure(data.params), {state = params.state}),
@@ -65,164 +65,87 @@ local function dissassemble(params)
             game.interface.setPlayer(id, player)
             game.interface.setName(id, data.name)
         end)
-
-        func.forEach(params.entries or {}, function(data)
-            local id = game.interface.buildConstruction(
-                data.fileName,
-                func.with(pure(data.params), {state = params.state}),
-                data.transf
-            )
-            game.interface.setPlayer(id, player)
-            game.interface.setName(id, data.name)
-        end)
-
+        
         game.interface.upgradeConstruction(
             pa[1].id,
-            params.major.fileName,
-            func.with(pure(params.major.params), {state = params.state})
+            params.entries[1].fileName,
+            func.with(pure(params.entries[1].params), {state = params.state})
         )
     end
     return {models = {}}
 end
 
-local ptToSetDistance = function(pt)
-    return function(pts, i)
-        local distances = pipe.new * pts
-            * pipe.filter(pt.toUpLevel
-                and function(p) return (p.toUpLevel and abs(p.z - pt.z) < 9) or (not p.toUpLevel and p.z > pt.z) end
-                or function(p) return (not p.toUpLevel and abs(p.z - pt.z) < 9) or (p.toUpLevel and p.z < pt.z) end)
-            * pipe.map(function(p) return {pt = p, distance = (p - pt):length()} end)
-            * pipe.sort(function(l, r) return l.distance < r.distance end)
-        return #distances > 0 and {
-            pt = pt,
-            set = pts,
-            avg = func.fold(distances, 0, function(r, d) return r + d.distance end) / #distances,
-            min = distances[1].distance,
-            result = distances,
-            order = i
-        } or false
-    end
-end
-
-local function generateConnectionNetwork(result, ctable, current, ...)
-    local allRest = pipe.new * {...}
-    local current = pipe.new * current
-    
-    if (#allRest == 0) then return result, ctable end
-    if (#current == 0) then return generateConnectionNetwork(result, ctable, ...) end
-    
-    local allPairs = current
-        * pipe.map(function(pt) return func.mapi(allRest, ptToSetDistance(pt)) end)
-        * pipe.map(pipe.filter(pipe.noop()))
-        * pipe.flatten()
-        * pipe.sort(function(l, r) return l.min < r.min end)
-    
-    local shortestPair = allPairs[1]
-    local rest = allRest * pipe.mapi(function(pts, i) return i ~= shortestPair.order and pts or false end) * pipe.filter(pipe.noop())
-    
-    local current = current + shortestPair.set
-    
-    local avgResultIndex = ceil(#shortestPair.result * 0.5)
-    
-    local newResult = pipe.new
-        / {shortestPair.pt, shortestPair.result[1].pt}
-        / (avgResultIndex > 1 and {shortestPair.pt, shortestPair.result[avgResultIndex].pt} or #shortestPair.result > 1 and {shortestPair.pt, shortestPair.result[2].pt} or nil)
-    
-    local ctable = ctable + newResult * pipe.flatten() * pipe.map(function(pt) return {pt.parent, pt.toUpLevel} end)
-    return generateConnectionNetwork(result + newResult, ctable, current, unpack(rest))
-end
-
 local updateFn = function(params)
     if (params.mode == 1) then return dissassemble(params) end
-    local result = func.with(
-        game.config.construction[params.major.fileName](func.with(params.major.params, {state = params.state, buildConnectorsOnly = true})),
-        {id = params.major.id}
-    )
-    local children = func.map(params.children, function(data)
-        game.interface.bulldoze(data.id)
-        return pipe.new
-            * game.config.construction[data.fileName](func.with(data.params, {state = params.state, buildConnectorsOnly = true}))
-            * station.setTransform(data.m)
-            * pipe.with({id = data.id})
-    end)
     
-    local allConn = pipe.new * children / result * pipe.map(function(e) return func.map(e.connectors, function(p) return func.with(p, {parent = e.id}) end) end)
-    
-    local conn, ctable = generateConnectionNetwork(pipe.new * {}, pipe.new * {}, unpack(allConn))
-    
-    local conn = conn
-        * pipe.map(function(c)
-            return station.newModel("uus/standard_lane.mdl", uus.mRot(c[2] - c[1]), coor.trans(c[1]))
-        end)
-        
-    local entryConn = pipe.new
+    local allEntries = pipe.new
         * params.entries
         * pipe.map(function(data)
-            game.interface.bulldoze(data.id)
-            local result = pipe.new
+            return {
+                result = pipe.new
                 * game.config.construction[data.fileName](func.with(data.params, {state = params.state, stationName = params.name}))
-                * station.setTransform(data.m)
-
-            local targets = func.map(result.connectors, function(pt)
-                return allConn
-                    * pipe.flatten()
-                    * pipe.map(function(p) 
-                        return {
-                        pt = p,
-                        distance = (p - pt):length(),
-                        conn = station.newModel("uus/standard_lane.mdl", uus.mRot(pt - p), coor.trans(p))
-                    } end)
-                    * pipe.min(function(l, r) return l.distance < r.distance end)
-            end)
-            
-            return (targets[1].pt - targets[2].pt):length() > 0.5
-                and {
-                    func.map(targets, pipe.select("conn")), 
-                    result, 
-                    func.map(targets, function(t) return {t.pt.parent, t.pt.toUpLevel} end)
-                }
-                or (targets[1].distance < targets[2].distance)
-                and {
-                    {targets[1].conn},
-                    pipe.new
-                    * game.config.construction[data.fileName](func.with(data.params, {state = params.state, stationName = params.name, isLeftOpen = true, isRightOpen = false}))
-                    * station.setTransform(data.m),
-                    {{targets[1].pt.parent, targets[1].pt.toUpLevel}}
-                }
-                or {
-                    {targets[2].conn},
-                    pipe.new
-                    * game.config.construction[data.fileName](func.with(data.params, {state = params.state, stationName = params.name, isLeftOpen = false, isRightOpen = true}))
-                    * station.setTransform(data.m),
-                    {{targets[2].pt.parent, targets[2].pt.toUpLevel}}
-                }
-        end
-    )
-    
-    local entryResults = entryConn * pipe.map(pipe.select(2))
-    local entryConns = entryConn
-        * pipe.map(pipe.select(1))
-        * pipe.flatten()
-        
-    local ctable = (ctable + entryConn * pipe.map(pipe.select(3)) * pipe.flatten()) * pipe.fold({}, function(r, c)
-        return func.with(
-            r,
-            {
-                [c[1]] = func.with(r[c[1]] or {false, false}, {[c[2] and 1 or 2] = true})
+                * station.setTransform(data.m),
+                id = data.id
             }
-    )
-    end)
+        end)
     
-    local result = game.config.construction[params.major.fileName]
-        (func.with(params.major.params, {state = params.state, stationName = params.name, hasUp = ctable[params.major.id][1], hasDown = ctable[params.major.id][2]}))
-    local children = func.map(params.children, function(data)
-        return pipe.new
-            * game.config.construction[data.fileName](func.with(data.params, {state = params.state, stationName = params.name, hasUp = ctable[data.id][1], hasDown = ctable[data.id][2]}))
-            * station.setTransform(data.m)
-    end)
+    local allConnections = allEntries * pipe.map(pipe.select("connectors"))
     
-    local newResult = station.mergeResults(result, unpack(entryResults + children))
-    return func.with(newResult, {models = newResult.models + conn + entryConns})
+    local entryConn = allEntries
+        * pipe.map(function(entry) return allEntries
+            * pipe.filter(function(e) return e.id ~= entry.id end)
+            * pipe.map(function(target)
+                return {
+                    {
+                        conn = uus.unitLane(entry.result.connectors[1], target.result.connectors[1]),
+                        distance = (entry.result.connectors[1] - target.result.connectors[1]):length(),
+                        info = {{entry.id, 1}, {target.id, 1}}
+                    },
+                    {
+                        conn = uus.unitLane(entry.result.connectors[1], target.result.connectors[2]),
+                        distance = (entry.result.connectors[1] - target.result.connectors[2]):length(),
+                        info = {{entry.id, 1}, {target.id, 2}}
+                    },
+                    {
+                        conn = uus.unitLane(entry.result.connectors[2], target.result.connectors[1]),
+                        distance = (entry.result.connectors[2] - target.result.connectors[1]):length(),
+                        info = {{entry.id, 2}, {target.id, 1}}
+                    },
+                    {
+                        conn = uus.unitLane(entry.result.connectors[2], target.result.connectors[2]),
+                        distance = (entry.result.connectors[2] - target.result.connectors[2]):length(),
+                        info = {{entry.id, 2}, {target.id, 2}}
+                    }
+                }
+            end)
+            * pipe.map(pipe.min(function(l, r) return l.distance < r.distance end))
+        end
+        )
+        * pipe.flatten()
+    
+    local entrySides = entryConn
+        * pipe.map(pipe.select("info"))
+        * pipe.flatten()
+        * pipe.fold({}, function(r, c)
+            return func.with(r,
+                {
+                    [c[1]] = func.with(r[c[1]] or {false, false}, {[c[2]] = true})
+                })
+        end)
+    
+    local allEntries = pipe.new
+        * params.entries
+        * pipe.map(function(data)
+            return
+                pipe.new
+                * game.config.construction[data.fileName](func.with(data.params, {state = params.state, isLeftOpen = entrySides[data.id][1], isRightOpen = entrySides[data.id][2]}))
+                * station.setTransform(data.m)
+        end)
+    
+    local newResult = station.mergeResults(unpack(allEntries))
+
+    local dump = require "luadump"
+    return dump()(func.with(newResult, {models = newResult.models + func.map(entryConn, pipe.select("conn"))}))
 end
 
 function data()

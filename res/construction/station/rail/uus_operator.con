@@ -104,8 +104,37 @@ end
 local assembly = function()
     local st = allStations()
     local en = allEntries()
-    
-    if (#st > 0) then
+    local dump = require "luadump"
+    dump()(st)
+    -- if (#st == 0 and #en > 1) then
+    --     local ref = en[1]
+    --     local vecRef, rotRef, _ = coor.decomposite(ref.transf)
+    --     local iRot = coor.inv(cov(rotRef))
+    --     local newId = game.interface.buildConstruction(
+    --         "station/rail/uus_pass.con",
+    --         {
+    --             mode = 0,
+    --             entries = en
+    --             * pipe.map(function(entry)
+    --                 local vec, rot, _ = coor.decomposite(entry.transf)
+    --                 return {
+    --                     params = entry.params,
+    --                     id = entry.id,
+    --                     fileName = entry.fileName,
+    --                     m = iRot * rot * coor.trans((vec - vecRef) .. iRot),
+    --                     transf = entry.transf,
+    --                     name = entry.name,
+    --                 }
+    --             end)
+    --         },
+    --         ref.transf
+    --     )
+        
+    --     game.interface.setPlayer(newId, game.interface.getPlayer())
+    --     local _ = en * pipe.map(pipe.select("id")) * pipe.forEach(game.interface.bulldoze)
+    -- else
+    if ((#st > 0 and #en > 0) or #st > 1) then
+        dump()("x")
         local stationName = (st + en)
             * pipe.map(function(e) return {name = e.name, sp = e.name:match('^#') and 0 or 1, oc = #{e.name:find("%s")}} end)
             * pipe.sort(function(l, r) return l.sp < r.sp or l.oc < r.oc end)
