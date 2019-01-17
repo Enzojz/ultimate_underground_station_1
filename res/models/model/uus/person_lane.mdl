@@ -23,7 +23,7 @@ return {
 			children = { },
 			events = { },
 			matConfigs = { },
-			static = false,
+			static = true,
 			visibleFrom = 0,
 			visibleTo = 1920,
 		}, 
