@@ -144,13 +144,12 @@ local updateFn = function(params)
     
     local newResult = station.mergeResults(unpack(allEntries))
 
-    local dump = require "luadump"
-    return dump()(func.with(newResult, {models = newResult.models + func.map(entryConn, pipe.select("conn"))}))
+    return func.with(newResult, {models = newResult.models + func.map(entryConn, pipe.select("conn"))})
 end
 
 function data()
     return {
-        type = "RAIL_STATION",
+        type = "ASSET_DEFAULT",
         buildMode = "SINGLE",
         availability = {
             yearFrom = 1800,

@@ -139,12 +139,13 @@ local updateFn = function(params)
         {id = params.major.id}
     )
     local children = func.map(params.children, function(data)
+        game.interface.bulldoze(data.id)
         return pipe.new
             * game.config.construction[data.fileName](func.with(data.params, {state = params.state, buildConnectorsOnly = true}))
             * station.setTransform(data.m)
             * pipe.with({id = data.id})
     end)
-    
+
     local allConn = pipe.new * children / result * pipe.map(function(e) return func.map(e.connectors, function(p) return func.with(p, {parent = e.id}) end) end)
     
     local conn, ctable = generateConnectionNetwork(pipe.new * {}, pipe.new * {}, unpack(allConn))
@@ -212,6 +213,7 @@ local updateFn = function(params)
     )
     end)
     
+
     local result = game.config.construction[params.major.fileName]
         (func.with(params.major.params, {state = params.state, stationName = params.name, hasUp = ctable[params.major.id][1], hasDown = ctable[params.major.id][2]}))
     local children = func.map(params.children, function(data)
