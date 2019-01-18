@@ -54,13 +54,13 @@ local function params()
             
             {
                 key = "wall",
-                name = _("Wall"),
+                name = sp .. "\n" .. _("Wall"),
                 values = {_("Tiles 1"), _("Tiles 2")},
                 defaultIndex = 0
             },
             {
                 key = "floor",
-                name = _("Floor style"),
+                name = _("Floor Style"),
                 values = {_("Marble 1"), _("Honeycomb"), _("Marble 2"), _("Concrete"), _("Asphalt")},
                 defaultIndex = 0
             }
@@ -110,7 +110,7 @@ local function params()
         + {
             {
                 key = "altitude",
-                name = _("Altitude adjustment") .. "(m)",
+                name = _("Depth Adjustment") .. " " .. "(m)",
                 values = func.seqMap({-5, 5}, tostring),
                 defaultIndex = 5
             }
@@ -298,7 +298,7 @@ local function updateFn()
                     terrainAlignmentLists = {},
                     connectors = connectors
                 }
-                * station.setHeight(-12 + alt)
+                * station.setHeight(-15 + alt)
         end
         
         local edge, mockEdge, terminals, terminalsGroup, models, terrain, connectors =
@@ -321,7 +321,7 @@ local function updateFn()
                 interconnection = {isStation = true},
                 terrainAlignmentLists = station.mergePoly(unpack(terrain))(),
             }
-            * station.setHeight(-12 + alt)
+            * station.setHeight(-15 + alt)
         return result
     end)
 end

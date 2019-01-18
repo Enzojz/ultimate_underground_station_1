@@ -29,7 +29,7 @@ local function params()
         {
             {
                 key = "mode",
-                name = _("Function"),
+                name = _("Form"),
                 values = {_("Keep"), _("Disassemble")},
                 defaultIndex = 0
             },
@@ -150,10 +150,7 @@ local updateFn = function(params)
     
     local conn, ctable = generateConnectionNetwork(pipe.new * {}, pipe.new * {}, unpack(allConn))
     
-    local conn = conn
-        * pipe.map(function(c)
-            return station.newModel("uus/standard_lane.mdl", uus.mRot(c[2] - c[1]), coor.trans(c[1]))
-        end)
+    local conn = conn * pipe.map(function(c) return uus.unitLane(c[1], c[2]) end)
         
     local entryConn = pipe.new
         * params.entries
@@ -170,7 +167,7 @@ local updateFn = function(params)
                         return {
                         pt = p,
                         distance = (p - pt):length(),
-                        conn = station.newModel("uus/standard_lane.mdl", uus.mRot(pt - p), coor.trans(p))
+                        conn = uus.unitLane(p, pt)
                     } end)
                     * pipe.min(function(l, r) return l.distance < r.distance end)
             end)

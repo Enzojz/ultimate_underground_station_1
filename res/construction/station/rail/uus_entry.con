@@ -33,7 +33,7 @@ local function params()
             {
                 key = "style",
                 name = _("Style"),
-                values = {_("Glass fence"), _("Normal fence"), _("Concrete fence")},
+                values = {_("Glass"), _("Normal"), _("Concrete")},
                 defaultIndex = 0
             },
             {
@@ -44,7 +44,7 @@ local function params()
             },
             {
                 key = "floor",
-                name = _("Floor style"),
+                name = _("Floor Style"),
                 values = {_("Marble 1"), _("Honeycomb"), _("Marble 2"), _("Concrete"), _("Asphalt")},
                 defaultIndex = 0
             },

@@ -132,10 +132,17 @@ local assembly = function()
         )
     elseif ((#st > 0 and #en > 0) or #st > 1) then
         local stationName = (st + en)
-            * pipe.map(function(e) return {name = e.name, sp = e.name:match('^#') and 0 or 1, oc = #{e.name:find("%s")}} end)
+            * pipe.map(pipe.select("stations"))
+            * pipe.flatten()
+            * pipe.map(game.interface.getEntity)
+            * pipe.map(pipe.select("stationGroup"))
+            * pipe.map(game.interface.getEntity)
+            * pipe.map(function(e) return {name = e.name, sp = e.name:match('^##') and 0 or 1, oc = #{e.name:find("%s")}} end)
             * pipe.sort(function(l, r) return l.sp < r.sp or l.oc < r.oc end)
             * pipe.select(1)
             * pipe.select("name")
+        local stationName = stationName:gsub("##", "", 1)
+            
         
         local ref = st[1]
         local vecRef, rotRef, _ = coor.decomposite(ref.transf)
@@ -197,7 +204,7 @@ function data()
         },
         description = {
             name = _("Underground station assembler"),
-            description = _("A tool that unify all un-conntected underground level and entries near the viewport as an interconnected and unique station.")
+            description = _("Unify all un-conntected underground level and entries near the viewport as an interconnected and unique station.")
         },
         order = 5018,
         skipCollision = true,

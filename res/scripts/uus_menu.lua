@@ -28,7 +28,7 @@ uusm.trackType = pipe.exec * function()
     local list = {
         {
             key = "trackType",
-            name = _("Track type"),
+            name = sp .. "\n" .. _("Track type"),
             values = {_("Standard"), _("High-speed")},
             yearFrom = 1925,
             yearTo = 0
