@@ -8,7 +8,15 @@ local quat = require "uus/quaternion"
 local pipe = require "uus/pipe"
 local uus = require "uus"
 local uusm = require "uus_menu"
-local livetext = require "livetext"
+
+local hasLivetext, livetext = xpcall(
+    require,
+    function(e)
+        print "Ultimate Underground Station: Livetext not found."
+    end,
+    "livetext"
+)
+
 local ma = math
 
 local abs = ma.abs
@@ -153,7 +161,7 @@ local updateFn = function(params)
     
     local models = models({wall = params.wall + 1, floor = params.floor + 1, style = params.style + 1})
     
-    local sign = params.stationName and placeSign(
+    local sign = params.stationName and hasLivetext and placeSign(
         params.stationName, 
         params.style == 2 and coor.xyz(0, 1.85, 1.8) or coor.xyz(0, -1, 1.8),
         params.style < 2 and width - 0.25

@@ -5,7 +5,14 @@ local line = require "uus/coorline"
 local quat = require "uus/quaternion"
 local station = require "uus/stationlib"
 local pipe = require "uus/pipe"
-local livetext = require "livetext"
+
+local hasLivetext, livetext = xpcall(
+    require,
+    function(e)
+        print "Ultimate Underground Station: Livetext not found."
+    end,
+    "livetext"
+)
 
 local uus = {}
 
@@ -537,6 +544,8 @@ uus.generateSideWalls = function(fitModel, config)
 end
 
 local placeSign = function(name, transBoard, hasPole)
+    if (not hasLivetext) then return {} end
+
     local signColor = "C00257E"
     local decoColor = "CF2F2F2"
     local textColor = "CFFFFFF_emissive"
