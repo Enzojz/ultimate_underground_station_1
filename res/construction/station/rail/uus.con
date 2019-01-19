@@ -231,7 +231,7 @@ end
 
 local function updateFn()
     return uus.safeBuild(params, function(params)
-        local radius = (uusm.rList[params.radius + 1] * 1000) * (params.sign == 0 and 1 or -1)
+        local radius = uusm.rList[params.radius + 1] * 1000
         local length = min(uusm.trackLengths[params.length + 1], abs(radius * pi * 1.5))
         
         local instance = pipe.new
@@ -256,9 +256,9 @@ local function updateFn()
         local nbTracks = uusm.trackNumberList[params.nbTracks + 1]
         
         local slope = uusm.slopeList[params.slope + 1] * 0.001 * (params.slopeSign == 0 and 1 or -1)
-        local radius = params.radiusOverride == 1 and params.overrideParams
+        local radius = (params.radiusOverride == 1 and params.overrideParams
             and params.overrideParams.radius
-            or (uusm.rList[params.radius + 1] * 1000) * (params.sign == 0 and 1 or -1)
+            or (uusm.rList[params.radius + 1] * 1000)) * (params.sign == 0 and 1 or -1)
         local length = params.lengthOverride == 1 and params.overrideParams
             and params.overrideParams.length
             or min(uusm.trackLengths[params.length + 1], abs(radius * pi * 1.5))

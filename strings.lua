@@ -15,6 +15,7 @@ For example:
 #L150R300 -> A station of 150m long and of 300m radius
 #L150TTPTT -> A station of 150m long, with two tracks on the both sides and a central platform
 #PTTTTP -> A station with platform on two sides, and two transit tracks in central
+* The "length" parameter defines the length of the shortest track in the station, if curved.
 * After the station is assembled, you can't directly modify it, to modify "Disassemble" it first.
 
 This mod requires the following two mods to work:
