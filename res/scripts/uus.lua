@@ -408,8 +408,8 @@ local stepsLanePos = function(config)
         local c = c + 1
         return
             pipe.new
-            + (config.hasDown and {{pos = floor(c * 0.25) + 3, vec = -1, z = -3}, {pos = ceil(c * 0.75) - 3, vec = 1, z = -3}} or {})
-            + (config.hasUp and {{pos = floor(c * 0.25) + 1, vec = -2, z = 6}, {pos = ceil(c * 0.75) - 1, vec = 2, z = 6}} or {})
+            + (config.hasDown and {{pos = floor(c * 0.25) + 3, vec = -1, z = -3}, {pos = ceil(c * 0.75) - 2, vec = 1, z = -3}} or {})
+            + (config.hasUp and {{pos = floor(c * 0.25) + 1, vec = -2, z = 6}, {pos = ceil(c * 0.75) - 0, vec = 2, z = 6}} or {})
     end
 end
 
@@ -432,7 +432,7 @@ uus.generalLanePos = function(config)
         local isStepsPos = isStepsPos(2 * arcs.count - 2)
         
         return func.map(
-            stepsLanePos(2 * arcs.count - 1),
+            stepsLanePos(2 * arcs.count - 2),
             function(i) return {f = arcs.platform.lane.mc[i.pos], t = arcs.platform.lane.mc[i.pos + i.vec] + coor.xyz(0, 0, i.z)} end
         ), isStepsPos
     end

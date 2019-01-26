@@ -121,7 +121,7 @@ local buildStation = function(totalTracks, arcPacker, config, ignoreFst, ignoreL
     local pW = config.wPlatform
     local tW = config.wTrack
     local bandWidth = 0.8
-    local fitModel = uus.fitModel
+    local fitModel = config.slope == 0 and uus.fitModel2D or uus.fitModel
     
     local ptList = config.pattern
         and #config.pattern > 0 and pipe.new * config.pattern
@@ -320,6 +320,12 @@ local function updateFn()
                 connectors = connectors,
                 interconnection = {isStation = true},
                 terrainAlignmentLists = station.mergePoly(unpack(terrain))(),
+                -- terrainAlignmentLists = {
+                --     {
+                --         type = "EQUAL",
+                --         faces = {}
+                --     }
+                -- }
             }
             * station.setHeight(-15 + alt)
         return result

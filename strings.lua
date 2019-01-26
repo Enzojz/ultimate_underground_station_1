@@ -28,6 +28,12 @@ The interconnection with Ultimate Station is in considering.
 Since the successor of Transport Fever has been announced upon the release of the final patch, this mod is probably my last big mod. I have spent too much hours on modding and even played the game too little.
 Honestly I hope the new game would be more modder friendly since lot's of modding mechanism is missing in the game, that limited the possibilities...
 Anyway Thanks to all who love my mod and Urban Games for much technical support.
+
+Changelog
+1.1
+* Better performance on slope = 0
+* Able to run without Livetext (Station Signs won't appear)
+* Fix wrong stairs lanes on some lengths
 ]]
 
 local descCN = [[本MOD能够自由地创建具有各个独立部分并且相互连接地铁站，并在你喜欢的任何地方自由创建入口。
