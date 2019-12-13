@@ -1,29 +1,23 @@
-function data() return {
-  animations = {  },
-  matConfigs = {
-    { 0 },
-    { 1 }
-  },
-  subMeshes = {
-    {
-      indices = {
-        normal   = { count = 36, offset = 504 },
-        position = { count = 36, offset = 504 },
-        tangent  = { count = 36, offset = 504 },
-        uv0      = { count = 36, offset = 504 },
-        uv1      = { count = 36, offset = 504 }
-      },
-      materials = {
-        "uus/downstep/tiles.mtl",
-        "uus/downstep/tiles_classic.mtl"
-      }
+function data()
+    return {
+        animations = {  },
+        subMeshes = {
+            {
+                indices = {
+                    normal = { count = 36, offset = 504 },
+                    position = { count = 36, offset = 504 },
+                    tangent = { count = 36, offset = 504 },
+                    uv0 = { count = 36, offset = 504 },
+                    uv1 = { count = 36, offset = 504 }
+                }
+            }
+        },
+        vertexAttr = {
+            normal = { count = 108, numComp = 3, offset = 180 },
+            position = { count = 108, numComp = 3, offset = 0 },
+            tangent = { count = 144, numComp = 4, offset = 288 },
+            uv0 = { count = 72, numComp = 2, offset = 108 },
+            uv1 = { count = 72, numComp = 2, offset = 432 }
+        }
     }
-  },
-  vertexAttr = {
-    normal   = { count = 108, numComp = 3, offset = 180 },
-    position = { count = 108, numComp = 3, offset = 0 },
-    tangent  = { count = 144, numComp = 4, offset = 288 },
-    uv0      = { count = 72, numComp = 2, offset = 108 },
-    uv1      = { count = 72, numComp = 2, offset = 432 }
-  }
-} end
+end

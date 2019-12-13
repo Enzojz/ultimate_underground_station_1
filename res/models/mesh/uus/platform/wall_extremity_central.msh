@@ -1,28 +1,23 @@
-function data() return {
-  animations = {  },
-  matConfigs = {
-    { 0 }, { 1 }
-  },
-  subMeshes = {
-    {
-      indices = {
-        normal   = { count = 24, offset = 336 },
-        position = { count = 24, offset = 336 },
-        tangent  = { count = 24, offset = 336 },
-        uv0      = { count = 24, offset = 336 },
-        uv1      = { count = 24, offset = 336 }
-      },
-      materials = {
-        "uus/wall_extremity/tiles.mtl",
-        "uus/wall_extremity/tiles_classic.mtl"
-      }
+function data()
+    return {
+        animations = {  },
+        subMeshes = {
+            {
+                indices = {
+                    normal = { count = 24, offset = 336 },
+                    position = { count = 24, offset = 336 },
+                    tangent = { count = 24, offset = 336 },
+                    uv0 = { count = 24, offset = 336 },
+                    uv1 = { count = 24, offset = 336 }
+                }
+            }
+        },
+        vertexAttr = {
+            normal = { count = 72, numComp = 3, offset = 120 },
+            position = { count = 72, numComp = 3, offset = 0 },
+            tangent = { count = 96, numComp = 4, offset = 192 },
+            uv0 = { count = 48, numComp = 2, offset = 72 },
+            uv1 = { count = 48, numComp = 2, offset = 288 }
+        }
     }
-  },
-  vertexAttr = {
-    normal   = { count = 72, numComp = 3, offset = 120 },
-    position = { count = 72, numComp = 3, offset = 0 },
-    tangent  = { count = 96, numComp = 4, offset = 192 },
-    uv0      = { count = 48, numComp = 2, offset = 72 },
-    uv1      = { count = 48, numComp = 2, offset = 288 }
-  }
-} end
+end

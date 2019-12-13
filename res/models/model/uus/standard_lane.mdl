@@ -1,46 +1,64 @@
-local laneutil = require "laneutil"
-
 function data()
     return {
         boundingInfo = {
-            bbMin = {
-                0, -.5, -.5
-            },
-            bbMax = {
-                1, .5, .5,
-            },
+            bbMax = { 1, 0.5, 0.5 },
+            bbMin = { 0, -0.5, -0.5 }
         },
         collider = {
             params = {
-                center = {.5, .0, .0},
-                halfExtents = {.5, .5, .5}
+                center = { 0.5, 0, 0 },
+                halfExtents = { 0.5, 0.5, 0.5 }
             },
             type = "BOX"
         },
         lods = {
             {
-                animations = {},
-                children = {},
-                events = {},
-                matConfigs = {},
+                animations = {  },
+                events = {  },
+                node = {
+                    children = {  },
+                    name = "RootNode",
+                    transf = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 }
+                },
                 static = true,
                 visibleFrom = 0,
-                visibleTo = 1920,
-            },
+                visibleTo = 1920
+            }
         },
         metadata = {
             transportNetworkProvider = {
                 laneLists = {
                     {
-                        transportModes = {"PERSON"},
-                        nodes = laneutil.makeLanes({
-                            {{0.0, 0.0, 0.0}, {0.5, 0.0, 0.0}, {0.5, 0.0, 0.0}, {0.5, 0.0, 0.0}, 2.4},
-                            {{1.0, 0.0, 0.0}, {0.5, 0.0, 0.0}, {-0.5, 0.0, 0.0}, {-0.5, 0.0, 0.0}, 2.4},
-                        })
+                        nodes = {
+                            {
+                                { 0, 0, 0 },
+                                { 0.5, 0, 0 },
+                                2.4
+                            },
+                            {
+                                { 0.5, 0, 0 },
+                                { 0.5, 0, 0 },
+                                2.4
+                            },
+                            {
+                                { 1, 0, 0 },
+                                { -0.5, 0, 0 },
+                                2.4
+                            },
+                            {
+                                { 0.5, 0, 0 },
+                                { -0.5, 0, 0 },
+                                2.4
+                            }
+                        },
+                        transportModes = {
+                            "PERSON"
+                        }
                     }
                 },
-                terminals = {}
+                terminals = {  }
             }
-        }
+        },
+        version = 1
     }
 end

@@ -1,45 +1,37 @@
 function data()
     return {
         collider = {
-            params = {
-            
-            },
-            type = "MESH",
+            params = {  },
+            type = "MESH"
         },
         lods = {
             {
-                children = {
-                    {
-                        id = "uus/platform/ceil_left_br.msh",
-                        transf = {
-                            1, 0, 0, 0,
-                            0, 1, 0, 0,
-                            0, 0, 1, 0,
-                            0, 0, 0, 1
+                node = {
+                    children = {
+                        {
+                            materials = {
+                                "uus/ceiling.mtl"
+                            },
+                            mesh = "uus/platform/ceil_left_br.msh",
+                            transf = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 }
                         },
-                        type = "MESH",
+                        {
+                            materials = {
+                                "uus/upstep/tiles.mtl"
+                            },
+                            mesh = "uus/platform/ceil_upstep_b_left.msh",
+                            transf = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 }
+                        }
                     },
-                    {
-                        id = "uus/platform/ceil_upstep_b_left.msh",
-                        transf = {
-                            1, 0, 0, 0,
-                            0, 1, 0, 0,
-                            0, 0, 1, 0,
-                            0, 0, 0, 1
-                        },
-                        type = "MESH",
-                    },
-                },
-                matConfigs = {
-                    { 0 }, { 0 }
+                    name = "RootNode",
+                    transf = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 }
                 },
                 static = false,
                 visibleFrom = 0,
-                visibleTo = 5000,
-            },
+                visibleTo = 5000
+            }
         },
-        metadata = {
-        },
-    
+        metadata = {  },
+        version = 1
     }
 end

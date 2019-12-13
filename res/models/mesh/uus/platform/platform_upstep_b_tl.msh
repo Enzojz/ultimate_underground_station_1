@@ -1,39 +1,32 @@
-function data() return {
-  animations = {  },
-  matConfigs = {
-    { 0, 0 }
-  },
-  subMeshes = {
-    {
-      indices = {
-        normal   = { count = 924, offset = 26376 },
-        position = { count = 924, offset = 26376 },
-        tangent  = { count = 924, offset = 26376 },
-        uv0      = { count = 924, offset = 26376 },
-        uv1      = { count = 924, offset = 26376 }
-      },
-      materials = {
-        "uus/upstep_steps.mtl"
-      }
-    },
-    {
-      indices = {
-        normal   = { count = 960, offset = 27300 },
-        position = { count = 960, offset = 27300 },
-        tangent  = { count = 960, offset = 27300 },
-        uv0      = { count = 960, offset = 27300 },
-        uv1      = { count = 960, offset = 27300 }
-      },
-      materials = {
-        "uus/step_armrest.mtl"
-      }
+function data()
+    return {
+        animations = {  },
+        subMeshes = {
+            {
+                indices = {
+                    normal = { count = 924, offset = 26376 },
+                    position = { count = 924, offset = 26376 },
+                    tangent = { count = 924, offset = 26376 },
+                    uv0 = { count = 924, offset = 26376 },
+                    uv1 = { count = 924, offset = 26376 }
+                }
+            },
+            {
+                indices = {
+                    normal = { count = 960, offset = 27300 },
+                    position = { count = 960, offset = 27300 },
+                    tangent = { count = 960, offset = 27300 },
+                    uv0 = { count = 960, offset = 27300 },
+                    uv1 = { count = 960, offset = 27300 }
+                }
+            }
+        },
+        vertexAttr = {
+            normal = { count = 5652, numComp = 3, offset = 9420 },
+            position = { count = 5652, numComp = 3, offset = 0 },
+            tangent = { count = 7536, numComp = 4, offset = 15072 },
+            uv0 = { count = 3768, numComp = 2, offset = 5652 },
+            uv1 = { count = 3768, numComp = 2, offset = 22608 }
+        }
     }
-  },
-  vertexAttr = {
-    normal   = { count = 5652, numComp = 3, offset = 9420 },
-    position = { count = 5652, numComp = 3, offset = 0 },
-    tangent  = { count = 7536, numComp = 4, offset = 15072 },
-    uv0      = { count = 3768, numComp = 2, offset = 5652 },
-    uv1      = { count = 3768, numComp = 2, offset = 22608 }
-  }
-} end
+end

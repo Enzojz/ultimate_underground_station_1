@@ -1516,7 +1516,7 @@ uus.refineParams = function(instance, params)
             * pipe.map(function(i) return info.pattern:sub(i, i) end)
             * pipe.fold(pipe.new, function(r, c)
                 if (c == "P") then
-                    return r[#r].t and r / {t = false, r = false} or r
+                    return (#r == 0 or r[#r].t) and r / {t = false, r = false} or r
                 else
                     return r / {t = true, r = (c == "t")}
                 end

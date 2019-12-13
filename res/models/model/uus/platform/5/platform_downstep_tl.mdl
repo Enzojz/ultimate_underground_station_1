@@ -1,35 +1,31 @@
 function data()
     return {
         collider = {
-            params = {
-            
-            },
-            type = "MESH",
+            params = {  },
+            type = "MESH"
         },
         lods = {
             {
-                children = {
-                    {
-                        id = "uus/platform/platform_downstep_tl.msh",
-                        transf = {
-                            1, 0, 0, 0,
-                            0, 1, 0, 0,
-                            0, 0, 1, 0,
-                            0, 0, 0, 1
-                        },
-                        type = "MESH",
+                node = {
+                    children = {
+                        {
+                            materials = {
+                                "uus/downstep_steps.mtl",
+                                "uus/step_armrest.mtl"
+                            },
+                            mesh = "uus/platform/platform_downstep_tl.msh",
+                            transf = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 }
+                        }
                     },
-                },
-                matConfigs = {
-                    {0, },
+                    name = "RootNode",
+                    transf = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 }
                 },
                 static = false,
                 visibleFrom = 0,
-                visibleTo = 5000,
-            },
+                visibleTo = 5000
+            }
         },
-        metadata = {
-        },
-    
+        metadata = {  },
+        version = 1
     }
 end

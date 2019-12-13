@@ -1,22 +1,22 @@
 function data()
     return {
         collider = {
-            params = {
-            
-            },
-            type = "MESH",
+            params = {  },
+            type = "MESH"
         },
         lods = {
             {
-                children = {},
-                matConfigs = {},
+                node = {
+                    children = {  },
+                    name = "RootNode",
+                    transf = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 }
+                },
                 static = false,
                 visibleFrom = 0,
-                visibleTo = 0,
-            },
+                visibleTo = 0
+            }
         },
-        metadata = {
-        },
-    
+        metadata = {  },
+        version = 1
     }
 end

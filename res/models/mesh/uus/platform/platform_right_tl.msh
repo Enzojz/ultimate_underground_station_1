@@ -1,35 +1,23 @@
-function data() return {
-  animations = {  },
-  matConfigs = {
-    { 0 },
-    { 1 },
-    { 2 },
-    { 3 },
-    { 4 }
-  },
-  subMeshes = {
-    {
-      indices = {
-        normal   = { count = 12, offset = 168 },
-        position = { count = 12, offset = 168 },
-        tangent  = { count = 12, offset = 168 },
-        uv0      = { count = 12, offset = 168 },
-        uv1      = { count = 12, offset = 168 }
-      },
-      materials = {
-        "uus/platform/marble.mtl",
-        "uus/platform/honeycomb.mtl",
-        "uus/platform/marble_geometric.mtl",
-        "uus/platform/concrete_tiles2.mtl",
-        "uus/platform/asphalt.mtl"
-      }
+function data()
+    return {
+        animations = {  },
+        subMeshes = {
+            {
+                indices = {
+                    normal = { count = 12, offset = 168 },
+                    position = { count = 12, offset = 168 },
+                    tangent = { count = 12, offset = 168 },
+                    uv0 = { count = 12, offset = 168 },
+                    uv1 = { count = 12, offset = 168 }
+                }
+            }
+        },
+        vertexAttr = {
+            normal = { count = 36, numComp = 3, offset = 60 },
+            position = { count = 36, numComp = 3, offset = 0 },
+            tangent = { count = 48, numComp = 4, offset = 96 },
+            uv0 = { count = 24, numComp = 2, offset = 36 },
+            uv1 = { count = 24, numComp = 2, offset = 144 }
+        }
     }
-  },
-  vertexAttr = {
-    normal   = { count = 36, numComp = 3, offset = 60 },
-    position = { count = 36, numComp = 3, offset = 0 },
-    tangent  = { count = 48, numComp = 4, offset = 96 },
-    uv0      = { count = 24, numComp = 2, offset = 36 },
-    uv1      = { count = 24, numComp = 2, offset = 144 }
-  }
-} end
+end

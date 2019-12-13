@@ -1,46 +1,32 @@
 function data()
     return {
         collider = {
-            params = {
-            
-            },
-            type = "MESH",
+            params = {  },
+            type = "MESH"
         },
         lods = {
             {
-                animations = {
-                
-                },
-                children = {
-                    {
-                        id = "uus/platform/double_chair.msh",
-                        transf = {
-                            1, 0, 0, 0,
-                            0, 1, 0, 0,
-                            0, 0, 1, 0,
-                            0, 0, 0, 1,
-                        },
-                        type = "MESH",
+                animations = {  },
+                events = {  },
+                node = {
+                    children = {
+                        {
+                            materials = {
+                                "uus/chair.mtl"
+                            },
+                            mesh = "uus/platform/double_chair.msh",
+                            transf = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 }
+                        }
                     },
-                
-                },
-                events = {
-                
-                },
-                matConfigs = {
-                    {
-                        0, 0, 0,
-                    },
+                    name = "RootNode",
+                    transf = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 }
                 },
                 static = false,
                 visibleFrom = 0,
-                visibleTo = 200,
-            
-            },
+                visibleTo = 200
+            }
         },
-        metadata = {
-        }
-    
-    
+        metadata = {  },
+        version = 1
     }
 end

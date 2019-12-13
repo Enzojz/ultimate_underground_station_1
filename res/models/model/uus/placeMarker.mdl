@@ -1,45 +1,35 @@
 function data()
     return {
         collider = {
-            params = {halfExtents = {0, 0, 0}},
-            transf = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1},
+            params = {
+                halfExtents = { 0, 0, 0 }
+            },
+            transf = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 },
             type = "BOX"
         },
         lods = {
             {
-                animations = {
-                
-                },
-                children = {
-                    {
-                        id = "uus/placeMarker.msh",
-                        transf = {
-                            1, 0, 0, 0, 
-                            0, 1, 0, 0, 
-                            0, 0, 1, 0, 
-                            -15, 0, 0, 1,
-                        },
-                        type = "MESH",
+                animations = {  },
+                events = {  },
+                node = {
+                    children = {
+                        {
+                            materials = {
+                                "asset/icon/asset_icon_mark.mtl"
+                            },
+                            mesh = "uus/placeMarker.msh",
+                            transf = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, -15, 0, 0, 1 }
+                        }
                     },
-                
-                },
-                events = {
-                
-                },
-                matConfigs = {
-                    {
-                        0, 0, 0,
-                    },
+                    name = "RootNode",
+                    transf = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 }
                 },
                 static = true,
                 visibleFrom = 0,
-                visibleTo = 2000,
-            
-            },
+                visibleTo = 2000
+            }
         },
-        metadata = {
-        }
-    
-    
+        metadata = {  },
+        version = 1
     }
 end

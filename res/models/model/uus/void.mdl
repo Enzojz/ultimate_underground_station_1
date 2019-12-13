@@ -1,26 +1,29 @@
 function data()
     return {
         boundingInfo = {
-            bbMin = {0, 0, 0},
-            bbMax = {0, 0, 0},
+            bbMax = { 0, 0, 0 },
+            bbMin = { 0, 0, 0 }
         },
         collider = {
             params = {
-                center = {0, 0, 0},
-                halfExtents = {0, 0, 0}
+                center = { 0, 0, 0 },
+                halfExtents = { 0, 0, 0 }
             },
             type = "BOX"
         },
         lods = {
             {
-                children = {},
-                matConfigs = {},
+                node = {
+                    children = {  },
+                    name = "RootNode",
+                    transf = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 }
+                },
                 static = true,
                 visibleFrom = 0,
-                visibleTo = 1000,
-            },
+                visibleTo = 1000
+            }
         },
-        metadata = {},
-    
+        metadata = {  },
+        version = 1
     }
 end
