@@ -13,7 +13,7 @@ function data() return {
         uv1      = { count = 2436, offset = 34104 }
       },
       materials = {
-        "uus/text_emissive.mtl"
+        "mus/text_emissive.mtl"
       }
     }
   },

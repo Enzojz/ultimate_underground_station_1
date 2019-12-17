@@ -1,0 +1,138 @@
+local paramsutil = require "paramsutil"
+local func = require "entry/func"
+local coor = require "entry/coor"
+local line = require "mus/coorline"
+local trackEdge = require "mus/trackedge"
+local station = require "mus/stationlib"
+local quat = require "entry/quaternion"
+local pipe = require "entry/pipe"
+-- local mus = require "mus"
+-- local musm = require "mus_menu"
+local ma = math
+local abs = ma.abs
+local ceil = ma.ceil
+local floor = ma.floor
+local pi = ma.pi
+local atan = ma.atan
+local pow = ma.pow
+local cos = ma.cos
+local sin = ma.sin
+local min = ma.min
+local e = ma.exp(1)
+local log = ma.log
+local log10 = log(10)
+local unpack = table.unpack
+
+local function slotIdDecode(id)
+    -- Rule 
+    -- T XXXXX, T = 5: 5m, 6: 10m, 7:15m, 1: track
+    local subId = id % 10000
+    local prefix = (id - subId) / 10000
+    if prefix == 5 then
+        return {"station/rail/mus_platform_5m.module", subId}
+    elseif prefix == 1 then
+        return {"station/rail/mus_track.module", subId}
+    end
+end
+
+function data()
+    local constructionTemplates =
+        {
+            {
+                constructionType = "RAIL_STATION",
+                type = "DYNAMIC",
+                availability = {
+                    yearFrom = 0,
+                    yearTo = 0
+                },
+                description = {
+                    name = _("Underground Station"),
+                    description = _("An underground level for a station, width adjustable platform width and radius."),
+                    icon = "ui/construction/station/rail/mus.tga"
+                },
+                data = {
+                    params = {}
+                },
+            }
+        }
+    
+    local createTemplateFn = function(params)
+        local result = {
+            [50001] = "station/rail/mus_platform_5m.module",
+            [10001] = "station/rail/mus_track.module",
+        }
+        
+        return result
+    end
+    
+    local upgradeFn = function(params)
+        end
+    
+    local updateFn = function(params)
+        local result = {}
+        
+        result.modules = params.modules
+        
+        result.slots = func.mapi(params.modules, function(e, i)
+            return {
+                id = i,
+                transf = e.transf or coor.I(),
+                type = "entry",
+                spacing = {0, 0, 0, 0}
+            }
+        end)
+        
+        result.models = {}
+        
+        result.colliders = {}
+        result.terrainAlignmentLists = {}
+        result.groundFaces = {}
+        result.terminalGroups = {}
+        result.stations = {}
+        result.dependentSlots = {}
+        result.edgeLists = {}
+        result.slotConfig = {}
+        
+        result.occupied = {{}, {}, {}, {}}
+        result.cost = 0
+        result.terminateConstructionHook = nil
+        return result
+    end
+    
+    return {
+        type = "RAIL_STATION",
+        description = {
+            name = _("Underground Station"),
+            description = _("An underground level for a station, width adjustable platform width and radius.")
+        },
+        availability = {
+            yearFrom = 0,
+            yearTo = 0
+        },
+        order = 1000,
+        constructionTemplates = constructionTemplates,
+        createTemplateFn = createTemplateFn,
+        params = {
+            {
+                key = "style",
+                name = _("Style"),
+                values = {_("Glass"), _("Normal"), _("Concrete")},
+                defaultIndex = 0
+            },
+            {
+                key = "wall",
+                name = _("Wall"),
+                values = {_("Tiles 1"), _("Tiles 2")},
+                defaultIndex = 0
+            },
+            {
+                key = "floor",
+                name = _("Floor Style"),
+                values = {_("Marble 1"), _("Honeycomb"), _("Marble 2"), _("Concrete"), _("Asphalt")},
+                defaultIndex = 0
+            },
+        },
+        upgradeFn = upgradeFn,
+        updateFn = updateFn
+    }
+end

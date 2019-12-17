@@ -1,0 +1,214 @@
+local paramsutil = require "paramsutil"
+local func = require "mus/func"
+local coor = require "mus/coor"
+local line = require "mus/coorline"
+local trackEdge = require "mus/trackedge"
+local station = require "mus/stationlib"
+local quat = require "mus/quaternion"
+local pipe = require "mus/pipe"
+local mus = require "mus"
+local musm = require "mus_menu"
+local ma = math
+
+local abs = ma.abs
+local ceil = ma.ceil
+local floor = ma.floor
+local pi = ma.pi
+local atan = ma.atan
+local pow = ma.pow
+local cos = ma.cos
+local sin = ma.sin
+local min = ma.min
+local e = ma.exp(1)
+local log = ma.log
+local log10 = log(10)
+
+justReset = justReset or false
+
+local pure = function(pa)
+    local params = {}
+    for key, value in pairs(pa) do
+        if (key ~= "seed") then
+            params[key] = value
+        end
+    end
+    return params
+end
+
+local function findMarkers()
+    return pipe.new
+        * game.interface.getEntities({pos = game.gui.getTerrainPos(), radius = 1000})
+        * pipe.map(game.interface.getEntity)
+        * pipe.filter(function(data) return data.fileName and string.match(data.fileName, "station/rail/mus_operator.con") end)
+        * pipe.sort(function(x, y) return x.id < y.id end)
+end
+
+local placeMarker = function()
+    return {
+        models = {
+            {
+                id = "mus/placeMarker.mdl",
+                transf = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}
+            }
+        },
+        cost = 0,
+        bulldozeCost = 0,
+        maintenanceCost = 0,
+        terrainAlignmentLists = {
+            {
+                type = "EQUAL",
+                faces = {}
+            }
+        }
+    }
+end
+
+local reset = function()
+    if (not justReset) then
+        local markers = findMarkers()
+        func.forEach(findMarkers(), function(m)
+            game.interface.bulldoze(m.id)
+        end)
+        justReset = true
+    end
+    return placeMarker()
+end
+
+local cov = function(m)
+    return func.seqMap({0, 3}, function(r)
+        return func.seqMap({1, 4}, function(c)
+            return m[r * 4 + c]
+        end)
+    end)
+end
+
+local allStations = function()
+    return pipe.new
+        * game.interface.getEntities(
+            {pos = game.gui.getTerrainPos(), radius = 1000},
+            {includeData = false, type = "CONSTRUCTION", fileName = "station/rail/mus.con"})
+        * pipe.map(game.interface.getEntity)
+        * pipe.sort(function(x, y) return x.id < y.id end)
+end
+
+
+local allEntries = function()
+    return pipe.new
+        * game.interface.getEntities(
+            {pos = game.gui.getTerrainPos(), radius = 1000},
+            {includeData = false, type = "CONSTRUCTION", fileName = "station/rail/mus_entry.con"})
+        * pipe.map(game.interface.getEntity)
+        * pipe.sort(function(x, y) return x.id < y.id end)
+end
+
+local assembly = function()
+    local st = allStations()
+    local en = allEntries()
+    
+    if (#st == 0 and #en > 1) then
+        local ref = en[1]
+        local vecRef, rotRef, _ = coor.decomposite(ref.transf)
+        local iRot = coor.inv(cov(rotRef))
+        
+        local _ = en * pipe.range(2, #en) * pipe.map(pipe.select("id")) * pipe.forEach(game.interface.bulldoze)
+        local newId = game.interface.upgradeConstruction(
+            ref.id,
+            "station/rail/mus_pass.con",
+            {
+                mode = 0,
+                entries = en
+                * pipe.map(function(entry)
+                    local vec, rot, _ = coor.decomposite(entry.transf)
+                    return {
+                        params = entry.params,
+                        id = entry.id,
+                        fileName = entry.fileName,
+                        m = iRot * rot * coor.trans((vec - vecRef) .. iRot),
+                        transf = entry.transf,
+                        name = entry.name,
+                    }
+                end)
+            }
+        )
+    elseif ((#st > 0 and #en > 0) or #st > 1) then
+        local stationName = (st + en)
+            * pipe.map(pipe.select("stations"))
+            * pipe.flatten()
+            * pipe.map(game.interface.getEntity)
+            * pipe.map(pipe.select("stationGroup"))
+            * pipe.map(game.interface.getEntity)
+            * pipe.map(function(e) return {name = e.name, sp = e.name:match('^##') and 0 or 1, oc = #{e.name:find("%s")}} end)
+            * pipe.sort(function(l, r) return l.sp < r.sp or l.oc < r.oc end)
+            * pipe.select(1)
+            * pipe.select("name")
+        local stationName = stationName:gsub("##", "", 1)
+            
+        
+        local ref = st[1]
+        local vecRef, rotRef, _ = coor.decomposite(ref.transf)
+        local iRot = coor.inv(cov(rotRef))
+        local rest = st
+            * pipe.range(2, #st)
+            * pipe.map(function(st)
+                local vec, rot, _ = coor.decomposite(st.transf)
+                return {
+                    params = mus.refineParams(st, st.params),
+                    id = st.id,
+                    fileName = st.fileName,
+                    m = iRot * rot * coor.trans((vec - vecRef) .. iRot),
+                    transf = st.transf,
+                    name = st.name,
+                }
+            end)
+        game.interface.upgradeConstruction(
+            ref.id,
+            "station/rail/mus_assemble.con",
+            {
+                mode = 0,
+                name = stationName,
+                major = {
+                    name = ref.name,
+                    fileName = ref.fileName,
+                    params = mus.refineParams(ref, ref.params),
+                    transf = ref.transf,
+                    id = ref.id
+                },
+                children = rest,
+                entries = en
+                * pipe.map(function(entry)
+                    local vec, rot, _ = coor.decomposite(entry.transf)
+                    return {
+                        params = entry.params,
+                        id = entry.id,
+                        fileName = entry.fileName,
+                        m = iRot * rot * coor.trans((vec - vecRef) .. iRot),
+                        transf = entry.transf,
+                        name = entry.name,
+                    }
+                end)
+            }
+        )
+        return reset()
+    end
+    
+    return placeMarker()
+end
+
+function data()
+    return {
+        type = "RAIL_STATION",
+        buildMode = "MULTI",
+        availability = {
+            yearFrom = 0,
+            yearTo = 0
+        },
+        description = {
+            name = _("Underground station assembler"),
+            description = _("Unify all un-conntected underground level and entries near the viewport as an interconnected and unique station.")
+        },
+        order = 5018,
+        skipCollision = true,
+        autoRemovable = false,
+        updateFn = assembly
+    }
+end

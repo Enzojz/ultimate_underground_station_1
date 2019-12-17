@@ -1,0 +1,34 @@
+function data()
+    return {
+        collider = {
+            params = {  },
+            type = "MESH"
+        },
+        lods = {
+            {
+                node = {
+                    children = {
+                        {
+                            materials = {
+                                "mus/entry_armrest.mtl",
+                                "mus/entry_marble.mtl",
+                                "mus/entry_concrete.mtl",
+                                "mus/entry_fence.mtl",
+                                "mus/entry_glass.mtl"
+                            },
+                            mesh = "mus/entry/entry_glass_right.msh",
+                            transf = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 }
+                        }
+                    },
+                    name = "RootNode",
+                    transf = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 }
+                },
+                static = true,
+                visibleFrom = 0,
+                visibleTo = 5000
+            }
+        },
+        metadata = {  },
+        version = 1
+    }
+end

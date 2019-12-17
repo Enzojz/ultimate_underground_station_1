@@ -5,9 +5,9 @@ function data()
         yearTo = 1840,
         carriers = { "RAIL" },
         portals = {
-            { "uus/void.mdl", "uus/void.mdl", "uus/void.mdl" },
-            { "uus/void.mdl", "uus/void.mdl", "uus/void.mdl" },
-            { "uus/void.mdl", "uus/void.mdl", "uus/void.mdl" },
+            { "mus/void.mdl", "mus/void.mdl", "mus/void.mdl" },
+            { "mus/void.mdl", "mus/void.mdl", "mus/void.mdl" },
+            { "mus/void.mdl", "mus/void.mdl", "mus/void.mdl" },
         },
         cost = 0.0
     }

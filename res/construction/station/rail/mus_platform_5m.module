@@ -1,0 +1,68 @@
+local func = require "entry/func"
+local coor = require "entry/coor"
+local pipe = require "entry/pipe"
+local general = require "entry/general"
+local mus = require "mus"
+-- local dump = require "luadump"
+
+local unpack = table.unpack
+local ma = math
+local pi = ma.pi
+
+function data()
+    return {
+        availability = {
+            yearFrom = 0,
+            yearTo = 0,
+        },
+        buildMode = "MULTI",
+        cost = {
+            price = 15000,
+        },
+        description = {
+            name = _("5m Underground platform"),
+            description = _("An underground platform of 5m wide"),
+            icon = "ui/construction/street/underpass_entry.tga"
+        },
+        category = {
+            categories = {"platform"},
+        },
+        type = "mus_platform",
+        order = {
+            value = 260,
+        },
+        metadata = {
+            entry = true,
+        },
+        
+        updateFn = function(result, transform, tag, slotId, addModelFn, params)
+            local models = mus.models(params)
+
+            local _ = func.forEach(getModels(params, result, slotId), function(m) addModelFn(m.id, m.transf) end)
+            local dz = 0
+            local width = widthList[(params.width or 1) + 1]
+            local holeFace = general.surfaceOf(coor.xyz(width + 0.25, 6.7, 1), coor.xyz(0.0, -1.55, dz), transform)
+            local terrainFace = general.surfaceOf(coor.xyz(width + 1, 10, 1), coor.xyz(0.0, -2.25, dz), transform)
+            local aboveFace = general.surfaceOf(coor.xyz(width + 1, 5.25, 1), coor.xyz(0.0, 4.625, dz), transform)
+            
+            result.terrainAlignmentLists[#result.terrainAlignmentLists + 1] = {
+                type = "EQUAL",
+                faces = {terrainFace}
+            }
+            
+            result.terrainAlignmentLists[#result.terrainAlignmentLists + 1] = {
+                type = "GREATER",
+                faces = {aboveFace}
+            }
+            
+            result.groundFaces[#result.groundFaces + 1] = {face = holeFace, modes = {{type = "FILL", key = "hole.lua"}}}
+            result.groundFaces[#result.groundFaces + 1] = {face = terrainFace, modes = {{type = "FILL", key = "town_concrete.lua"}}}
+            result.groundFaces[#result.groundFaces + 1] = {face = terrainFace, modes = {{type = "STROKE_OUTER", key = "town_concrete_border.lua"}}}
+        end,
+        
+        getModelsFn = function(params)
+            return getModels(params, nil)
+        end
+    }
+
+end

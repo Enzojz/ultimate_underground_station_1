@@ -1,0 +1,32 @@
+function data()
+    return {
+        collider = {
+            params = {  },
+            type = "MESH"
+        },
+        lods = {
+            {
+                animations = {  },
+                events = {  },
+                node = {
+                    children = {
+                        {
+                            materials = {
+                                "mus/chair.mtl"
+                            },
+                            mesh = "mus/platform/double_chair.msh",
+                            transf = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 }
+                        }
+                    },
+                    name = "RootNode",
+                    transf = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 }
+                },
+                static = false,
+                visibleFrom = 0,
+                visibleTo = 200
+            }
+        },
+        metadata = {  },
+        version = 1
+    }
+end

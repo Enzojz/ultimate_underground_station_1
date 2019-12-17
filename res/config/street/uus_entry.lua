@@ -14,11 +14,11 @@ function data()
         desc = "",
         materials = {
             streetPaving = {
-                name = "uus/street_paving.mtl",
+                name = "mus/street_paving.mtl",
                 size = { 1.0, 1.0 }
             },	
             streetLane = {
-                name = "uus/street_paving.mtl",
+                name = "mus/street_paving.mtl",
                 size = { 1.0, 1.0 }
             },
             streetStripe = {
@@ -57,7 +57,7 @@ function data()
                 name = ""		
             },
             sidewalkPaving = {
-                name = "uus/street_paving.mtl",
+                name = "mus/street_paving.mtl",
                 size = { 1.0, 1.0 }
             },
             sidewalkLane = {	
