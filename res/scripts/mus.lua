@@ -1,10 +1,10 @@
-local func = require "mus/func"
-local coor = require "mus/coor"
+local func = require "entry/func"
+local coor = require "entry/coor"
 local arc = require "mus/coorarc"
 local line = require "mus/coorline"
-local quat = require "mus/quaternion"
+local quat = require "entry/quaternion"
 local station = require "mus/stationlib"
-local pipe = require "mus/pipe"
+local pipe = require "entry/pipe"
 
 local hasLivetext, livetext = xpcall(
     require,

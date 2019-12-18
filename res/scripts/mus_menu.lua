@@ -1,5 +1,5 @@
-local func = require "mus/func"
-local pipe = require "mus/pipe"
+local func = require "entry/func"
+local pipe = require "entry/pipe"
 local musm = {}
 
 local infi = 1e8

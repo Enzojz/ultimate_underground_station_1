@@ -1,4 +1,4 @@
-local func = require "mus/func"
+local func = require "entry/func"
 local trackEdge = {}
 
 

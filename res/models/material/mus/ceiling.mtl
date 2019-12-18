@@ -58,6 +58,6 @@ function data()
             polygon_offset = { factor = 0, units = 0 },
             two_sided = { twoSided = false }
         },
-        type = "PHYSICAL_NRML_MAP_UV1_AO"
+        type = "PHYSICAL_NRML_MAP_OP_UV1_AO"
     }
 end

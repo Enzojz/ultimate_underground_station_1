@@ -1,6 +1,6 @@
-local func = require "mus/func"
-local pipe = require "mus/pipe"
-local coor = require "mus/coor"
+local func = require "entry/func"
+local pipe = require "entry/pipe"
+local coor = require "entry/coor"
 local line = require "mus/coorline"
 
 local math = math

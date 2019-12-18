@@ -2,12 +2,29 @@ local func = require "entry/func"
 local coor = require "entry/coor"
 local pipe = require "entry/pipe"
 local general = require "entry/general"
+local station = require "mus/stationlib"
 local mus = require "mus"
--- local dump = require "luadump"
+local dump = require "luadump"
 
 local unpack = table.unpack
 local ma = math
 local pi = ma.pi
+
+local segmentLength = 5
+local platformWidth = 10
+local platformHeight = 1.93
+local edgeWidth = 0.8
+local sideWidth = 1.7
+local centralWidth = 5
+
+local function makeSize(left, right)
+    return {
+        lb = coor.xyz(left, -2.5, 0),
+        lt = coor.xyz(left, 2.5, 0),
+        rt = coor.xyz(right, 2.5, 0),
+        rb = coor.xyz(right, -2.5, 0)
+    }
+end
 
 function data()
     return {
@@ -15,7 +32,7 @@ function data()
             yearFrom = 0,
             yearTo = 0,
         },
-        buildMode = "MULTI",
+        buildMode = "SINGLE",
         cost = {
             price = 15000,
         },
@@ -32,36 +49,59 @@ function data()
             value = 260,
         },
         metadata = {
-            entry = true,
+            platform = true,
         },
         
         updateFn = function(result, transform, tag, slotId, addModelFn, params)
-            local models = mus.models(params)
-
-            local _ = func.forEach(getModels(params, result, slotId), function(m) addModelFn(m.id, m.transf) end)
-            local dz = 0
-            local width = widthList[(params.width or 1) + 1]
-            local holeFace = general.surfaceOf(coor.xyz(width + 0.25, 6.7, 1), coor.xyz(0.0, -1.55, dz), transform)
-            local terrainFace = general.surfaceOf(coor.xyz(width + 1, 10, 1), coor.xyz(0.0, -2.25, dz), transform)
-            local aboveFace = general.surfaceOf(coor.xyz(width + 1, 5.25, 1), coor.xyz(0.0, 4.625, dz), transform)
+            local hW = 5
+            local vectorW = func.interlace({
+                -hW,
+                - hW + edgeWidth,
+                -hW + edgeWidth + sideWidth,
+                hW - edgeWidth - sideWidth,
+                hW - edgeWidth,
+                hW
+            })
+            local vectorMW = {edgeWidth, sideWidth, (hW - edgeWidth - sideWidth) * 2, sideWidth, edgeWidth}
+            local vectorM = {"edgeLeft", "left", "central", "right", "edgeRight"}
+            dump()({vectorW, vectorMW, vectorM})
+            local newModels = pipe.mapn(vectorW, vectorMW, vectorM)(function(w, mw, m)
+                local size = makeSize(unpack(w))
+                return {
+                    station.newModel(result.modelType.platform[m] .. "_tl.mdl", mus.fitModel(mw, segmentLength, platformHeight, size, true, true)),
+                    station.newModel(result.modelType.platform[m] .. "_br.mdl", mus.fitModel(mw, segmentLength, platformHeight, size, false, false))
+                }
+            end)
             
-            result.terrainAlignmentLists[#result.terrainAlignmentLists + 1] = {
-                type = "EQUAL",
-                faces = {terrainFace}
-            }
-            
-            result.terrainAlignmentLists[#result.terrainAlignmentLists + 1] = {
-                type = "GREATER",
-                faces = {aboveFace}
-            }
-            
-            result.groundFaces[#result.groundFaces + 1] = {face = holeFace, modes = {{type = "FILL", key = "hole.lua"}}}
-            result.groundFaces[#result.groundFaces + 1] = {face = terrainFace, modes = {{type = "FILL", key = "town_concrete.lua"}}}
-            result.groundFaces[#result.groundFaces + 1] = {face = terrainFace, modes = {{type = "STROKE_OUTER", key = "town_concrete_border.lua"}}}
+            result.models =
+                pipe.new
+                * result.models
+                + func.flatten(newModels)
         end,
         
         getModelsFn = function(params)
-            return getModels(params, nil)
+            local hW = 5
+            local vectorW = func.interlace({
+                -hW
+                - hW + edgeWidth,
+                -hW + edgeWidth + sideWidth,
+                hW - edgeWidth - sideWidth,
+                hW - edgeWidth,
+                hW
+            })
+            local vectorMW = {edgeWidth, sideWidth, (hW - edgeWidth - sideWidth) * 2, sideWidth, edgeWidth}
+            local vectorM = {"edgeLeft", "left", "central", "right", "edgeRight"}
+            
+            return
+                pipe.new
+                * pipe.mapn(vectorW, vectorMW, vectorM)(function(w, mw, m)
+                    local size = makeSize(unpack(w))
+                    return {
+                        station.newModel(m .. "_tl.mdl", mus.fitModel(mw, segmentLength, platformHeight, size, true, true)),
+                        station.newModel(m .. "_br.mdl", mus.fitModel(mw, segmentLength, platformHeight, size, false, false))
+                    }
+                end)
+                * pipe.flatten()
         end
     }
 

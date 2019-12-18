@@ -6,7 +6,10 @@ local trackEdge = require "mus/trackedge"
 local station = require "mus/stationlib"
 local quat = require "entry/quaternion"
 local pipe = require "entry/pipe"
--- local mus = require "mus"
+local mus = require "mus"
+
+local dump = require "luadump"
+
 -- local musm = require "mus_menu"
 local ma = math
 local abs = ma.abs
@@ -24,7 +27,7 @@ local log10 = log(10)
 local unpack = table.unpack
 
 local function slotIdDecode(id)
-    -- Rule 
+    -- Rule
     -- T XXXXX, T = 5: 5m, 6: 10m, 7:15m, 1: track
     local subId = id % 10000
     local prefix = (id - subId) / 10000
@@ -58,8 +61,8 @@ function data()
     
     local createTemplateFn = function(params)
         local result = {
-            [50001] = "station/rail/mus_platform_5m.module",
-            [10001] = "station/rail/mus_track.module",
+            [1] = "station/rail/mus_platform_5m.module",
+        -- [10001] = "station/rail/mus_track.module",
         }
         
         return result
@@ -72,12 +75,13 @@ function data()
         local result = {}
         
         result.modules = params.modules
+        result.modelType = mus.models({platform = 1, wall = 1})
         
         result.slots = func.mapi(params.modules, function(e, i)
             return {
                 id = i,
                 transf = e.transf or coor.I(),
-                type = "entry",
+                type = "mus_platform",
                 spacing = {0, 0, 0, 0}
             }
         end)
@@ -85,7 +89,7 @@ function data()
         result.models = {}
         
         result.colliders = {}
-        result.terrainAlignmentLists = {}
+        result.terrainAlignmentLists = { { type = "EQUAL", faces =  { } } }
         result.groundFaces = {}
         result.terminalGroups = {}
         result.stations = {}
@@ -95,7 +99,7 @@ function data()
         
         result.occupied = {{}, {}, {}, {}}
         result.cost = 0
-        result.terminateConstructionHook = nil
+        result.terminateConstructionHook = function() end
         return result
     end
     
