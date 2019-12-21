@@ -7,6 +7,7 @@ local station = require "mus/stationlib"
 local quat = require "entry/quaternion"
 local pipe = require "entry/pipe"
 local mus = require "mus"
+local musm = require "mus_menu"
 
 local dump = require "luadump"
 
@@ -36,6 +37,97 @@ local function slotIdDecode(id)
     elseif prefix == 1 then
         return {"station/rail/mus_track.module", subId}
     end
+end
+
+local function params()
+    return
+        pipe.new
+        +
+        {
+            {
+                key = "wall",
+                name = _("Wall"),
+                values = {_("Tiles 1"), _("Tiles 2")},
+                defaultIndex = 0
+            },
+            {
+                key = "floor",
+                name = _("Floor Style"),
+                values = {_("Marble 1"), _("Honeycomb"), _("Marble 2"), _("Concrete"), _("Asphalt")},
+                defaultIndex = 0
+            }
+        }
+        +
+        {
+            {
+                key = "sign",
+                name = "",
+                values = {"+", "-"},
+                defaultIndex = 0
+            },
+            {
+                key = "radius",
+                name = _("Radius") .. " " .. "(m)",
+                values = pipe.from("∞") + func.map(func.range(musm.rList, 2, #musm.rList), function(r) return tostring(math.floor(r * 1000 + 0.5)) end),
+                defaultIndex = 0
+            },
+            {
+                key = "length",
+                name = _("Platform Length") .. " " .. "(m)",
+                values = func.map(musm.trackLengths, tostring),
+                defaultIndex = 5
+            }
+        }
+        +
+        {
+            {
+                key = "hPlatform",
+                name = _("Platform Height") .. " " .. "(mm)",
+                values = func.map(musm.hPlatformList, tostring),
+                defaultIndex = 3
+            }
+        } +
+        {
+            {
+                key = "slopeSign",
+                name = "",
+                values = {"+", "-"},
+                defaultIndex = 0
+            },
+            {
+                key = "slope",
+                name = _("Slope") .. " " .. "(‰)",
+                values = func.map(musm.slopeList, tostring),
+                defaultIndex = 0
+            }
+        }
+        + {
+            {
+                key = "altitude",
+                name = _("Depth Adjustment") .. " " .. "(m)",
+                values = func.seqMap({-5, 5}, tostring),
+                defaultIndex = 5
+            }
+        }
+end
+
+local offsetGen = function(meta)
+    local function gen(result, base, fst, snd, ...)
+        if (fst and snd) then
+            local offset = base + (fst.width + snd.width) * 0.5
+            
+            local data = snd.track and {offset} or
+                {
+                    offset,
+                    base + fst.width * 0.5,
+                    base + fst.width * 0.5 + snd.width
+                }
+            return gen(result / data, offset, snd, ...)
+        else
+            return result
+        end
+    end
+    return gen(pipe.new * {}, 0, {width = 0}, unpack(meta))
 end
 
 function data()
@@ -74,8 +166,28 @@ function data()
     local updateFn = function(params)
         local result = {}
         
+        local radius = musm.rList[params.radius + 1] * 1000 * (params.sign == 0 and 1 or -1)
+        local length = min(musm.trackLengths[params.length + 1], abs(radius * pi * 1.5))
+        local hPlatform = musm.hPlatformList[params.hPlatform + 1] * 0.001
+        local slope = musm.slopeList[params.slope + 1] * 0.001 * (params.slopeSign == 0 and 1 or -1)
+        
+        local arcPacker = mus.arcPacker(length, slope, radius)
+        
+        result.modelType = mus.models({platform = params.floor + 1, wall = params.wall + 1})
         result.modules = params.modules
-        result.modelType = mus.models({platform = 1, wall = 1})
+        
+        local o = coor.xyz(-radius, 0, 0)
+        result.arcs = pipe.new * params.modules * pipe.map(pipe.select("metadata"))
+            * offsetGen
+            * pipe.map(pipe.map(function(of) return arcPacker(radius + radius > 0 and of or -of, o) end))
+
+        result.config = {
+            hPlatform = hPlatform,
+            refZ = hPlatform,
+            slope = slope,
+            models = result.modelType,
+        }
+        
         
         result.slots = func.mapi(params.modules, function(e, i)
             return {
@@ -89,7 +201,7 @@ function data()
         result.models = {}
         
         result.colliders = {}
-        result.terrainAlignmentLists = { { type = "EQUAL", faces =  { } } }
+        result.terrainAlignmentLists = {{type = "EQUAL", faces = {}}}
         result.groundFaces = {}
         result.terminalGroups = {}
         result.stations = {}
@@ -116,26 +228,7 @@ function data()
         order = 1000,
         constructionTemplates = constructionTemplates,
         createTemplateFn = createTemplateFn,
-        params = {
-            {
-                key = "style",
-                name = _("Style"),
-                values = {_("Glass"), _("Normal"), _("Concrete")},
-                defaultIndex = 0
-            },
-            {
-                key = "wall",
-                name = _("Wall"),
-                values = {_("Tiles 1"), _("Tiles 2")},
-                defaultIndex = 0
-            },
-            {
-                key = "floor",
-                name = _("Floor Style"),
-                values = {_("Marble 1"), _("Honeycomb"), _("Marble 2"), _("Concrete"), _("Asphalt")},
-                defaultIndex = 0
-            },
-        },
+        params = params(),
         upgradeFn = upgradeFn,
         updateFn = updateFn
     }

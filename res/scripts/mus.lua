@@ -13,7 +13,6 @@ local hasLivetext, livetext = xpcall(
     end,
     "livetext"
 )
-
 local mus = {}
 
 local math = math
@@ -125,29 +124,23 @@ end
 mus.arcPacker = function(length, slope, r)
     return function(radius, o)
         local initRad = (radius > 0 and pi or 0)
-        return function(minLength)
-            local length = minLength and (length / minLength * length) or length
-            return function(z)
-                local z = z or 0
-                return function(lengthOverride)
-                    local l = lengthOverride and lengthOverride(length) or length
-                    return function(xDr)
-                        local dr = xDr or 0
-                        local ar = arc.byOR(o + coor.xyz(0, 0, z), abs(radius - dr))
-                        local rad = l / r * 0.5
-                        return pipe.new
-                            / ar:withLimits({
-                                sup = initRad - rad,
-                                inf = initRad,
-                                slope = -slope
-                            })
-                            / ar:withLimits({
-                                inf = initRad,
-                                sup = initRad + rad,
-                                slope = slope
-                            })
-                    end
-                end
+        return function(z)
+            local z = z or 0
+            return function(xDr)
+                local dr = xDr or 0
+                local ar = arc.byOR(o + coor.xyz(0, 0, z), abs(radius - dr))
+                local rad = length / r * 0.5
+                return pipe.new
+                    / ar:withLimits({
+                        sup = initRad - rad,
+                        inf = initRad,
+                        slope = -slope
+                    })
+                    / ar:withLimits({
+                        inf = initRad,
+                        sup = initRad + rad,
+                        slope = slope
+                    })
             end
         end
     end
@@ -164,7 +157,7 @@ end
 local retriveBiLatCoords = function(nSeg, l, ...)
     local rst = pipe.new * {l, ...}
     local lscale = l:length() / (nSeg * station.segmentLength)
-    return table.unpack(
+    return unpack(
         func.map(rst,
             function(s) return abs(lscale) < 1e-5 and pipe.new * {} or pipe.new * func.seqMap({0, nSeg},
                 function(n) return s:pt(s.inf + n * ((s.sup - s.inf) / nSeg)) end)
@@ -196,7 +189,7 @@ local function ungroup(fst, ...)
         local l = {...}
         return function(result, c)
             if (fst and lst) then
-                return ungroup(table.unpack(f))(table.unpack(l))(
+                return ungroup(unpack(f))(unpack(l))(
                     result /
                     (
                     (fst[1] - lst[1]):length2() < (fst[1] - lst[#lst]):length2()
@@ -215,10 +208,10 @@ end
 local biLatCoords = function(length)
     return function(...)
         local arcs = pipe.new * {...}
-        local arcsInf = equalizeArcs(table.unpack(func.map({...}, pipe.select(1))))
-        local arcsSup = equalizeArcs(table.unpack(func.map({...}, pipe.select(2))))
-        local nSegInf = retriveNSeg(length, table.unpack(arcsInf))
-        local nSegSup = retriveNSeg(length, table.unpack(arcsSup))
+        local arcsInf = equalizeArcs(unpack(func.map({...}, pipe.select(1))))
+        local arcsSup = equalizeArcs(unpack(func.map({...}, pipe.select(2))))
+        local nSegInf = retriveNSeg(length, unpack(arcsInf))
+        local nSegSup = retriveNSeg(length, unpack(arcsSup))
         if (nSegInf % 2 ~= nSegSup % 2) then
             if (nSegInf > nSegSup) then
                 nSegSup = nSegSup + 1
@@ -226,9 +219,9 @@ local biLatCoords = function(length)
                 nSegInf = nSegInf + 1
             end
         end
-        return table.unpack(ungroup
-            (retriveBiLatCoords(nSegInf, table.unpack(arcsInf)))
-            (retriveBiLatCoords(nSegSup, table.unpack(arcsSup)))
+        return unpack(ungroup
+            (retriveBiLatCoords(nSegInf, unpack(arcsInf)))
+            (retriveBiLatCoords(nSegSup, unpack(arcsSup)))
             (pipe.new)
     )
     end
@@ -361,7 +354,7 @@ mus.unitLane = function(f, t) return ((t - f):length2() > 1e-2 and (t - f):lengt
 
 mus.generateEdges = function(edges, isLeft, arcPacker)
     local arcs = arcPacker()()()
-    local eInf, eSup = table.unpack(arcs * pipe.map2(isLeft and {pipe.noop(), arc.rev} or {arc.rev, pipe.noop()}, function(a, op) return op(a) end) * pipe.map(mus.generateArc))
+    local eInf, eSup = unpack(arcs * pipe.map2(isLeft and {pipe.noop(), arc.rev} or {arc.rev, pipe.noop()}, function(a, op) return op(a) end) * pipe.map(mus.generateArc))
     if isLeft then
         eInf[1] = eInf[1]:avg(eSup[2])
         eSup[2] = eInf[1]
@@ -390,7 +383,7 @@ mus.generateMockEdges = function(config)
     return function(mockEdges, arcPacker)
         return mockEdges + func.map(offsets, function(o)
             local arcs = arcPacker()()(o)
-            local eInf, eSup = table.unpack(arcs * pipe.map2({pipe.noop(), arc.rev}, function(a, op) return op(a) end) * pipe.map(mus.generateArc))
+            local eInf, eSup = unpack(arcs * pipe.map2({pipe.noop(), arc.rev}, function(a, op) return op(a) end) * pipe.map(mus.generateArc))
             eInf[1] = eInf[1]:avg(eSup[2])
             eSup[2] = eInf[1]
             eInf[3] = eInf[3]:avg(eSup[4])
@@ -545,14 +538,14 @@ end
 
 local placeSign = function(name, transBoard, hasPole)
     if (not hasLivetext) then return {} end
-
+    
     local signColor = "C00257E"
     local decoColor = "CF2F2F2"
     local textColor = "CFFFFFF_emissive"
     
     local font = "alte_din_1451_mittelschrift"
     local livetext = livetext(font, nil, textColor)
-    local nameModelsF, width = table.unpack({livetext(0.35)(name or "?")} or {})
+    local nameModelsF, width = unpack({livetext(0.35)(name or "?")} or {})
     local height = 0.5
     local thickness = 0.1
     
@@ -1065,7 +1058,7 @@ mus.allArcs = function(config)
     
     return pipe.map(function(p)
         if (#p == 3) then
-            local arcL, arcR, arcRef = table.unpack(p)
+            local arcL, arcR, arcRef = unpack(p)
             local general = {
                 l = arcL(refZ)(),
                 r = arcR(refZ)()

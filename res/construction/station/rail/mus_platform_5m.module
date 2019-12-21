@@ -26,6 +26,75 @@ local function makeSize(left, right)
     }
 end
 
+local stairsWidth = 7
+
+local arcGen = function(p, o) return {
+    l = p.l(o),
+    r = p.r(-o)
+} end
+
+local arcProfiles = function(config, arcs)
+    local refZ = config.hPlatform
+    local arcRef, arcL, arcR = unpack(arcs)
+    local general = {
+        l = arcL(refZ)(),
+        r = arcR(refZ)()
+    }
+    
+    local arcs = {
+        platform = {
+            lane = arcGen(general, 0.6),
+            edge = arcGen(general, -0.5),
+            central = arcGen(general, 0.3)
+        },
+        ceil = {
+            edge = arcGen(general, -0.5),
+            central = arcGen(general, 0.2),
+        },
+        stairs = {
+            outer = arcGen(general, (platformWidth - stairsWidth) * 0.5 + 0.3),
+            inner = arcGen(general, (platformWidth - stairsWidth) * 0.5 + 0.55)
+        },
+        terrain = arcGen({
+            l = arcL(refZ + 7.75)(function(l) return l + 5 end),
+            r = arcR(refZ + 7.75)(function(l) return l + 5 end)
+        }, -0.5)
+    }
+    
+    local lsc, rsc, lsuc, rsuc, lc, rc, lpc, rpc, lpic, rpic, lsoc, rsoc, lsic, rsic, c = uus.biLatCoords(5)(
+        arcs.platform.edge.l, arcs.platform.edge.r,
+        arcs.platform.central.l, arcs.platform.central.r,
+        arcs.platform.lane.l, arcs.platform.lane.r,
+        arcs.ceil.edge.l, arcs.ceil.edge.r,
+        arcs.ceil.central.l, arcs.ceil.central.r,
+        arcs.stairs.outer.l, arcs.stairs.outer.r,
+        arcs.stairs.inner.l, arcs.stairs.inner.r
+    )
+    local tlc, trc, tc = mus.biLatCoords(5)(arcs.terrain.l, arcs.terrain.r)
+    return {
+        [1] = arcL,
+        [2] = arcR,
+        [3] = arcRef,
+        count = c,
+        platform = {
+            edge = func.with(arcs.platform.edge, {lc = lsc, rc = rsc, mc = mc(lsc, rsc), c = c}),
+            central = func.with(arcs.platform.central, {lc = lsuc, rc = rsuc, mc = mc(lsuc, rsuc), c = c}),
+            lane = func.with(arcs.platform.lane, {lc = lc, rc = rc, mc = mc(lc, rc), c = c})
+        },
+        ceil = {
+            edge = func.with(arcs.ceil.edge, {lc = lpc, rc = rpc, mc = mc(lpc, rpc), c = c}),
+            central = func.with(arcs.ceil.central, {lc = lpic, rc = rpic, mc = mc(lpic, rpic), c = c}),
+        },
+        stairs = {
+            outer = func.with(arcs.stairs.outer, {lc = lsoc, rc = rsoc, mc = mc(lsoc, rsoc), c = c}),
+            inner = func.with(arcs.stairs.inner, {lc = lsic, rc = rsic, mc = mc(lsic, rsic), c = c}),
+        },
+        terrain = func.with(arcs.terrain, {lc = tlc, rc = trc, mc = mc(tlc, trc), c = tc}),
+        isPlatform = true
+    }
+
+end
+
 function data()
     return {
         availability = {
@@ -50,9 +119,12 @@ function data()
         },
         metadata = {
             platform = true,
+            width = 5
         },
         
         updateFn = function(result, transform, tag, slotId, addModelFn, params)
+            local allArcs = arcProfiles(result.config, result.arcs[slotId])
+
             local hW = 5
             local vectorW = func.interlace({
                 -hW,
@@ -64,7 +136,6 @@ function data()
             })
             local vectorMW = {edgeWidth, sideWidth, (hW - edgeWidth - sideWidth) * 2, sideWidth, edgeWidth}
             local vectorM = {"edgeLeft", "left", "central", "right", "edgeRight"}
-            dump()({vectorW, vectorMW, vectorM})
             local newModels = pipe.mapn(vectorW, vectorMW, vectorM)(function(w, mw, m)
                 local size = makeSize(unpack(w))
                 return {
