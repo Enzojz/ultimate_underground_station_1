@@ -5,6 +5,7 @@ local line = require "mus/coorline"
 local quat = require "entry/quaternion"
 local station = require "mus/stationlib"
 local pipe = require "entry/pipe"
+local dump = require "luadump"
 
 local hasLivetext, livetext = xpcall(
     require,
@@ -126,21 +127,24 @@ mus.arcPacker = function(length, slope, r)
         local initRad = (radius > 0 and pi or 0)
         return function(z)
             local z = z or 0
-            return function(xDr)
-                local dr = xDr or 0
-                local ar = arc.byOR(o + coor.xyz(0, 0, z), abs(radius - dr))
-                local rad = length / r * 0.5
-                return pipe.new
-                    / ar:withLimits({
-                        sup = initRad - rad,
-                        inf = initRad,
-                        slope = -slope
-                    })
-                    / ar:withLimits({
-                        inf = initRad,
-                        sup = initRad + rad,
-                        slope = slope
-                    })
+            return function(lengthOverride)
+                local l = lengthOverride and lengthOverride(length) or length
+                return function(xDr)
+                    local dr = xDr or 0
+                    local ar = arc.byOR(o + coor.xyz(0, 0, z), abs(radius - dr))
+                    local rad = l / r * 0.5
+                    return pipe.new
+                        / ar:withLimits({
+                            sup = initRad - rad,
+                            inf = initRad,
+                            slope = -slope
+                        })
+                        / ar:withLimits({
+                            inf = initRad,
+                            sup = initRad + rad,
+                            slope = slope
+                        })
+                end
             end
         end
     end
@@ -163,24 +167,6 @@ local retriveBiLatCoords = function(nSeg, l, ...)
                 function(n) return s:pt(s.inf + n * ((s.sup - s.inf) / nSeg)) end)
             end)
 )
-end
-
-local equalizeArcs = function(f, s, ...)
-    local arcs = pipe.new * {f, s, ...}
-    local ptInf = f:pt(f.inf):avg(s:pt(s.inf))
-    local ptSup = f:pt(f.sup):avg(s:pt(s.sup))
-    local lnInf = line.byPtPt(arc.ptByPt(f, ptInf), arc.ptByPt(s, ptInf))
-    local lnSup = line.byPtPt(arc.ptByPt(f, ptSup), arc.ptByPt(s, ptSup))
-    return arcs * pipe.map(function(ar)
-        local intInf = ar / lnInf
-        local intSup = ar / lnSup
-        
-        return ar:withLimits({
-            inf = ar:rad(((intInf[1] - ptInf):length2() < (intInf[2] - ptInf):length2()) and intInf[1] or intInf[2]),
-            sup = ar:rad(((intSup[1] - ptSup):length2() < (intSup[2] - ptSup):length2()) and intSup[1] or intSup[2])
-        }
-    )
-    end)
 end
 
 local function ungroup(fst, ...)
@@ -208,8 +194,8 @@ end
 local biLatCoords = function(length)
     return function(...)
         local arcs = pipe.new * {...}
-        local arcsInf = equalizeArcs(unpack(func.map({...}, pipe.select(1))))
-        local arcsSup = equalizeArcs(unpack(func.map({...}, pipe.select(2))))
+        local arcsInf = func.map({...}, pipe.select(1))
+        local arcsSup = func.map({...}, pipe.select(2))
         local nSegInf = retriveNSeg(length, unpack(arcsInf))
         local nSegSup = retriveNSeg(length, unpack(arcsSup))
         if (nSegInf % 2 ~= nSegSup % 2) then

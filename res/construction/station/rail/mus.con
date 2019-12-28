@@ -179,7 +179,7 @@ function data()
         local o = coor.xyz(-radius, 0, 0)
         result.arcs = pipe.new * params.modules * pipe.map(pipe.select("metadata"))
             * offsetGen
-            * pipe.map(pipe.map(function(of) return arcPacker(radius + radius > 0 and of or -of, o) end))
+            * pipe.map(pipe.map(function(of) return arcPacker(radius + (radius > 0 and of or -of), o) end))
 
         result.config = {
             hPlatform = hPlatform,
