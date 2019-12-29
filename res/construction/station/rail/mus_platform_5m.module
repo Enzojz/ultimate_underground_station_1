@@ -3,7 +3,7 @@ local coor = require "entry/coor"
 local pipe = require "entry/pipe"
 local general = require "entry/general"
 local station = require "mus/stationlib"
-local mus = require "mus"
+local mus = require "mus_platform"
 local quat = require "entry/quaternion"
 local dump = require "luadump"
 

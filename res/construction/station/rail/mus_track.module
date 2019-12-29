@@ -3,7 +3,7 @@ local coor = require "entry/coor"
 local pipe = require "entry/pipe"
 local general = require "entry/general"
 local station = require "mus/stationlib"
-local mus = require "mus"
+local mus = require "mus_track"
 local quat = require "entry/quaternion"
 local dump = require "luadump"
 
@@ -52,7 +52,7 @@ function data()
         updateFn = function(result, transform, tag, slotId, addModelFn, params)
             local allArcs = mus.trackArcs(trackWidth)(result.config, result.arcs[slotId])
             local newModels = mus.trackModels(result.config, allArcs, mus.fitModel)
-
+            
             result.models =
                 pipe.new
                 * result.models

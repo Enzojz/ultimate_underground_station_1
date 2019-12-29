@@ -155,6 +155,7 @@ function data()
         local result = {
             [1] = "station/rail/mus_platform_5m.module",
             [2] = "station/rail/mus_track.module",
+            [3] = "station/rail/mus_platform_5m.module",
         }
         
         return result
@@ -180,7 +181,7 @@ function data()
         result.arcs = pipe.new * params.modules * pipe.map(pipe.select("metadata"))
             * offsetGen
             * pipe.map(pipe.map(function(of) return arcPacker(radius - of, o) end))
-
+        
         result.config = {
             hPlatform = hPlatform,
             refZ = hPlatform,
@@ -211,8 +212,8 @@ function data()
         
         result.occupied = {{}, {}, {}, {}}
         result.cost = 0
-        result.terminateConstructionHook = function() dump()({r = result}) end
-            
+        result.terminateConstructionHook = function()dump()({r = result}) end
+        
         return result
     end
     
