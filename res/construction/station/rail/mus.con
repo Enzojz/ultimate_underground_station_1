@@ -154,7 +154,7 @@ function data()
     local createTemplateFn = function(params)
         local result = {
             [1] = "station/rail/mus_platform_5m.module",
-        -- [10001] = "station/rail/mus_track.module",
+            [2] = "station/rail/mus_track.module",
         }
         
         return result
@@ -176,10 +176,10 @@ function data()
         result.modelType = mus.models({platform = params.floor + 1, wall = params.wall + 1})
         result.modules = params.modules
         
-        local o = coor.xyz(-radius, 0, 0)
+        local o = coor.xyz(radius, 0, 0)
         result.arcs = pipe.new * params.modules * pipe.map(pipe.select("metadata"))
             * offsetGen
-            * pipe.map(pipe.map(function(of) return arcPacker(radius + (radius > 0 and of or -of), o) end))
+            * pipe.map(pipe.map(function(of) return arcPacker(radius - of, o) end))
 
         result.config = {
             hPlatform = hPlatform,
@@ -211,7 +211,8 @@ function data()
         
         result.occupied = {{}, {}, {}, {}}
         result.cost = 0
-        result.terminateConstructionHook = function() end
+        result.terminateConstructionHook = function() dump()({r = result}) end
+            
         return result
     end
     

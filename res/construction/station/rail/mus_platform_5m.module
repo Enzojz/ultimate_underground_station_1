@@ -307,7 +307,7 @@ local platform = function(config, arcs, fitModel)
         }
     end)
     
-    return (pipe.new / platforms ) * pipe.flatten() * pipe.flatten() + extremity
+    return (pipe.new / platforms / ceils / tops / extremityPlatform ) * pipe.flatten() * pipe.flatten() + extremity
 end
 
 
@@ -341,26 +341,7 @@ function data()
         updateFn = function(result, transform, tag, slotId, addModelFn, params)
             local allArcs = arcProfiles(result.config, result.arcs[slotId])
             local newModels = platform(result.config, allArcs, mus.fitModel)
-            dump()(newModels)
-            -- local hW = 5
-            -- local vectorW = func.interlace({
-            --     -hW,
-            --     - hW + edgeWidth,
-            --     -hW + edgeWidth + sideWidth,
-            --     hW - edgeWidth - sideWidth,
-            --     hW - edgeWidth,
-            --     hW
-            -- })
-            -- local vectorMW = {edgeWidth, sideWidth, (hW - edgeWidth - sideWidth) * 2, sideWidth, edgeWidth}
-            -- local vectorM = {"edgeLeft", "left", "central", "right", "edgeRight"}
-            -- local newModels = pipe.mapn(vectorW, vectorMW, vectorM)(function(w, mw, m)
-            --     local size = makeSize(unpack(w))
-            --     return {
-            --         station.newModel(result.modelType.platform[m] .. "_tl.mdl", mus.fitModel(mw, segmentLength, platformHeight, size, true, true)),
-            --         station.newModel(result.modelType.platform[m] .. "_br.mdl", mus.fitModel(mw, segmentLength, platformHeight, size, false, false))
-            --     }
-            -- end)
-            
+
             result.models =
                 pipe.new
                 * result.models
