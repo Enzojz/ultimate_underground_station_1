@@ -3,8 +3,8 @@ local coor = require "entry/coor"
 local arc = require "mus/coorarc"
 local line = require "mus/coorline"
 local quat = require "entry/quaternion"
-local station = require "mus/stationlib"
 local pipe = require "entry/pipe"
+local general = require "entry/general"
 local dump = require "luadump"
 
 local mus = require "mus"
@@ -235,7 +235,7 @@ mus.platformModels = function(config, arcs, fitModel)
     (function(c, m, w)
         local lc, rc = unpack(c)
         local vec = rc - lc
-        return station.newModel(m .. ".mdl",
+        return general.newModel(m .. ".mdl",
             coor.scale(coor.xyz(vec:length() / w, 1, 5 - platformZ)),
             quat.byVec(coor.xyz(1, 0, 0), vec):mRot(),
             coor.trans(lc:avg(rc))
@@ -259,13 +259,13 @@ mus.platformModels = function(config, arcs, fitModel)
         local lc, rc = unpack(c)
         local vec = rc - lc
         return {
-            station.newModel(config.models.wallExtremityPlatform .. "_" .. p .. ".mdl",
+            general.newModel(config.models.wallExtremityPlatform .. "_" .. p .. ".mdl",
                 coor.transZ(-platformZ),
                 tZ, r,
                 quat.byVec(coor.xyz(1, 0, 0), vec):mRot(),
                 coor.trans(lc:avg(rc))
             ),
-            station.newModel(config.models.wallExtremityTop .. "_" .. p .. ".mdl",
+            general.newModel(config.models.wallExtremityTop .. "_" .. p .. ".mdl",
                 coor.transZ(-platformZ),
                 r,
                 quat.byVec(coor.xyz(1, 0, 0), vec):mRot(),

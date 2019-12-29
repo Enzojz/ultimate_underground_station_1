@@ -2,7 +2,6 @@ local func = require "entry/func"
 local coor = require "entry/coor"
 local pipe = require "entry/pipe"
 local general = require "entry/general"
-local station = require "mus/stationlib"
 local mus = require "mus_track"
 local quat = require "entry/quaternion"
 local dump = require "luadump"
@@ -33,8 +32,8 @@ function data()
             price = 15000,
         },
         description = {
-            name = _("5m Underground platform"),
-            description = _("An underground platform of 5m wide"),
+            name = _("Underground station track"),
+            description = _("An underground station track"),
             icon = "ui/construction/street/underpass_entry.tga"
         },
         category = {
@@ -51,12 +50,31 @@ function data()
         
         updateFn = function(result, transform, tag, slotId, addModelFn, params)
             local allArcs = mus.trackArcs(trackWidth)(result.config, result.arcs[slotId])
+            local refArc = pipe.new * allArcs[1]()()() * pipe.map(mus.arc2Edges) * pipe.flatten() * pipe.map(pipe.map(coor.vec2Tuple))
+            local edges = {
+                type = "TRACK",
+                alignTerrain = false,
+                params = {
+                    type = "high_speed.lua",
+                    catenary = true,
+                },
+                edgeType = "TUNNEL",
+                edgeTypeName = "ust_void.lua",
+                edges = refArc,
+                snapNodes = {5, 11},
+                tag2nodes = {},
+            }
+            
             local newModels = mus.trackModels(result.config, allArcs, mus.fitModel)
             
             result.models =
                 pipe.new
                 * result.models
                 + newModels
+            
+            result.edgeLists = pipe.new
+                * result.edgeLists
+                / edges
         end,
         
         getModelsFn = function(params)
@@ -77,8 +95,8 @@ function data()
                 * pipe.mapn(vectorW, vectorMW, vectorM)(function(w, mw, m)
                     local size = makeSize(unpack(w))
                     return {
-                        station.newModel(m .. "_tl.mdl", mus.fitModel(mw, segmentLength, platformHeight, size, true, true)),
-                        station.newModel(m .. "_br.mdl", mus.fitModel(mw, segmentLength, platformHeight, size, false, false))
+                        general.newModel(m .. "_tl.mdl", mus.fitModel(mw, segmentLength, platformHeight, size, true, true)),
+                        general.newModel(m .. "_br.mdl", mus.fitModel(mw, segmentLength, platformHeight, size, false, false))
                     }
                 end)
                 * pipe.flatten()

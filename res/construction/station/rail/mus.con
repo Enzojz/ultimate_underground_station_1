@@ -3,7 +3,6 @@ local func = require "entry/func"
 local coor = require "entry/coor"
 local line = require "mus/coorline"
 local trackEdge = require "mus/trackedge"
-local station = require "mus/stationlib"
 local quat = require "entry/quaternion"
 local pipe = require "entry/pipe"
 local mus = require "mus"
@@ -212,7 +211,7 @@ function data()
         
         result.occupied = {{}, {}, {}, {}}
         result.cost = 0
-        result.terminateConstructionHook = function()dump()({r = result}) end
+        result.terminateConstructionHook = function()  end
         
         return result
     end

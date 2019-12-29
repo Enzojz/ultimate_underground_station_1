@@ -2,7 +2,6 @@ local func = require "entry/func"
 local coor = require "entry/coor"
 local pipe = require "entry/pipe"
 local general = require "entry/general"
-local station = require "mus/stationlib"
 local mus = require "mus_platform"
 local quat = require "entry/quaternion"
 local dump = require "luadump"
@@ -61,11 +60,32 @@ function data()
         updateFn = function(result, transform, tag, slotId, addModelFn, params)
             local allArcs = platformArcs(result.config, result.arcs[slotId])
             local newModels = mus.platformModels(result.config, allArcs, mus.fitModel)
-
+            
+            
+            local refArc = pipe.new * allArcs[3]()()() * pipe.map(mus.arc2Edges) * pipe.flatten() * pipe.map(pipe.map(coor.vec2Tuple))
+            local edges = {
+                type = "TRACK",
+                alignTerrain = false,
+                params = {
+                    type = "uus_mock.lua",
+                    catenary = true,
+                },
+                edgeType = "TUNNEL",
+                edgeTypeName = "ust_void.lua",
+                edges = refArc,
+                snapNodes = {5, 11},
+                tag2nodes = {},
+            }
+            
             result.models =
                 pipe.new
                 * result.models
                 + newModels
+            
+            
+            result.edgeLists = pipe.new
+                * result.edgeLists
+                / edges
         end,
         
         getModelsFn = function(params)
@@ -86,8 +106,8 @@ function data()
                 * pipe.mapn(vectorW, vectorMW, vectorM)(function(w, mw, m)
                     local size = makeSize(unpack(w))
                     return {
-                        station.newModel(m .. "_tl.mdl", mus.fitModel(mw, segmentLength, platformHeight, size, true, true)),
-                        station.newModel(m .. "_br.mdl", mus.fitModel(mw, segmentLength, platformHeight, size, false, false))
+                        general.newModel(m .. "_tl.mdl", mus.fitModel(mw, segmentLength, platformHeight, size, true, true)),
+                        general.newModel(m .. "_br.mdl", mus.fitModel(mw, segmentLength, platformHeight, size, false, false))
                     }
                 end)
                 * pipe.flatten()

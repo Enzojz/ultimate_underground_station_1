@@ -3,7 +3,7 @@ local coor = require "entry/coor"
 local arc = require "mus/coorarc"
 local line = require "mus/coorline"
 local quat = require "entry/quaternion"
-local station = require "mus/stationlib"
+local general = require "entry/general"
 local pipe = require "entry/pipe"
 local dump = require "luadump"
 
@@ -19,40 +19,39 @@ local min = math.min
 local e = math.exp(1)
 local unpack = table.unpack
 
+local segmentLength = 20
+
 mus.normalizeRad = function(rad)
     return (rad < pi * -0.5) and mus.normalizeRad(rad + pi * 2) or
         ((rad > pi + pi * 0.5) and mus.normalizeRad(rad - pi * 2) or rad)
 end
 
-mus.generateArc = function(arc)
-    local sup = arc:pt(arc.sup)
-    local inf = arc:pt(arc.inf)
-    
-    local vecSup = arc:tangent(arc.sup)
-    local vecInf = arc:tangent(arc.inf)
-    
-    return
-        {inf, sup, vecInf, vecSup}
-end
-
-mus.generateArcExt = function(arc)
-    local extArc = arc:extendLimits(5)
+mus.arc2Edges = function(arc)
+    local extLength = 2
+    local extArc = arc:extendLimits(-extLength)
+    local length = arc.r * abs(arc.sup - arc.inf)
     
     local sup = arc:pt(arc.sup)
     local inf = arc:pt(arc.inf)
-    
-    local vecSup = arc:tangent(arc.sup)
-    local vecInf = arc:tangent(arc.inf)
     
     local supExt = arc:pt(extArc.sup)
     local infExt = arc:pt(extArc.inf)
     
     local vecSupExt = arc:tangent(extArc.sup)
     local vecInfExt = arc:tangent(extArc.inf)
+
+    local vecSup = arc:tangent(arc.sup)
+    local vecInf = arc:tangent(arc.inf)
     
     return {
-        {infExt, inf, vecInfExt, vecInf},
-        {sup, supExt, vecSup, vecSupExt},
+        {inf, vecInf * extLength},
+        {infExt, vecInfExt * extLength},
+        
+        {infExt, vecInfExt * (length - extLength)},
+        {supExt, vecSupExt * (length - extLength)},
+        
+        {supExt, vecSupExt * extLength},
+        {sup, vecSup * extLength}
     }
 end
 
@@ -84,17 +83,13 @@ mus.arcPacker = function(length, slope, r)
     end
 end
 
-mus.mRot = function(vec)
-    return coor.scaleX(vec:length()) * quat.byVec(coor.xyz(1, 0, 0), (vec)):mRot()
-end
-
 local retriveNSeg = function(length, l, ...)
     return (function(x) return (x < 1 or (x % 1 > 0.5)) and ceil(x) or floor(x) end)(l:length() / length), l, ...
 end
 
 local retriveBiLatCoords = function(nSeg, l, ...)
     local rst = pipe.new * {l, ...}
-    local lscale = l:length() / (nSeg * station.segmentLength)
+    local lscale = l:length() / (nSeg * segmentLength)
     return unpack(
         func.map(rst,
             function(s) return abs(lscale) < 1e-5 and pipe.new * {} or pipe.new * func.seqMap({0, nSeg},
@@ -266,7 +261,7 @@ end
 
 mus.interlace = pipe.interlace({"s", "i"})
 
-mus.unitLane = function(f, t) return ((t - f):length2() > 1e-2 and (t - f):length2() < 562500) and station.newModel("mus/person_lane.mdl", mus.mRot(t - f), coor.trans(f)) or nil end
+mus.unitLane = function(f, t) return ((t - f):length2() > 1e-2 and (t - f):length2() < 562500) and general.newModel("mus/person_lane.mdl", general.mRot(t - f), coor.trans(f)) or nil end
 
 mus.generateSideWalls = function(fitModel, config)
     local platformZ = config.hPlatform + 0.53
@@ -281,7 +276,7 @@ mus.generateSideWalls = function(fitModel, config)
             * pipe.filter(filter)
             * pipe.map(function(ic)
                 local vec = ic.i - ic.s
-                return station.newModel((isTrack and config.models.wallTrack or config.models.wallPlatform) .. ".mdl",
+                return general.newModel((isTrack and config.models.wallTrack or config.models.wallPlatform) .. ".mdl",
                     coor.rotZ(isLeft and -0.5 * pi or 0.5 * pi),
                     isTrack and coor.I() or coor.scaleZ(5 - platformZ),
                     coor.scaleX(vec:length() / 5),
@@ -292,19 +287,19 @@ mus.generateSideWalls = function(fitModel, config)
     end
 end
 
-mus.generateTerrain = function(config)
-    return pipe.mapFlatten(function(arcs)
-        return pipe.new
-            / {
-                greater = pipe.new
-                * pipe.mapn(mus.interlace(arcs.terrain.lc), mus.interlace(arcs.terrain.rc))
-                (function(lc, rc)
-                    local size = assembleSize(lc, rc)
-                    return pipe.new / size.lt / size.lb / size.rb / size.rt * station.finalizePoly
-                end)
-            }
-    end)
-end
+-- mus.generateTerrain = function(config)
+--     return pipe.mapFlatten(function(arcs)
+--         return pipe.new
+--             / {
+--                 greater = pipe.new
+--                 * pipe.mapn(mus.interlace(arcs.terrain.lc), mus.interlace(arcs.terrain.rc))
+--                 (function(lc, rc)
+--                     local size = assembleSize(lc, rc)
+--                     return pipe.new / size.lt / size.lb / size.rb / size.rt * station.finalizePoly
+--                 end)
+--             }
+--     end)
+-- end
 
 mus.arcGen = function(p, o) return {
     l = p.l(o),
@@ -321,8 +316,8 @@ mus.buildSurface = function(fitModel, config, platformZ, tZ)
             
             return s
                 and pipe.new
-                / station.newModel(s .. "_tl.mdl", tZ, fitModel(w, 5, platformZ, sizeS, true, true))
-                / station.newModel(s .. "_br.mdl", tZ, fitModel(w, 5, platformZ, sizeS, false, false))
+                / general.newModel(s .. "_tl.mdl", tZ, fitModel(w, 5, platformZ, sizeS, true, true))
+                / general.newModel(s .. "_br.mdl", tZ, fitModel(w, 5, platformZ, sizeS, false, false))
                 or pipe.new * {}
         end
     end
