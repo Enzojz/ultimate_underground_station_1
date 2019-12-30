@@ -37,14 +37,14 @@ function data()
             icon = "ui/construction/street/underpass_entry.tga"
         },
         category = {
-            categories = {"platform"},
+            categories = {"track"},
         },
-        type = "mus_platform",
+        type = "mus_track",
         order = {
             value = 260,
         },
         metadata = {
-            platform = true,
+            track = true,
             width = 5
         },
         
@@ -75,6 +75,7 @@ function data()
             result.edgeLists = pipe.new
                 * result.edgeLists
                 / edges
+                
         end,
         
         getModelsFn = function(params)

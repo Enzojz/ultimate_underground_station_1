@@ -41,12 +41,13 @@ function data()
                                 2.4
                             }
                         },
-                        transportModes = {
-                            "PERSON"
-                        }
+                        linkable = false,
+                        speedLimit = 20,
+                        transportModes = { "PERSON" }
                     }
                 },
-                terminals = {  }
+                runways = { },
+                terminals = { }
             }
         },
         version = 1

@@ -154,7 +154,8 @@ function data()
         local result = {
             [1] = "station/rail/mus_platform_5m.module",
             [2] = "station/rail/mus_track.module",
-            [3] = "station/rail/mus_platform_5m.module",
+            [3] = "station/rail/mus_track.module",
+            [4] = "station/rail/mus_track.module",
         }
         
         return result
@@ -210,8 +211,36 @@ function data()
         result.slotConfig = {}
         
         result.occupied = {{}, {}, {}, {}}
+        result.terminalInfo = {}
         result.cost = 0
-        result.terminateConstructionHook = function()  end
+        result.terminateConstructionHook = function()
+            for i, t in ipairs(result.terminalInfo) do
+                if params.modules[i].metadata.track then
+                    if (params.modules[i - 1] and params.modules[i - 1].metadata.platform) then
+                        local node = (i - 1) * 12 + 1
+                        result.terminalGroups[#result.terminalGroups + 1] = {
+                            callbacks = { },
+                            terminals = func.seqMap(result.terminalInfo[i - 1][2], function(t) return {t, 0} end),
+                            vehicleNodeOverride = node,
+                            vehicleNodeOverrideList = { node },
+                            vehicleNodeOverrideListCenter = { node + 3 }
+                        }
+                    end
+                    if (params.modules[i + 1] and params.modules[i + 1].metadata.platform) then
+                        local node = (i - 1) * 12 + 7
+                        result.terminalGroups[#result.terminalGroups + 1] = {
+                            callbacks = { },
+                            terminals = func.seqMap(result.terminalInfo[i + 1][1], function(t) return {t, 0} end),
+                            vehicleNodeOverride = node,
+                            vehicleNodeOverrideList = { node },
+                            vehicleNodeOverrideListCenter = { node + 3 }
+                        }
+                    end
+                else
+                end
+            end
+            dump()(result)
+        end
         
         return result
     end

@@ -84,7 +84,7 @@ mus.platformArcs = function(platformWidth, stairsWidth)
 end
 
 mus.platformModels = function(config, arcs, fitModel)
-    local tZ = coor.transZ(config.hPlatform - 1.4) -- model height = 1.93 - 1.4 -> 0.53 -> adjust model level to rail level
+    local tZ = coor.transZ(config.hPlatform - 1.4)-- model height = 1.93 - 1.4 -> 0.53 -> adjust model level to rail level
     local platformZ = config.hPlatform + 0.53 --target Z
     
     local buildPlatform = mus.buildSurface(fitModel, config, platformZ, tZ)
@@ -245,7 +245,7 @@ mus.platformModels = function(config, arcs, fitModel)
     local extremityPlatform = pipe.mapn(
         {
             {arcs.ceil.edge.lc[1], arcs.ceil.central.lc[1]},
-            {arcs.ceil.central.lc[1], arcs.ceil.edge.rc[1]},
+            {arcs.ceil.central.rc[1], arcs.ceil.edge.rc[1]},
             {arcs.ceil.edge.lc[c * 2 - 1], arcs.ceil.central.lc[c * 2 - 1]},
             {arcs.ceil.central.rc[c * 2 - 1], arcs.ceil.edge.rc[c * 2 - 1]},
         },
@@ -275,6 +275,29 @@ mus.platformModels = function(config, arcs, fitModel)
     end)
     
     return (pipe.new / platforms / ceils / tops / extremityPlatform) * pipe.flatten() * pipe.flatten() + extremity
+end
+
+mus.generateTerminals = function(arcs)
+    local newLanes = pipe.new
+        * pipe.mapn(
+            func.seq(1, 2 * arcs.count - 2),
+            mus.interlace(arcs.platform.lane.lc),
+            mus.interlace(arcs.platform.lane.rc),
+            mus.interlace(arcs.platform.lane.mc)
+        )
+        (function(i, lc, rc, mc)
+            return {
+                l = general.newModel("mus/terminal_lane.mdl", general.mRot(lc.s - lc.i), coor.trans(lc.i)),
+                r = general.newModel("mus/terminal_lane.mdl", general.mRot(rc.i - rc.s), coor.trans(rc.s)),
+                link = (lc.s:avg(lc.i) - rc.s:avg(rc.i)):length() > 0.5
+                and general.newModel("mus/standard_lane.mdl", general.mRot(lc.s:avg(lc.i) - rc.s:avg(rc.i)), coor.trans(rc.i:avg(rc.s)))
+            }
+        end)
+    return
+        func.map(newLanes, pipe.select("l")),
+        func.map(newLanes, pipe.select("r")),
+        (newLanes * pipe.map(pipe.select("link")) * pipe.filter(pipe.noop())),
+        2 * arcs.count - 2
 end
 
 return mus

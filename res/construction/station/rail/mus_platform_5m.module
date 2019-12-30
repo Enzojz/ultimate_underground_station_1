@@ -76,13 +76,22 @@ function data()
                 snapNodes = {5, 11},
                 tag2nodes = {},
             }
+
+            local leftTerminals, rightTerminals, linkings, terminalCounts = mus.generateTerminals(allArcs)
             
             result.models =
                 pipe.new
                 * result.models
                 + newModels
+                + linkings
+
+            result.terminalInfo[slotId] = {
+                { #result.models, #result.models + terminalCounts - 1 },
+                { #result.models + terminalCounts, #result.models + terminalCounts + terminalCounts - 1 },
+            }
             
-            
+            result.models = result.models + leftTerminals + rightTerminals
+
             result.edgeLists = pipe.new
                 * result.edgeLists
                 / edges
