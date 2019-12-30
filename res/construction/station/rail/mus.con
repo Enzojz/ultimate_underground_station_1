@@ -154,8 +154,6 @@ function data()
         local result = {
             [1] = "station/rail/mus_platform_5m.module",
             [2] = "station/rail/mus_track.module",
-            [3] = "station/rail/mus_track.module",
-            [4] = "station/rail/mus_track.module",
         }
         
         return result
@@ -177,6 +175,7 @@ function data()
         result.modelType = mus.models({platform = params.floor + 1, wall = params.wall + 1})
         result.modules = params.modules
         
+        dump()(params.modules)
         local o = coor.xyz(radius, 0, 0)
         result.arcs = pipe.new * params.modules * pipe.map(pipe.select("metadata"))
             * offsetGen
@@ -188,7 +187,6 @@ function data()
             slope = slope,
             models = result.modelType,
         }
-        
         
         result.slots = func.mapi(params.modules, function(e, i)
             return {
@@ -214,7 +212,7 @@ function data()
         result.terminalInfo = {}
         result.cost = 0
         result.terminateConstructionHook = function()
-            for i, t in ipairs(result.terminalInfo) do
+            for i, m in pairs(params.modules) do
                 if params.modules[i].metadata.track then
                     if (params.modules[i - 1] and params.modules[i - 1].metadata.platform) then
                         local node = (i - 1) * 12 + 1

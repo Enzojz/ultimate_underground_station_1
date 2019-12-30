@@ -21,7 +21,7 @@ local unpack = table.unpack
 
 mus.platformArcs = function(platformWidth, stairsWidth)
     return function(config, arcs)
-        local refZ = config.hPlatform
+        local refZ = config.hPlatform + 0.53
         local arcRef, arcL, arcR = unpack(arcs)
         local general = {
             l = arcL(refZ)(),

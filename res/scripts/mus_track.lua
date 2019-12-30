@@ -21,7 +21,7 @@ local unpack = table.unpack
 
 mus.trackArcs = function(trackWidth)
     return function(config, arcs)
-        local refZ = config.hPlatform
+        local refZ = config.hPlatform + 0.53
         
         local arc = arcs[1]
         local ceil = mus.arcGen(

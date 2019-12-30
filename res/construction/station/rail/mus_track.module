@@ -12,15 +12,6 @@ local pi = ma.pi
 
 local trackWidth = 5
 
-local function makeSize(left, right)
-    return {
-        lb = coor.xyz(left, -2.5, 0),
-        lt = coor.xyz(left, 2.5, 0),
-        rt = coor.xyz(right, 2.5, 0),
-        rb = coor.xyz(right, -2.5, 0)
-    }
-end
-
 function data()
     return {
         availability = {
@@ -66,7 +57,7 @@ function data()
             }
             
             local newModels = mus.trackModels(result.config, allArcs, mus.fitModel)
-            
+            result.terminalInfo[slotId] = true
             result.models =
                 pipe.new
                 * result.models
@@ -79,28 +70,7 @@ function data()
         end,
         
         getModelsFn = function(params)
-            local hW = 5
-            local vectorW = func.interlace({
-                -hW
-                - hW + edgeWidth,
-                -hW + edgeWidth + sideWidth,
-                hW - edgeWidth - sideWidth,
-                hW - edgeWidth,
-                hW
-            })
-            local vectorMW = {edgeWidth, sideWidth, (hW - edgeWidth - sideWidth) * 2, sideWidth, edgeWidth}
-            local vectorM = {"edgeLeft", "left", "central", "right", "edgeRight"}
-            
-            return
-                pipe.new
-                * pipe.mapn(vectorW, vectorMW, vectorM)(function(w, mw, m)
-                    local size = makeSize(unpack(w))
-                    return {
-                        general.newModel(m .. "_tl.mdl", mus.fitModel(mw, segmentLength, platformHeight, size, true, true)),
-                        general.newModel(m .. "_br.mdl", mus.fitModel(mw, segmentLength, platformHeight, size, false, false))
-                    }
-                end)
-                * pipe.flatten()
+            return {}
         end
     }
 
