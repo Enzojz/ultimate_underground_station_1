@@ -39,15 +39,22 @@ function data()
         },
         metadata = {
             platform = true,
-            width = 5
+            width = 10
         },
         
         updateFn = function(result, transform, tag, slotId, addModelFn, params)
-            local allArcs = platformArcs(result.config, result.arcs[slotId])
+            local rank = result.slotId2Rank[slotId]
+            local allArcs = platformArcs(result.config, result.arcs[rank])
             local newModels = mus.platformModels(result.config, allArcs, mus.fitModel)
             
             
-            local refArc = pipe.new * allArcs[3]()()() * pipe.map(mus.arc2Edges) * pipe.flatten() * pipe.map(pipe.map(coor.vec2Tuple))
+            local refArc = pipe.new
+                * {allArcs[3]()()(-2.5), allArcs[3]()()(2.5)}
+                * pipe.map(pipe.map(mus.arc2Edges))
+                * pipe.flatten()
+                * pipe.flatten()
+                * pipe.map(pipe.map(coor.vec2Tuple))
+            
             local edges = {
                 type = "TRACK",
                 alignTerrain = false,
@@ -58,25 +65,26 @@ function data()
                 edgeType = "TUNNEL",
                 edgeTypeName = "ust_void.lua",
                 edges = refArc,
-                snapNodes = {5, 11},
+                snapNodes = {},
                 tag2nodes = {},
             }
-
+            
             local leftTerminals, rightTerminals, linkings, terminalCounts = mus.generateTerminals(allArcs)
             
             result.models =
                 pipe.new
                 * result.models
-                + newModels
-                + linkings
-
-            result.terminalInfo[slotId] = {
-                { #result.models, #result.models + terminalCounts - 1 },
-                { #result.models + terminalCounts, #result.models + terminalCounts + terminalCounts - 1 },
+                + 
+                (newModels
+                + linkings) * pipe.map(function(m) return func.with(m, { tag = "__module_" .. slotId }) end)
+            
+            result.terminalInfo[rank] = {
+                {#result.models, #result.models + terminalCounts - 1},
+                {#result.models + terminalCounts, #result.models + terminalCounts + terminalCounts - 1},
             }
             
             result.models = result.models + leftTerminals + rightTerminals
-
+            
             result.edgeLists = pipe.new
                 * result.edgeLists
                 / edges

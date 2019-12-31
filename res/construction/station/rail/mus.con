@@ -26,18 +26,6 @@ local log = ma.log
 local log10 = log(10)
 local unpack = table.unpack
 
-local function slotIdDecode(id)
-    -- Rule
-    -- T XXXXX, T = 5: 5m, 6: 10m, 7:15m, 1: track
-    local subId = id % 10000
-    local prefix = (id - subId) / 10000
-    if prefix == 5 then
-        return {"station/rail/mus_platform_5m.module", subId}
-    elseif prefix == 1 then
-        return {"station/rail/mus_track.module", subId}
-    end
-end
-
 local function params()
     return
         pipe.new
@@ -152,7 +140,7 @@ function data()
     
     local createTemplateFn = function(params)
         local result = {
-            [1] = "station/rail/mus_platform_5m.module",
+            [10001] = "station/rail/mus_platform_10m.module",
             [2] = "station/rail/mus_track.module",
         }
         
@@ -173,13 +161,46 @@ function data()
         local arcPacker = mus.arcPacker(length, slope, radius)
         
         result.modelType = mus.models({platform = params.floor + 1, wall = params.wall + 1})
-        result.modules = params.modules
         
-        dump()(params.modules)
-        local o = coor.xyz(radius, 0, 0)
-        result.arcs = pipe.new * params.modules * pipe.map(pipe.select("metadata"))
-            * offsetGen
-            * pipe.map(pipe.map(function(of) return arcPacker(radius - of, o) end))
+        
+        result.slotId2Rank = {}
+        
+        local modules = {}
+        local allPos = {}
+        local pos2Slot = {}
+        local slot2Pos = {}
+        
+        for slotId, m in pairs(params.modules) do
+            local pos = slotId % 10000
+            if pos > 5000 then pos = pos - 10000 end
+            allPos[#allPos + 1] = pos
+            pos2Slot[pos] = slotId
+            slot2Pos[slotId] = pos
+        end
+        allPos = pipe.new * allPos * pipe.sort()
+        
+        for rank = 1, #allPos do
+            local pos = allPos[rank]
+            local slotId = pos2Slot[pos]
+            result.slotId2Rank[slotId] = rank
+            modules[rank] = func.with(
+                params.modules[slotId], {
+                    slotId = slotId,
+                    pos = pos,
+                    rank = rank
+                }
+        )
+        end
+
+        local minPositive = allPos * pipe.filter(function(p) return p > 0 end) * pipe.min()
+        
+        local offsets = pipe.new * modules * pipe.map(pipe.select("metadata")) * offsetGen
+        
+        local reOffset = offsets[result.slotId2Rank[pos2Slot[minPositive]]][1]
+
+        offsets = offsets * pipe.map(pipe.map(pipe.plus(-reOffset)))
+
+        result.arcs = offsets * pipe.map(pipe.map(function(of) return arcPacker(radius - of, coor.xyz(radius, 0, 0)) end))
         
         result.config = {
             hPlatform = hPlatform,
@@ -187,15 +208,55 @@ function data()
             slope = slope,
             models = result.modelType,
         }
+        result.slots = {}
         
-        result.slots = func.mapi(params.modules, function(e, i)
-            return {
-                id = i,
-                transf = e.transf or coor.I(),
+        local rankMax = func.max(allPos)
+        local rankMin = func.min(allPos)
+        
+        result.slots = pipe.new * pipe.mapn(func.seq(1, #modules), modules, offsets)(
+                function(rank, m, o)
+                    return {
+                        id = m.slotId,
+                        transf = coor.transX(o[1]),
+                        type = m.metadata.track and "mus_track" or "mus_platform",
+                        spacing = {m.metadata.width * 0.5, m.metadata.width * 0.5, 5, 5}
+                    }
+                end
+        )
+        
+        result.slots = result.slots + {
+            {
+                id = rankMax + 1,
+                transf = coor.transX(offsets[#offsets][1] + result.slots[#result.slots].spacing[1] + 2.5),
+                type = "mus_track",
+                spacing = {2.5, 2.5, 5, 5}
+            },
+            {
+                id = rankMax + 1 + 10000,
+                transf = coor.transX(offsets[#offsets][1] + result.slots[#result.slots].spacing[1] + 5),
                 type = "mus_platform",
-                spacing = {0, 0, 0, 0}
+                spacing = {5, 5, 5, 5}
+            },
+            {
+                id = (rankMin - 1 < 0) and (rankMin - 1 + 10000) or (rankMin - 1),
+                transf = coor.transX(offsets[1][1] - result.slots[1].spacing[1] - 2.5),
+                type = "mus_track",
+                spacing = {2.5, 2.5, 5, 5}
+            },
+            {
+                id = (rankMin - 1 < 0) and (rankMin - 1 + 10000 + 10000) or (rankMin - 1 + 10000),
+                transf = coor.transX(offsets[1][1] - result.slots[1].spacing[1] - 5),
+                type = "mus_platform",
+                spacing = {5, 5, 5, 5}
             }
-        end)
+        }
+
+        dump()(
+            {
+            modules,
+            result.slots
+            }
+        )
         
         result.models = {}
         
@@ -212,32 +273,31 @@ function data()
         result.terminalInfo = {}
         result.cost = 0
         result.terminateConstructionHook = function()
-            for i, m in pairs(params.modules) do
-                if params.modules[i].metadata.track then
-                    if (params.modules[i - 1] and params.modules[i - 1].metadata.platform) then
-                        local node = (i - 1) * 12 + 1
+            for rank, m in pairs(modules) do
+                if m.metadata.track then
+                    if (modules[rank - 1] and modules[rank - 1].metadata.platform) then
+                        local node = (rank - 1) * 12 + 1
                         result.terminalGroups[#result.terminalGroups + 1] = {
-                            callbacks = { },
-                            terminals = func.seqMap(result.terminalInfo[i - 1][2], function(t) return {t, 0} end),
+                            callbacks = {},
+                            terminals = func.seqMap(result.terminalInfo[rank - 1][2], function(t) return {t, 0} end),
                             vehicleNodeOverride = node,
-                            vehicleNodeOverrideList = { node },
-                            vehicleNodeOverrideListCenter = { node + 3 }
+                            vehicleNodeOverrideList = {node},
+                            vehicleNodeOverrideListCenter = {node + 3}
                         }
                     end
-                    if (params.modules[i + 1] and params.modules[i + 1].metadata.platform) then
-                        local node = (i - 1) * 12 + 7
+                    if (modules[rank + 1] and modules[rank + 1].metadata.platform) then
+                        local node = (rank - 1) * 12 + 7
                         result.terminalGroups[#result.terminalGroups + 1] = {
-                            callbacks = { },
-                            terminals = func.seqMap(result.terminalInfo[i + 1][1], function(t) return {t, 0} end),
+                            callbacks = {},
+                            terminals = func.seqMap(result.terminalInfo[rank + 1][1], function(t) return {t, 0} end),
                             vehicleNodeOverride = node,
-                            vehicleNodeOverrideList = { node },
-                            vehicleNodeOverrideListCenter = { node + 3 }
+                            vehicleNodeOverrideList = {node},
+                            vehicleNodeOverrideListCenter = {node + 3}
                         }
                     end
                 else
-                end
+                    end
             end
-            dump()(result)
         end
         
         return result
