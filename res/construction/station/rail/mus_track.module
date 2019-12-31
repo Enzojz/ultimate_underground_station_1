@@ -11,7 +11,7 @@ local ma = math
 local pi = ma.pi
 
 local trackWidth = 5
-
+local mType = "mus_track"
 function data()
     return {
         availability = {
@@ -30,16 +30,18 @@ function data()
         category = {
             categories = {"track"},
         },
-        type = "mus_track",
+        type = mType,
         order = {
             value = 260,
         },
         metadata = {
             track = true,
-            width = 5
+            width = 5,
+            type = mType
         },
         
         updateFn = function(result, transform, tag, slotId, addModelFn, params)
+            local withTag = general.withTag(tag)
             local rank = result.slotId2Rank[slotId]
             local allArcs = mus.trackArcs(trackWidth)(result.config, result.arcs[rank])
             local refArc = pipe.new * allArcs[1]()()() * pipe.map(mus.arc2Edges) * pipe.flatten() * pipe.map(pipe.map(coor.vec2Tuple))
@@ -54,7 +56,9 @@ function data()
                 edgeTypeName = "ust_void.lua",
                 edges = refArc,
                 snapNodes = {5, 11},
-                tag2nodes = {},
+                tag2nodes = {
+                    [tag] = func.seq(0, #refArc - 1)
+                }
             }
             
             local newModels = mus.trackModels(result.config, allArcs, mus.fitModel)
@@ -62,11 +66,12 @@ function data()
             result.models =
                 pipe.new
                 * result.models
-                + newModels
+                + withTag(newModels)
             
             result.edgeLists = pipe.new
                 * result.edgeLists
                 / edges
+
                 
         end,
         

@@ -1,0 +1,61 @@
+local func = require "entry/func"
+local coor = require "entry/coor"
+local pipe = require "entry/pipe"
+local general = require "entry/general"
+local mus = require "mus_platform"
+local quat = require "entry/quaternion"
+local dump = require "luadump"
+
+local unpack = table.unpack
+local ma = math
+local pi = ma.pi
+
+local platformWidth = 10
+local stairsWidth = 7
+
+local platformArcs = mus.platformArcs(platformWidth, stairsWidth)
+local mType = "mus_downstair"
+function data()
+    return {
+        availability = {
+            yearFrom = 0,
+            yearTo = 0,
+        },
+        buildMode = "SINGLE",
+        cost = {
+            price = 15000,
+        },
+        description = {
+            name = _("10m Underground platform"),
+            description = _("An underground platform of 10m wide"),
+            icon = "ui/construction/street/underpass_entry.tga"
+        },
+        category = {
+            categories = {"Stairs"},
+        },
+        type = mType,
+        order = {
+            value = 260,
+        },
+        metadata = {
+            platform = true,
+            width = 10,
+            type = mType
+        },
+        
+        updateFn = function(result, transform, tag, slotId, addModelFn, params)
+            local pos = slotId % 1000
+            local refSlot = (slotId - pos - 10000) / 1000
+            
+            local rank = result.slotId2Rank[slotId]
+            local allArcs = platformArcs(result.config, result.arcs[rank])
+            local newModels = mus.platformModels(result.config, allArcs, mus.fitModel)
+            
+        end,
+        
+        getModelsFn = function(params)
+            return {}
+        end
+    }
+
+end

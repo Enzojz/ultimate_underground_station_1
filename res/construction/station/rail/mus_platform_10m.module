@@ -14,7 +14,7 @@ local platformWidth = 10
 local stairsWidth = 7
 
 local platformArcs = mus.platformArcs(platformWidth, stairsWidth)
-
+local mType = "mus_platform"
 function data()
     return {
         availability = {
@@ -33,21 +33,22 @@ function data()
         category = {
             categories = {"platform"},
         },
-        type = "mus_platform",
+        type = mType,
         order = {
             value = 260,
         },
         metadata = {
             platform = true,
-            width = 10
+            width = 10,
+            type = mType
         },
         
         updateFn = function(result, transform, tag, slotId, addModelFn, params)
             local rank = result.slotId2Rank[slotId]
             local allArcs = platformArcs(result.config, result.arcs[rank])
             local newModels = mus.platformModels(result.config, allArcs, mus.fitModel)
-            
-            
+            local withTag = general.withTag(tag)
+                        
             local refArc = pipe.new
                 * {allArcs[3]()()(-2.5), allArcs[3]()()(2.5)}
                 * pipe.map(pipe.map(mus.arc2Edges))
@@ -66,7 +67,9 @@ function data()
                 edgeTypeName = "ust_void.lua",
                 edges = refArc,
                 snapNodes = {},
-                tag2nodes = {},
+                tag2nodes = {
+                    [tag] = func.seq(0, #refArc - 1)
+                }
             }
             
             local leftTerminals, rightTerminals, linkings, terminalCounts = mus.generateTerminals(allArcs)
@@ -74,20 +77,31 @@ function data()
             result.models =
                 pipe.new
                 * result.models
-                + 
-                (newModels
-                + linkings) * pipe.map(function(m) return func.with(m, { tag = "__module_" .. slotId }) end)
+                + withTag(newModels)
+                + withTag(linkings)
             
             result.terminalInfo[rank] = {
                 {#result.models, #result.models + terminalCounts - 1},
                 {#result.models + terminalCounts, #result.models + terminalCounts + terminalCounts - 1},
             }
             
-            result.models = result.models + leftTerminals + rightTerminals
+            result.models = result.models
+                + withTag(leftTerminals)
+                + withTag(rightTerminals)
             
             result.edgeLists = pipe.new
                 * result.edgeLists
                 / edges
+            
+            result.slots = result.slots + func.mapi(allArcs.platform.central.mc,
+                function(mc, i)
+                    return {
+                        id = slotId * 1000 + i + 10000,
+                        transf = coor.trans(mc),
+                        type = "mus_stairs",
+                        spacing = {0, 0, 0, 0}
+                    }
+                end)
         end,
         
         getModelsFn = function(params)
