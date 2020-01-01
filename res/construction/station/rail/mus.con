@@ -148,7 +148,7 @@ function data()
     end
     
     local upgradeFn = function(params)
-        end
+    end
     
     local updateFn = function(params)
         local result = {}
@@ -170,10 +170,7 @@ function data()
         local pos2Slot = {}
         local slot2Pos = {}
         
-        dump()(params)
-        
         for slotId, m in pairs(params.modules) do
-            dump()(slotId)
             local pos = slotId % 1000
             if pos > 500 then pos = pos - 1000 end
             allPos[#allPos + 1] = pos
@@ -196,14 +193,7 @@ function data()
         end
         
         local minPositive = allPos * pipe.filter(function(p) return p > 0 end) * pipe.min()
-        dump()(
-            {
-                params.modules,
-                minPositive,
-                pos2Slot,
-                result.slotId2Rank
-            }
-        )
+        
         local offsets = pipe.new * modules * pipe.map(pipe.select("metadata")) * offsetGen
                 
         local reOffset = offsets[result.slotId2Rank[pos2Slot[minPositive]] or 1][1]
@@ -259,8 +249,6 @@ function data()
                 spacing = {5, 5, 5, 5}
             }
         }
-        
-        result.newSlots = pipe.new * {}
         
         result.models = {}
         

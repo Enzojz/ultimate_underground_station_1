@@ -70,8 +70,8 @@ function data()
                 tag2nodes = {
                     [tag] = func.seq(0, #refArc - 1)
                 }
+                
             }
-            
             local leftTerminals, rightTerminals, linkings, terminalCounts = mus.generateTerminals(allArcs)
             
             result.models =
@@ -93,15 +93,15 @@ function data()
                 * result.edgeLists
                 / edges
             
-            result.slots = result.slots + func.mapi(allArcs.platform.central.mc,
-                function(mc, i)
-                    return {
-                        id = slotId * 1000 + i + 10000,
-                        transf = coor.trans(mc),
-                        type = "mus_stairs",
-                        spacing = {0, 0, 0, 0}
-                    }
-                end)
+            -- result.slots = result.slots + func.mapi(allArcs.platform.central.mc,
+            --     function(mc, i)
+            --         return {
+            --             id = slotId * 1000 + i + 10000,
+            --             transf = coor.trans(mc),
+            --             type = "mus_stairs",
+            --             spacing = {0, 0, 0, 0}
+            --         }
+            --     end)
         end,
         
         getModelsFn = function(params)
