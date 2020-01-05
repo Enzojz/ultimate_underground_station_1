@@ -39,7 +39,7 @@ mus.arc2Edges = function(arc)
     
     local vecSupExt = arc:tangent(extArc.sup)
     local vecInfExt = arc:tangent(extArc.inf)
-
+    
     local vecSup = arc:tangent(arc.sup)
     local vecInf = arc:tangent(arc.inf)
     
@@ -300,7 +300,6 @@ end
 --             }
 --     end)
 -- end
-
 mus.arcGen = function(p, o) return {
     l = p.l(o),
     r = p.r(-o)
@@ -309,15 +308,15 @@ mus.arcGen = function(p, o) return {
 mus.mc = function(lc, rc) return func.map2(lc, rc, function(l, r) return l:avg(r) end) end
 
 mus.buildSurface = function(fitModel, config, platformZ, tZ)
-    return function(c, w, fnSize)
+    return function(w, fnSize)
         local fnSize = fnSize or function(_, lc, rc) return mus.assembleSize(lc, rc) end
         return function(i, s, ...)
             local sizeS = fnSize(i, ...)
             
             return s
                 and pipe.new
-                / general.newModel(s .. "_tl.mdl", tZ, fitModel(w, 5, platformZ, sizeS, true, true))
-                / general.newModel(s .. "_br.mdl", tZ, fitModel(w, 5, platformZ, sizeS, false, false))
+                / func.with(general.newModel(s .. "_tl.mdl", tZ, fitModel(w, 5, platformZ, sizeS, true, true)), {pos = i})
+                / func.with(general.newModel(s .. "_br.mdl", tZ, fitModel(w, 5, platformZ, sizeS, false, false)), {pos = i})
                 or pipe.new * {}
         end
     end

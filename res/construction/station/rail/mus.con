@@ -151,6 +151,17 @@ function data()
         end
     
     local updateFn = function(params)
+        if #func.keys(params.modules) == 0 then
+            return {
+                edgeLists = {},
+                models = {{
+                    id = "asset/icon/marker_exclamation.mdl",
+                    transf = coor.I(),
+                }},
+                terrainAlignmentLists = {{type = "EQUAL", faces = {}}}
+            }
+        end
+        
         local result = {}
         
         local radius = musm.rList[params.radius + 1] * 1000 * (params.sign == 0 and 1 or -1)
@@ -162,23 +173,21 @@ function data()
         
         result.modelType = mus.models({platform = params.floor + 1, wall = params.wall + 1})
         
-        
         result.slotId2Rank = {}
         
         local modules = {}
         local allPos = {}
         local pos2Slot = {}
         local slot2Pos = {}
-        
-        dump()(params)
-        
+                
         for slotId, m in pairs(params.modules) do
-            dump()(slotId)
-            local pos = slotId % 1000
-            if pos > 500 then pos = pos - 1000 end
-            allPos[#allPos + 1] = pos
-            pos2Slot[pos] = slotId
-            slot2Pos[slotId] = pos
+            if (slotId < 5000) then
+                local pos = slotId % 1000
+                if pos > 500 then pos = pos - 1000 end
+                allPos[#allPos + 1] = pos
+                pos2Slot[pos] = slotId
+                slot2Pos[slotId] = pos
+            end
         end
         allPos = pipe.new * allPos * pipe.sort()
         
@@ -196,22 +205,13 @@ function data()
         end
         
         local minPositive = allPos * pipe.filter(function(p) return p > 0 end) * pipe.min()
-        dump()(
-            {
-                params.modules,
-                minPositive,
-                pos2Slot,
-                result.slotId2Rank
-            }
-        )
         local offsets = pipe.new * modules * pipe.map(pipe.select("metadata")) * offsetGen
-                
         local reOffset = offsets[result.slotId2Rank[pos2Slot[minPositive]] or 1][1]
         
         offsets = offsets * pipe.map(pipe.map(pipe.plus(-reOffset)))
         
         result.arcs = offsets * pipe.map(pipe.map(function(of) return arcPacker(radius - of, coor.xyz(radius, 0, 0)) end))
-        
+        result.allArcs = {}
         result.config = {
             hPlatform = hPlatform,
             refZ = hPlatform,
@@ -219,7 +219,8 @@ function data()
             models = result.modelType,
         }
         result.slots = {}
-        
+        result.invoke = {}
+
         local rankMax = func.max(allPos)
         local rankMin = func.min(allPos)
         
@@ -262,7 +263,7 @@ function data()
         
         result.newSlots = pipe.new * {}
         
-        result.models = {}
+        result.models = pipe.new * {}
         
         result.colliders = {}
         result.terrainAlignmentLists = {{type = "EQUAL", faces = {}}}
@@ -277,6 +278,9 @@ function data()
         result.terminalInfo = {}
         result.cost = 0
         result.terminateConstructionHook = function()
+
+            for _, f in ipairs(result.invoke) do f() end
+
             for rank, m in pairs(modules) do
                 if m.metadata.track then
                     if (modules[rank - 1] and modules[rank - 1].metadata.platform) then

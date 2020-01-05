@@ -61,7 +61,7 @@ mus.trackModels = function(config, arcs, fitModel)
             func.seq(1, 2 * arcs.ceil.c - 2),
             ceilTop,
             mus.interlace(arcs.ceil.lc), mus.interlace(arcs.ceil.rc)
-        )(buildCeil(arcs.ceil.c, 5))
+        )(buildCeil(5))
         * pipe.flatten()
 end
 

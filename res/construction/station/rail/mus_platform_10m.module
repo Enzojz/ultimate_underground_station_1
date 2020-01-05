@@ -46,6 +46,9 @@ function data()
         updateFn = function(result, transform, tag, slotId, addModelFn, params)
             local rank = result.slotId2Rank[slotId]
             local allArcs = platformArcs(result.config, result.arcs[rank])
+
+            result.allArcs[rank] = allArcs
+
             local newModels = mus.platformModels(result.config, allArcs, mus.fitModel)
             local withTag = general.withTag(tag)
                         
@@ -74,11 +77,11 @@ function data()
             
             local leftTerminals, rightTerminals, linkings, terminalCounts = mus.generateTerminals(allArcs)
             
-            result.models =
-                pipe.new
-                * result.models
-                + withTag(newModels)
-                + withTag(linkings)
+            result.invoke[#result.invoke + 1] = function() 
+                result.models = result.models
+                    + withTag(newModels)
+                    + withTag(linkings)
+            end
             
             result.terminalInfo[rank] = {
                 {#result.models, #result.models + terminalCounts - 1},
@@ -93,11 +96,11 @@ function data()
                 * result.edgeLists
                 / edges
             
-            result.slots = result.slots + func.mapi(allArcs.platform.central.mc,
+            result.slots = result.slots + func.mapi(allArcs.blockCoords.platform.central.mc,
                 function(mc, i)
                     return {
                         id = slotId * 1000 + i + 10000,
-                        transf = coor.trans(mc),
+                        transf = coor.trans((mc.s + mc.i) * 0.5),
                         type = "mus_stairs",
                         spacing = {0, 0, 0, 0}
                     }

@@ -14,7 +14,7 @@ local platformWidth = 10
 local stairsWidth = 7
 
 local platformArcs = mus.platformArcs(platformWidth, stairsWidth)
-local mType = "mus_downstair"
+local mType = "mus_stairs"
 function data()
     return {
         availability = {
@@ -46,11 +46,14 @@ function data()
         updateFn = function(result, transform, tag, slotId, addModelFn, params)
             local pos = slotId % 1000
             local refSlot = (slotId - pos - 10000) / 1000
+            local rank = result.slotId2Rank[refSlot]
+             
+            local allArcs = result.allArcs[rank]
+            local newModels = mus.downstairModels(result.config, allArcs, mus.fitModel, pos)
             
-            local rank = result.slotId2Rank[slotId]
-            local allArcs = platformArcs(result.config, result.arcs[rank])
-            local newModels = mus.platformModels(result.config, allArcs, mus.fitModel)
-            
+            result.invoke[#result.invoke + 1] = function()
+                result.models = result.models * pipe.filter(function(m) return m.tag ~= "__module_" .. refSlot or m.pos ~= pos end) + general.withTag(tag)(newModels)
+            end
         end,
         
         getModelsFn = function(params)
