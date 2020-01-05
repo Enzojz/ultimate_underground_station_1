@@ -46,12 +46,12 @@ function data()
         updateFn = function(result, transform, tag, slotId, addModelFn, params)
             local rank = result.slotId2Rank[slotId]
             local allArcs = platformArcs(result.config, result.arcs[rank])
-
+            
             result.allArcs[rank] = allArcs
-
+            
             local newModels = mus.platformModels(result.config, allArcs, mus.fitModel)
             local withTag = general.withTag(tag)
-                        
+            
             local refArc = pipe.new
                 * {allArcs[3]()()(-2.5), allArcs[3]()()(2.5)}
                 * pipe.map(pipe.map(mus.arc2Edges))
@@ -77,7 +77,7 @@ function data()
             
             local leftTerminals, rightTerminals, linkings, terminalCounts = mus.generateTerminals(allArcs)
             
-            result.invoke[#result.invoke + 1] = function() 
+            result.invoke[#result.invoke + 1] = function()
                 result.models = result.models
                     + withTag(newModels)
                     + withTag(linkings)
@@ -96,15 +96,27 @@ function data()
                 * result.edgeLists
                 / edges
             
-            result.slots = result.slots + func.mapi(allArcs.blockCoords.platform.central.mc,
-                function(mc, i)
-                    return {
-                        id = slotId * 1000 + i + 10000,
-                        transf = coor.trans((mc.s + mc.i) * 0.5),
-                        type = "mus_stairs",
-                        spacing = {0, 0, 0, 0}
-                    }
-                end)
+            result.slots = result.slots
+                + func.mapi(allArcs.blockCoords.platform.central.mc,
+                    function(mc, i)
+                        return {
+                            id = slotId % 1000 * 100000 + 10000 + i,
+                            transf = quat.byVec(coor.xyz(0, 1, 0), (mc.s - mc.i)):mRot() * coor.trans((mc.s + mc.i) * 0.5),
+                            type = "mus_downstairs",
+                            spacing = {stairsWidth * 0.5, stairsWidth * 0.5, 2.75, 2.75},
+                            shape = 0
+                        }
+                    end)
+                + func.mapi(mus.interlace(allArcs.blockCoords.platform.central.mc),
+                    function(mc, i)
+                        return {
+                            id = slotId % 1000 * 100000 + 20000 + i,
+                            transf = quat.byVec(coor.xyz(0, 1, 0), (mc.s.s - mc.i.i)):mRot() * coor.trans(mc.i.s),
+                            type = "mus_upstairs",
+                            spacing = {stairsWidth * 0.5, stairsWidth * 0.5, 5.25, 5.25},
+                            shape = 0
+                        }
+                    end)
         end,
         
         getModelsFn = function(params)

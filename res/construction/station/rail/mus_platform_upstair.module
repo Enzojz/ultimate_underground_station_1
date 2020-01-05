@@ -5,10 +5,9 @@ local general = require "entry/general"
 local mus = require "mus_platform"
 local quat = require "entry/quaternion"
 local dump = require "luadump"
-
 local unpack = table.unpack
 
-local mType = "mus_downstairs"
+local mType = "mus_upstairs"
 function data()
     return {
         availability = {
@@ -44,10 +43,10 @@ function data()
             local rank = result.slotId2Rank[refSlot]
              
             local allArcs = result.allArcs[rank]
-            local newModels = mus.downstairsModels(result.config, allArcs, mus.fitModel, pos)
+            local newModels = mus.upstairsModels(result.config, allArcs, mus.fitModel, pos)
             
             result.invoke[#result.invoke + 1] = function()
-                result.models = result.models * pipe.filter(function(m) return m.tag ~= "__module_" .. refSlot or m.pos ~= pos end) + general.withTag(tag)(newModels)
+                result.models = result.models * pipe.filter(function(m) return m.tag ~= "__module_" .. refSlot or (m.pos ~= pos and m.pos ~= pos + 1) end) + general.withTag(tag)(newModels)
             end
         end,
         

@@ -174,12 +174,13 @@ function data()
         result.modelType = mus.models({platform = params.floor + 1, wall = params.wall + 1})
         
         result.slotId2Rank = {}
+        result.pos2SlotId = {}
         
         local modules = {}
         local allPos = {}
         local pos2Slot = {}
         local slot2Pos = {}
-                
+        
         for slotId, m in pairs(params.modules) do
             if (slotId < 5000) then
                 local pos = slotId % 1000
@@ -195,6 +196,7 @@ function data()
             local pos = allPos[rank]
             local slotId = pos2Slot[pos]
             result.slotId2Rank[slotId] = rank
+            result.pos2SlotId[pos] = slotId
             modules[rank] = func.with(
                 params.modules[slotId], {
                     slotId = slotId,
