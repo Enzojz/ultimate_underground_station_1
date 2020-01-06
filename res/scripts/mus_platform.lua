@@ -124,12 +124,6 @@ mus.upstairsModels = function(config, arcs, fitModel, pos)
     
     local c = arcs.count
     
-    local fnSizeSym = function(i, lc, rc) return
-        i >= c
-        and mus.assembleSize(lc, rc)
-        or mus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s})
-    end
-    
     local models = {
         platform = {
             left = config.models.platform.left,
@@ -159,7 +153,7 @@ mus.upstairsModels = function(config, arcs, fitModel, pos)
     }
     
     local steps = pipe.new
-        / buildWall(4.5, fnSizeSym)(
+        / buildWall(4.5)(
             pos,
             models.stair.back,
             arcs.blockCoords.stairs.inner.lc[pos + 1],
@@ -171,14 +165,14 @@ mus.upstairsModels = function(config, arcs, fitModel, pos)
             models.stair.central,
             {arcs.blockCoords.stairs.inner.lc[pos], arcs.blockCoords.stairs.inner.lc[pos + 1]},
             {arcs.blockCoords.stairs.inner.rc[pos], arcs.blockCoords.stairs.inner.rc[pos + 1]}
-        )(buildPlatform(4.5, fnSizeSym))
+        )(buildPlatform(4.5))
         +
         pipe.mapn(
             {pos, pos + 1},
             models.stair.inner,
             {arcs.blockCoords.stairs.inner.lc[pos], arcs.blockCoords.stairs.inner.lc[pos + 1]},
             {arcs.blockCoords.stairs.inner.rc[pos], arcs.blockCoords.stairs.inner.rc[pos + 1]}
-        )(buildPlatform(4.5, fnSizeSym))
+        )(buildPlatform(4.5))
         +
         pipe.mapn(
             {pos, pos + 1},
@@ -187,12 +181,7 @@ mus.upstairsModels = function(config, arcs, fitModel, pos)
             {arcs.blockCoords.stairs.inner.lc[pos], arcs.blockCoords.stairs.inner.lc[pos + 1]},
             {arcs.blockCoords.stairs.outer.rc[pos], arcs.blockCoords.stairs.outer.rc[pos + 1]},
             {arcs.blockCoords.stairs.inner.rc[pos], arcs.blockCoords.stairs.inner.rc[pos + 1]}
-        )(buildWall(0.25,
-            function(i, loc, lic, roc, ric) return
-                i >= c
-                and mus.assembleSize(loc, lic)
-                or mus.assembleSize({s = roc.i, i = roc.s}, {s = ric.i, i = ric.s})
-            end))
+        )(buildWall(0.25, function(i, loc, lic, roc, ric) return mus.assembleSize(loc, lic) end))
         +
         pipe.mapn(
             {pos, pos + 1},
@@ -201,12 +190,7 @@ mus.upstairsModels = function(config, arcs, fitModel, pos)
             {arcs.blockCoords.stairs.inner.lc[pos], arcs.blockCoords.stairs.inner.lc[pos + 1]},
             {arcs.blockCoords.stairs.outer.rc[pos], arcs.blockCoords.stairs.outer.rc[pos + 1]},
             {arcs.blockCoords.stairs.inner.rc[pos], arcs.blockCoords.stairs.inner.rc[pos + 1]}
-        )(buildWall(0.25,
-            function(i, loc, lic, roc, ric) return
-                i >= c
-                and mus.assembleSize(ric, roc)
-                or mus.assembleSize({s = lic.i, i = lic.s}, {s = loc.i, i = loc.s})
-            end))
+        )(buildWall(0.25, function(i, loc, lic, roc, ric) return mus.assembleSize(ric, roc) end))
     
     local platforms = func.seqMap({0, 1},
         function(i)
@@ -311,12 +295,6 @@ mus.downstairsModels = function(config, arcs, fitModel, pos)
     
     local c = arcs.count
     
-    local fnSizeSym = function(i, lc, rc) return
-        i >= c
-        and mus.assembleSize(lc, rc)
-        or mus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s})
-    end
-    
     local models = {
         platform = {
             left = config.models.platform.left,
@@ -348,14 +326,14 @@ mus.downstairsModels = function(config, arcs, fitModel, pos)
     }
     
     local steps = pipe.new +
-        buildPlatform(4.5, fnSizeSym)(
+        buildPlatform(4.5)(
             pos,
             models.stair.central,
             arcs.blockCoords.stairs.inner.lc[pos],
             arcs.blockCoords.stairs.inner.rc[pos]
         )
         +
-        buildPlatform(4.5, fnSizeSym)(
+        buildPlatform(4.5)(
             pos,
             models.stair.back,
             arcs.blockCoords.stairs.inner.lc[pos],
@@ -417,7 +395,7 @@ mus.downstairsModels = function(config, arcs, fitModel, pos)
             arcs.blockCoords.platform.edge.rc[pos]
     )
     local ceils = pipe.new +
-        buildCeil(5, fnSizeSym)(
+        buildCeil(5)(
             pos,
             models.ceil.central,
             arcs.blockCoords.stairs.outer.lc[pos],
@@ -511,11 +489,7 @@ mus.platformModels = function(config, arcs, fitModel)
             indices,
             models.platform.central,
             arcs.blockCoords.stairs.outer.lc, arcs.blockCoords.stairs.outer.rc
-        )(buildPlatform(5, function(i, lc, rc) return
-            i >= c
-            and mus.assembleSize(lc, rc)
-            or mus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s})
-        end))
+        )(buildPlatform(5))
         + pipe.mapn(
             indices,
             models.platform.left,

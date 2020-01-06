@@ -41,9 +41,21 @@ function data()
             local refPos = (slotId - slotId % 100000) / 100000
             local refSlot = result.pos2SlotId[refPos]
             local rank = result.slotId2Rank[refSlot]
-             
+            
             local allArcs = result.allArcs[rank]
             local newModels = mus.upstairsModels(result.config, allArcs, mus.fitModel, pos)
+            
+            local startBlock = allArcs.blockCoords.platform.lane.mc[pos - 1]
+            local pt1 = startBlock.i:avg(startBlock.s)
+            local pt2 = allArcs.blockCoords.platform.lane.mc[pos].s
+            local pt3 = allArcs.blockCoords.platform.lane.mc[pos + 1].i + coor.xyz(0, 0, 6)
+            local lane =
+                {
+                    general.newModel("mus/person_lane.mdl", general.mRot(pt2 - pt1), coor.trans(pt1)),
+                    general.newModel("mus/person_lane.mdl", general.mRot(pt3 - pt2), coor.trans(pt2))
+                }
+            
+            newModels = newModels + lane
             
             result.invoke[#result.invoke + 1] = function()
                 result.models = result.models * pipe.filter(function(m) return m.tag ~= "__module_" .. refSlot or (m.pos ~= pos and m.pos ~= pos + 1) end) + general.withTag(tag)(newModels)

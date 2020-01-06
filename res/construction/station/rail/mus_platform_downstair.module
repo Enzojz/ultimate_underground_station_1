@@ -45,6 +45,18 @@ function data()
              
             local allArcs = result.allArcs[rank]
             local newModels = mus.downstairsModels(result.config, allArcs, mus.fitModel, pos)
+
+            local blocks = allArcs.blockCoords.platform.lane.mc
+            local pt1 = (blocks[pos - 1].i):avg(blocks[pos - 1].s)
+            local pt2 = blocks[pos].s
+            local pt3 = blocks[pos].i - coor.xyz(0, 0, 3)
+            local lane =
+                {
+                    general.newModel("mus/person_lane.mdl", general.mRot(pt2 - pt1), coor.trans(pt1)),
+                    general.newModel("mus/person_lane.mdl", general.mRot(pt3 - pt2), coor.trans(pt2))
+                }
+            
+            newModels = newModels + lane
             
             result.invoke[#result.invoke + 1] = function()
                 result.models = result.models * pipe.filter(function(m) return m.tag ~= "__module_" .. refSlot or m.pos ~= pos end) + general.withTag(tag)(newModels)
