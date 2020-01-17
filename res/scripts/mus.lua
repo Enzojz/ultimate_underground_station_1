@@ -21,6 +21,31 @@ local unpack = table.unpack
 
 local segmentLength = 20
 
+mus.slotInfo = function(slotId)
+    -- Platform/track
+    -- 1 ~ 3 : pos x (0~500 > right, 501 ~ 999 < left)
+    -- 4: 1 for platform, 0 for track
+    -- 5: group
+    -- Stairs
+    -- 1 ~ 3 : pos x
+    -- 4 : 2 for downstairs 3 for upstairs
+    -- 5 : group
+    -- 6 ~ 8 : pos y
+    local d13 = slotId % 1000
+    local d14 = slotId % 10000
+    local d15 = slotId % 100000
+    local posX = d13
+    local typeId = (d14 - d13) / 1000
+    local posZ = (d15 - d14) / 10000
+    local posY = (slotId - d15) / 100000
+    if posX > 500 then posX = posX - 1000 end
+    if posZ > 5 then posZ = posZ - 10 end
+    return {
+        pos = coor.xyz(posX, posY, posZ),
+        typeId = typeId
+    }
+end
+
 mus.normalizeRad = function(rad)
     return (rad < pi * -0.5) and mus.normalizeRad(rad + pi * 2) or
         ((rad > pi + pi * 0.5) and mus.normalizeRad(rad - pi * 2) or rad)
@@ -262,30 +287,6 @@ end
 mus.interlace = pipe.interlace({"s", "i"})
 
 mus.unitLane = function(f, t) return ((t - f):length2() > 1e-2 and (t - f):length2() < 562500) and general.newModel("mus/person_lane.mdl", general.mRot(t - f), coor.trans(f)) or nil end
-
-mus.generateSideWalls = function(fitModel, config)
-    local platformZ = config.hPlatform + 0.53
-    return function(arcRef, isLeft, filter)
-        local filter = filter and filter(isLeft, isTrack) or function(_) return true end
-        local isTrack = arcRef.isTrack
-        local c = arcRef.isTrack and
-            (isLeft and arcRef.ceil.lc or arcRef.ceil.rc) or
-            (isLeft and arcRef.stairs.inner.lc or arcRef.stairs.inner.rc)
-        local newModels =
-            pipe.new * mus.interlace(c)
-            * pipe.filter(filter)
-            * pipe.map(function(ic)
-                local vec = ic.i - ic.s
-                return general.newModel((isTrack and config.models.wallTrack or config.models.wallPlatform) .. ".mdl",
-                    coor.rotZ(isLeft and -0.5 * pi or 0.5 * pi),
-                    isTrack and coor.I() or coor.scaleZ(5 - platformZ),
-                    coor.scaleX(vec:length() / 5),
-                    quat.byVec(coor.xyz(5, 0, 0), vec):mRot(),
-                    coor.trans(ic.s:avg(ic.i) + (isTrack and coor.xyz(0, 0, -platformZ) or coor.xyz(0, 0, 0))))
-            end)
-        return newModels
-    end
-end
 
 -- mus.generateTerrain = function(config)
 --     return pipe.mapFlatten(function(arcs)

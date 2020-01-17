@@ -44,7 +44,7 @@ function data()
             local withTag = general.withTag(tag)
             local rank = result.slotId2Rank[slotId]
             local allArcs = mus.trackArcs(trackWidth)(result.config, result.arcs[rank])
-            result.allArcs[rank] = allArcs
+            
             local refArc = pipe.new * allArcs[1]()()() * pipe.map(mus.arc2Edges) * pipe.flatten() * pipe.map(pipe.map(coor.vec2Tuple))
             local edges = {
                 type = "TRACK",
@@ -62,7 +62,11 @@ function data()
                 }
             }
             
-            local newModels = mus.trackModels(result.config, allArcs, mus.fitModel)
+            local sideWall = (rank == 1) 
+                and mus.trackSideWallModels(result.config, allArcs, true) 
+                or (rank == #result.arcs) and mus.trackSideWallModels(result.config, allArcs, false) 
+                or {}
+            local newModels = mus.trackModels(result.config, allArcs, mus.fitModel) + sideWall
             result.terminalInfo[rank] = true
             
             result.invoke[#result.invoke + 1] = function()

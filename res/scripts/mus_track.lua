@@ -65,5 +65,21 @@ mus.trackModels = function(config, arcs, fitModel)
         * pipe.flatten()
 end
 
+mus.trackSideWallModels = function(config, arcRef, isLeft)
+    local platformZ = config.hPlatform + 0.53
+    local c = isLeft and arcRef.ceil.lc or arcRef.ceil.rc
+    local newModels =
+        pipe.new * mus.interlace(c)
+        * pipe.map(function(ic)
+            local vec = ic.i - ic.s
+            return general.newModel(config.models.wallTrack .. ".mdl",
+                coor.rotZ(isLeft and -0.5 * pi or 0.5 * pi),
+                coor.scaleX(vec:length() / 5),
+                quat.byVec(coor.xyz(5, 0, 0), vec):mRot(),
+                coor.trans(ic.s:avg(ic.i) + coor.xyz(0, 0, -platformZ)))
+        end)
+    return newModels
+end
+
 
 return mus

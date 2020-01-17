@@ -37,12 +37,11 @@ function data()
         },
         
         updateFn = function(result, transform, tag, slotId, addModelFn, params)
-            local pos = slotId % 1000
-            local refPos = (slotId - slotId % 100000) / 100000
-            local refSlot = result.pos2SlotId[refPos]
-            local rank = result.slotId2Rank[refSlot]
+            local info = mus.slotInfo(slotId)
+            local pos = info.pos.y
+            local refSlot = slotId % 100000 - 2000
             
-            local allArcs = result.allArcs[rank]
+            local allArcs = result.allArcs[refSlot]
             local newModels = mus.upstairsModels(result.config, allArcs, mus.fitModel, pos)
             
             local startBlock = allArcs.blockCoords.platform.lane.mc[pos - 1]

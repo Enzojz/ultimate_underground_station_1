@@ -173,30 +173,26 @@ function data()
         
         result.modelType = mus.models({platform = params.floor + 1, wall = params.wall + 1})
         
+        result.arcs = {}
         result.slotId2Rank = {}
-        result.pos2SlotId = {}
-        
         local modules = {}
         local allPos = {}
         local pos2Slot = {}
-        local slot2Pos = {}
-        
+        local monoGroup = {}
+
         for slotId, m in pairs(params.modules) do
-            if (slotId < 5000) then
-                local pos = slotId % 1000
-                if pos > 500 then pos = pos - 1000 end
-                allPos[#allPos + 1] = pos
-                pos2Slot[pos] = slotId
-                slot2Pos[slotId] = pos
+            local info = mus.slotInfo(slotId)
+            if info.typeId < 2 then
+                table.insert(allPos, info.pos.x)
+                pos2Slot[info.pos.x] = slotId
             end
         end
         allPos = pipe.new * allPos * pipe.sort()
-        
+    
         for rank = 1, #allPos do
             local pos = allPos[rank]
             local slotId = pos2Slot[pos]
             result.slotId2Rank[slotId] = rank
-            result.pos2SlotId[pos] = slotId
             modules[rank] = func.with(
                 params.modules[slotId], {
                     slotId = slotId,
@@ -209,10 +205,11 @@ function data()
         local minPositive = allPos * pipe.filter(function(p) return p > 0 end) * pipe.min()
         local offsets = pipe.new * modules * pipe.map(pipe.select("metadata")) * offsetGen
         local reOffset = offsets[result.slotId2Rank[pos2Slot[minPositive]] or 1][1]
-        
         offsets = offsets * pipe.map(pipe.map(pipe.plus(-reOffset)))
-        
         result.arcs = offsets * pipe.map(pipe.map(function(of) return arcPacker(radius - of, coor.xyz(radius, 0, 0)) end))
+
+        
+    
         result.allArcs = {}
         result.config = {
             hPlatform = hPlatform,

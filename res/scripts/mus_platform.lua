@@ -114,6 +114,25 @@ mus.platformArcs = function(platformWidth, stairsWidth)
     end
 end
 
+mus.platformSideWallModels = function(config, arcRef, isLeft)
+    local platformZ = config.hPlatform + 0.53
+    local newModels =
+        pipe.new * (isLeft and arcRef.blockCoords.stairs.inner.lc or arcRef.blockCoords.stairs.inner.rc)
+        * pipe.mapi(function(ic, i)
+            local vec = ic.i - ic.s
+            return func.with(
+                general.newModel(config.models.wallPlatform .. ".mdl",
+                    coor.rotZ(isLeft and -0.5 * pi or 0.5 * pi),
+                    coor.scaleZ(5 - platformZ),
+                    coor.scaleX(vec:length() / 5),
+                    quat.byVec(coor.xyz(5, 0, 0), vec):mRot(),
+                    coor.trans(ic.s:avg(ic.i))),
+                {pos = i}
+        )
+        end)
+    return newModels
+end
+
 mus.upstairsModels = function(config, arcs, fitModel, pos)
     local tZ = coor.transZ(config.hPlatform - 1.4)-- model height = 1.93 - 1.4 -> 0.53 -> adjust model level to rail level
     local platformZ = config.hPlatform + 0.53 --target Z
@@ -632,7 +651,7 @@ mus.generateTerminals = function(arcs)
                 l = general.newModel("mus/terminal_lane.mdl", general.mRot(lc.s - lc.i), coor.trans(lc.i)),
                 r = general.newModel("mus/terminal_lane.mdl", general.mRot(rc.i - rc.s), coor.trans(rc.s)),
                 link = (lc.s:avg(lc.i) - rc.s:avg(rc.i)):length() > 0.5
-                and func.with(general.newModel("mus/standard_lane.mdl", general.mRot(lc.s:avg(lc.i) - rc.s:avg(rc.i)), coor.trans(rc.i:avg(rc.s))), { pos = i })
+                and func.with(general.newModel("mus/standard_lane.mdl", general.mRot(lc.s:avg(lc.i) - rc.s:avg(rc.i)), coor.trans(rc.i:avg(rc.s))), {pos = i})
             }
         end)
     return
