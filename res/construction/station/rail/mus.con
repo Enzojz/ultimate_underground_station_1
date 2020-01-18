@@ -1,6 +1,7 @@
 local paramsutil = require "paramsutil"
 local func = require "entry/func"
 local coor = require "entry/coor"
+local general = require "entry/general"
 local line = require "mus/coorline"
 local trackEdge = require "mus/trackedge"
 local quat = require "entry/quaternion"
@@ -25,6 +26,39 @@ local e = ma.exp(1)
 local log = ma.log
 local log10 = log(10)
 local unpack = table.unpack
+
+local linkConnectors = function(allConnectors)
+    return
+        allConnectors
+        * pipe.interlace()
+        * pipe.map(function(conn)
+            local recordL = {}
+            local recordR = {}
+            if (#conn[1] == 0 and #conn[2] == 0) then return {} end
+            
+            for i, l in ipairs(conn[1]) do
+                for j, r in ipairs(conn[2]) do
+                    local vec = l - r
+                    local dist = vec:length2()
+                    recordL[i] = recordL[i] and recordL[i].dist < dist and recordL[i] or {dist = dist, vec = vec, i = i, j = j, l = l, r = r}
+                    recordR[j] = recordR[j] and recordR[j].dist < dist and recordR[j] or {dist = dist, vec = vec, i = i, j = j, l = l, r = r}
+                end
+            end
+            
+            return #recordL == 0 and #recordR == 0 and {} or (pipe.new + recordL + recordR)
+                * pipe.sort(function(l, r) return l.i < r.i or (l.i == r.i and l.j < r.j) end)
+                * pipe.fold(pipe.new * {}, function(result, e)
+                    if #result > 0 then
+                        local lastElement = result[#result]
+                        return (lastElement.i == e.i and lastElement.j == e.j) and result or (result / e)
+                    else
+                        return result / e
+                    end
+                end)
+                * pipe.map(function(e) return mus.unitLane(e.l, e.r) end)
+        end)
+        * pipe.flatten()
+end
 
 local function params()
     return
@@ -178,8 +212,8 @@ function data()
         local modules = {}
         local allPos = {}
         local pos2Slot = {}
-        local monoGroup = {}
-
+        result.connectors = {}
+        
         for slotId, m in pairs(params.modules) do
             local info = mus.slotInfo(slotId)
             if info.typeId < 2 then
@@ -188,7 +222,7 @@ function data()
             end
         end
         allPos = pipe.new * allPos * pipe.sort()
-    
+        
         for rank = 1, #allPos do
             local pos = allPos[rank]
             local slotId = pos2Slot[pos]
@@ -207,9 +241,9 @@ function data()
         local reOffset = offsets[result.slotId2Rank[pos2Slot[minPositive]] or 1][1]
         offsets = offsets * pipe.map(pipe.map(pipe.plus(-reOffset)))
         result.arcs = offsets * pipe.map(pipe.map(function(of) return arcPacker(radius - of, coor.xyz(radius, 0, 0)) end))
-
         
-    
+        
+        
         result.allArcs = {}
         result.config = {
             hPlatform = hPlatform,
@@ -219,7 +253,7 @@ function data()
         }
         result.slots = {}
         result.invoke = {}
-
+        
         local rankMax = func.max(allPos)
         local rankMin = func.min(allPos)
         
@@ -277,33 +311,55 @@ function data()
         result.terminalInfo = {}
         result.cost = 0
         result.terminateConstructionHook = function()
-
-            for _, f in ipairs(result.invoke) do f() end
-
-            for rank, m in pairs(modules) do
-                if m.metadata.track then
-                    if (modules[rank - 1] and modules[rank - 1].metadata.platform) then
-                        local node = (rank - 1) * 12 + 1
-                        result.terminalGroups[#result.terminalGroups + 1] = {
-                            callbacks = {},
-                            terminals = func.seqMap(result.terminalInfo[rank - 1][2], function(t) return {t, 0} end),
-                            vehicleNodeOverride = node,
-                            vehicleNodeOverrideList = {node},
-                            vehicleNodeOverrideListCenter = {node + 3}
-                        }
+                
+                for _, f in ipairs(result.invoke) do f() end
+                
+                for rank, m in pairs(modules) do
+                    if m.metadata.track then
+                        if (modules[rank - 1] and modules[rank - 1].metadata.platform) then
+                            local node = (rank - 1) * 12 + 1
+                            result.terminalGroups[#result.terminalGroups + 1] = {
+                                callbacks = {},
+                                terminals = func.seqMap(result.terminalInfo[rank - 1][2], function(t) return {t, 0} end),
+                                vehicleNodeOverride = node,
+                                vehicleNodeOverrideList = {node},
+                                vehicleNodeOverrideListCenter = {node + 3}
+                            }
+                        end
+                        if (modules[rank + 1] and modules[rank + 1].metadata.platform) then
+                            local node = (rank - 1) * 12 + 7
+                            result.terminalGroups[#result.terminalGroups + 1] = {
+                                callbacks = {},
+                                terminals = func.seqMap(result.terminalInfo[rank + 1][1], function(t) return {t, 0} end),
+                                vehicleNodeOverride = node,
+                                vehicleNodeOverrideList = {node},
+                                vehicleNodeOverrideListCenter = {node + 3}
+                            }
+                        end
                     end
-                    if (modules[rank + 1] and modules[rank + 1].metadata.platform) then
-                        local node = (rank - 1) * 12 + 7
-                        result.terminalGroups[#result.terminalGroups + 1] = {
-                            callbacks = {},
-                            terminals = func.seqMap(result.terminalInfo[rank + 1][1], function(t) return {t, 0} end),
-                            vehicleNodeOverride = node,
-                            vehicleNodeOverrideList = {node},
-                            vehicleNodeOverrideListCenter = {node + 3}
-                        }
+                    
+                    if m.metadata.platform then
+                        if (result.connectors[rank]) then
+                            local lanes = pipe.new * {
+                                #result.connectors[rank].up > 1 and func.interlace(result.connectors[rank].up) or {},
+                                #result.connectors[rank].down > 1 and func.interlace(result.connectors[rank].down) or {}
+                            }
+                            * pipe.flatten()
+                            * pipe.map(function(c) return mus.unitLane(unpack(c)) end)
+                            
+                            result.models = result.models + lanes
+                        end
                     end
                 end
-            end
+                
+                local allConnectors = pipe.new
+                    * func.values(modules)
+                    * pipe.filter(function(m) return m.metadata.platform end)
+                    * pipe.map(function(m) return result.connectors[m.rank] end)
+                
+                result.models = result.models
+                    + linkConnectors(allConnectors * pipe.map(pipe.select("up")))
+                    + linkConnectors(allConnectors * pipe.map(pipe.select("down")))
         end
         
         return result

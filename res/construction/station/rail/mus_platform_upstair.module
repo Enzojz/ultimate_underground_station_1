@@ -40,6 +40,7 @@ function data()
             local info = mus.slotInfo(slotId)
             local pos = info.pos.y
             local refSlot = slotId % 100000 - 2000
+            local rank = result.slotId2Rank[refSlot]
             
             local allArcs = result.allArcs[refSlot]
             local newModels = mus.upstairsModels(result.config, allArcs, mus.fitModel, pos)
@@ -55,6 +56,10 @@ function data()
                 }
             
             newModels = newModels + lane
+
+            local connector = result.connectors[rank] and result.connectors[rank] or { up = pipe.new * {}, down = pipe.new * {}}
+            connector.up = connector.up / pt3
+            result.connectors[rank] = connector
             
             result.invoke[#result.invoke + 1] = function()
                 result.models = result.models * pipe.filter(function(m) return m.tag ~= "__module_" .. refSlot or (m.pos ~= pos and m.pos ~= pos + 1) end) + general.withTag(tag)(newModels)
