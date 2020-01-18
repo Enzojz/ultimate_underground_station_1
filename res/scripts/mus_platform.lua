@@ -127,7 +127,7 @@ mus.platformSideWallModels = function(config, arcRef, isLeft)
                     coor.scaleX(vec:length() / 5),
                     quat.byVec(coor.xyz(5, 0, 0), vec):mRot(),
                     coor.trans(ic.s:avg(ic.i))),
-                {pos = i}
+                {pos = i, wall = true}
         )
         end)
     return newModels
@@ -360,11 +360,7 @@ mus.downstairsModels = function(config, arcs, fitModel, pos)
         )
         +
         buildPlatform(0.25,
-            function(i, loc, lic, roc, ric) return
-                i >= c
-                and mus.assembleSize(loc, lic)
-                or mus.assembleSize({s = roc.i, i = roc.s}, {s = ric.i, i = ric.s})
-            end
+            function(i, loc, lic, roc, ric) return mus.assembleSize(loc, lic) end
             )(
             pos,
             models.stair.left,
@@ -375,12 +371,7 @@ mus.downstairsModels = function(config, arcs, fitModel, pos)
         )
         +
         buildPlatform(0.25,
-            function(i, loc, lic, roc, ric) return
-                i >= c
-                and mus.assembleSize(ric, roc)
-                or mus.assembleSize({s = lic.i, i = lic.s}, {s = loc.i, i = loc.s})
-            end
-            )(
+            function(i, loc, lic, roc, ric) return mus.assembleSize(ric, roc) end)(
             pos,
             models.stair.right,
             arcs.blockCoords.stairs.outer.lc[pos],

@@ -63,7 +63,7 @@ function data()
             result.connectors[rank] = connector
 
             result.invoke[#result.invoke + 1] = function()
-                result.models = result.models * pipe.filter(function(m) return m.tag ~= "__module_" .. refSlot or m.pos ~= pos end) + general.withTag(tag)(newModels)
+                result.models = result.models * pipe.filter(function(m) return m.tag ~= "__module_" .. refSlot or m.pos ~= pos or m.wall end) + general.withTag(tag)(newModels)
             end
         end,
         

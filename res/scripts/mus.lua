@@ -323,6 +323,39 @@ mus.buildSurface = function(fitModel, config, platformZ, tZ)
     end
 end
 
+mus.linkConnectors = function(allConnectors)
+    return
+        allConnectors
+        * pipe.interlace()
+        * pipe.map(function(conn)
+            local recordL = {}
+            local recordR = {}
+            if (#conn[1] == 0 and #conn[2] == 0) then return {} end
+            
+            for i, l in ipairs(conn[1]) do
+                for j, r in ipairs(conn[2]) do
+                    local vec = l - r
+                    local dist = vec:length2()
+                    recordL[i] = recordL[i] and recordL[i].dist < dist and recordL[i] or {dist = dist, vec = vec, i = i, j = j, l = l, r = r}
+                    recordR[j] = recordR[j] and recordR[j].dist < dist and recordR[j] or {dist = dist, vec = vec, i = i, j = j, l = l, r = r}
+                end
+            end
+            
+            return #recordL == 0 and #recordR == 0 and {} or (pipe.new + recordL + recordR)
+                * pipe.sort(function(l, r) return l.i < r.i or (l.i == r.i and l.j < r.j) end)
+                * pipe.fold(pipe.new * {}, function(result, e)
+                    if #result > 0 then
+                        local lastElement = result[#result]
+                        return (lastElement.i == e.i and lastElement.j == e.j) and result or (result / e)
+                    else
+                        return result / e
+                    end
+                end)
+                * pipe.map(function(e) return mus.unitLane(e.l, e.r) end)
+        end)
+        * pipe.flatten()
+end
+
 mus.models = function(set)
     local c = "mus/ceil/"
     local t = "mus/top/"

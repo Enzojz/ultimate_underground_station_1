@@ -27,39 +27,6 @@ local log = ma.log
 local log10 = log(10)
 local unpack = table.unpack
 
-local linkConnectors = function(allConnectors)
-    return
-        allConnectors
-        * pipe.interlace()
-        * pipe.map(function(conn)
-            local recordL = {}
-            local recordR = {}
-            if (#conn[1] == 0 and #conn[2] == 0) then return {} end
-            
-            for i, l in ipairs(conn[1]) do
-                for j, r in ipairs(conn[2]) do
-                    local vec = l - r
-                    local dist = vec:length2()
-                    recordL[i] = recordL[i] and recordL[i].dist < dist and recordL[i] or {dist = dist, vec = vec, i = i, j = j, l = l, r = r}
-                    recordR[j] = recordR[j] and recordR[j].dist < dist and recordR[j] or {dist = dist, vec = vec, i = i, j = j, l = l, r = r}
-                end
-            end
-            
-            return #recordL == 0 and #recordR == 0 and {} or (pipe.new + recordL + recordR)
-                * pipe.sort(function(l, r) return l.i < r.i or (l.i == r.i and l.j < r.j) end)
-                * pipe.fold(pipe.new * {}, function(result, e)
-                    if #result > 0 then
-                        local lastElement = result[#result]
-                        return (lastElement.i == e.i and lastElement.j == e.j) and result or (result / e)
-                    else
-                        return result / e
-                    end
-                end)
-                * pipe.map(function(e) return mus.unitLane(e.l, e.r) end)
-        end)
-        * pipe.flatten()
-end
-
 local function params()
     return
         pipe.new
@@ -76,58 +43,34 @@ local function params()
                 name = _("Floor Style"),
                 values = {_("Marble 1"), _("Honeycomb"), _("Marble 2"), _("Concrete"), _("Asphalt")},
                 defaultIndex = 0
-            }
-        }
-        +
-        {
-            {
-                key = "sign",
-                name = "",
-                values = {"+", "-"},
-                defaultIndex = 0
             },
             {
                 key = "radius",
                 name = _("Radius") .. " " .. "(m)",
-                values = pipe.from("∞") + func.map(func.range(musm.rList, 2, #musm.rList), function(r) return tostring(math.floor(r * 1000 + 0.5)) end),
-                defaultIndex = 0
+                values = musm.rList * pipe.map(function(r) return r > 15 and "∞" or tostring(math.floor(r * 1000)) end),
+                uiType = "SLIDER",
+                defaultIndex = (#musm.rList - 1) / 2
             },
             {
                 key = "length",
                 name = _("Platform Length") .. " " .. "(m)",
                 values = func.map(musm.trackLengths, tostring),
-                defaultIndex = 5
-            }
-        }
-        +
-        {
+                uiType = "SLIDER",
+                defaultIndex = 7
+            },
             {
                 key = "hPlatform",
                 name = _("Platform Height") .. " " .. "(mm)",
                 values = func.map(musm.hPlatformList, tostring),
+                uiType = "SLIDER",
                 defaultIndex = 3
-            }
-        } +
-        {
-            {
-                key = "slopeSign",
-                name = "",
-                values = {"+", "-"},
-                defaultIndex = 0
             },
             {
                 key = "slope",
                 name = _("Slope") .. " " .. "(‰)",
                 values = func.map(musm.slopeList, tostring),
-                defaultIndex = 0
-            }
-        }
-        + {
-            {
-                key = "altitude",
-                name = _("Depth Adjustment") .. " " .. "(m)",
-                values = func.seqMap({-5, 5}, tostring),
-                defaultIndex = 5
+                uiType = "SLIDER",
+                defaultIndex = (#musm.slopeList - 1) / 2
             }
         }
 end
@@ -198,7 +141,7 @@ function data()
         
         local result = {}
         
-        local radius = musm.rList[params.radius + 1] * 1000 * (params.sign == 0 and 1 or -1)
+        local radius = musm.rList[params.radius + 1] * 1000
         local length = min(musm.trackLengths[params.length + 1], abs(radius * pi * 1.5))
         local hPlatform = musm.hPlatformList[params.hPlatform + 1] * 0.001
         local slope = musm.slopeList[params.slope + 1] * 0.001 * (params.slopeSign == 0 and 1 or -1)
@@ -358,8 +301,8 @@ function data()
                     * pipe.map(function(m) return result.connectors[m.rank] end)
                 
                 result.models = result.models
-                    + linkConnectors(allConnectors * pipe.map(pipe.select("up")))
-                    + linkConnectors(allConnectors * pipe.map(pipe.select("down")))
+                    + mus.linkConnectors(allConnectors * pipe.map(pipe.select("up")))
+                    + mus.linkConnectors(allConnectors * pipe.map(pipe.select("down")))
         end
         
         return result
