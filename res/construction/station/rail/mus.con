@@ -28,51 +28,60 @@ local log10 = log(10)
 local unpack = table.unpack
 
 local function params()
-    return
-        pipe.new
-        +
+    return {
         {
-            {
-                key = "wall",
-                name = _("Wall"),
-                values = {_("Tiles 1"), _("Tiles 2")},
-                defaultIndex = 0
+            key = "wall",
+            name = _("Wall"),
+            values = {
+                "ui/construction/station/rail/tiles.tga",
+                "ui/construction/station/rail/tiles_classic.tga"
             },
-            {
-                key = "floor",
-                name = _("Floor Style"),
-                values = {_("Marble 1"), _("Honeycomb"), _("Marble 2"), _("Concrete"), _("Asphalt")},
-                defaultIndex = 0
+            uiType = "ICON_BUTTON",
+            defaultIndex = 0
+        },
+        {
+            key = "floor",
+            name = _("Floor Style"),
+            values = {
+                "ui/construction/station/rail/marble.tga",
+                "ui/construction/station/rail/honeycomb.tga",
+                "ui/construction/station/rail/marble_geometric.tga",
+                "ui/construction/station/rail/concrete_tiles2.tga",
+                "ui/construction/station/rail/asphalt.tga"
             },
-            {
-                key = "radius",
-                name = _("Radius") .. " " .. "(m)",
-                values = musm.rList * pipe.map(function(r) return r > 15 and "∞" or tostring(math.floor(r * 1000)) end),
-                uiType = "SLIDER",
-                defaultIndex = (#musm.rList - 1) / 2
-            },
-            {
-                key = "length",
-                name = _("Platform Length") .. " " .. "(m)",
-                values = func.map(musm.trackLengths, tostring),
-                uiType = "SLIDER",
-                defaultIndex = 7
-            },
-            {
-                key = "hPlatform",
-                name = _("Platform Height") .. " " .. "(mm)",
-                values = func.map(musm.hPlatformList, tostring),
-                uiType = "SLIDER",
-                defaultIndex = 3
-            },
-            {
-                key = "slope",
-                name = _("Slope") .. " " .. "(‰)",
-                values = func.map(musm.slopeList, tostring),
-                uiType = "SLIDER",
-                defaultIndex = (#musm.slopeList - 1) / 2
-            }
+            uiType = "ICON_BUTTON",
+            tooltip = _("Floor Style"),
+            defaultIndex = 0
+        },
+        {
+            key = "radius",
+            name = _("Radius") .. " " .. "(m)",
+            values = musm.rList * pipe.map(function(r) return r > 15 and "∞" or tostring(math.floor(r * 1000)) end),
+            uiType = "SLIDER",
+            defaultIndex = (#musm.rList - 1) / 2
+        },
+        {
+            key = "length",
+            name = _("Platform Length") .. " " .. "(m)",
+            values = func.map(musm.trackLengths, tostring),
+            uiType = "SLIDER",
+            defaultIndex = 7
+        },
+        {
+            key = "hPlatform",
+            name = _("Platform Height") .. " " .. "(mm)",
+            values = func.map(musm.hPlatformList, tostring),
+            uiType = "SLIDER",
+            defaultIndex = 3
+        },
+        {
+            key = "slope",
+            name = _("Slope") .. " " .. "(‰)",
+            values = func.map(musm.slopeList, tostring),
+            uiType = "SLIDER",
+            defaultIndex = (#musm.slopeList - 1) / 2
         }
+    }
 end
 
 local offsetGen = function(meta)
