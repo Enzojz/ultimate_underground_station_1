@@ -51,7 +51,8 @@ mus.trackArcs = function(trackWidth)
     end
 end
 
-mus.trackModels = function(config, arcs, fitModel)
+mus.trackModels = function(config, arcs)
+    local fitModel = config.fitModel
     local platformZ = config.hPlatform + 0.53 --target Z
     local buildCeil = mus.buildSurface(fitModel, config, platformZ, coor.I())
     local ceilTop = pipe.rep(2 * arcs.ceil.c - 2)(config.models.top.track.central)

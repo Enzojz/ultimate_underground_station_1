@@ -28,36 +28,50 @@ mus.platformArcs = function(platformWidth, stairsWidth)
             r = arcR(refZ)()
         }
         
-        local arcs = {
+        local baseL, baseR, c = mus.biLatCoords(5)(general.l(0), general.r(0))
+        
+        
+        local coords = {
             platform = {
-                lane = mus.arcGen(general, 0.6),
-                edge = mus.arcGen(general, -0.5),
-                central = mus.arcGen(general, 0.3)
+                edge = {lc = {}, rc = {}, mc = {}, c = c},
+                central = {lc = {}, rc = {}, mc = {}, c = c},
+                lane = {lc = {}, rc = {}, mc = {}, c = c}
             },
             ceil = {
-                edge = mus.arcGen(general, -0.5),
-                central = mus.arcGen(general, 0.2),
+                edge = {lc = {}, rc = {}, mc = {}, c = c},
+                central = {lc = {}, rc = {}, mc = {}, c = c},
             },
             stairs = {
-                outer = mus.arcGen(general, (platformWidth - stairsWidth) * 0.5 + 0.3),
-                inner = mus.arcGen(general, (platformWidth - stairsWidth) * 0.5 + 0.55)
+                outer = {lc = {}, rc = {}, mc = {}, c = c},
+                inner = {lc = {}, rc = {}, mc = {}, c = c},
             },
-            terrain = mus.arcGen({
-                l = arcL(refZ + 7.75)(function(l) return l + 5 end),
-                r = arcR(refZ + 7.75)(function(l) return l + 5 end)
-            }, -0.5)
+        -- terrain = func.with(arcs.terrain, {lc = tlc, rc = trc, mc = mus.mc(tlc, trc), c = tc}),
         }
         
-        local lsc, rsc, lsuc, rsuc, lc, rc, lpc, rpc, lpic, rpic, lsoc, rsoc, lsic, rsic, c = mus.biLatCoords(5)(
-            arcs.platform.edge.l, arcs.platform.edge.r,
-            arcs.platform.central.l, arcs.platform.central.r,
-            arcs.platform.lane.l, arcs.platform.lane.r,
-            arcs.ceil.edge.l, arcs.ceil.edge.r,
-            arcs.ceil.central.l, arcs.ceil.central.r,
-            arcs.stairs.outer.l, arcs.stairs.outer.r,
-            arcs.stairs.inner.l, arcs.stairs.inner.r
-        )
-        local tlc, trc, tc = mus.biLatCoords(5)(arcs.terrain.l, arcs.terrain.r)
+        for i = 1, (c * 2 - 1) do
+            local ptL = baseL[i]
+            local ptR = baseR[i]
+            
+            local transL = (ptL - ptR):normalized()
+            local function offset(o, ls)
+                ls.lc[i] = ptL + transL * o
+                ls.rc[i] = ptR - transL * o
+                ls.mc[i] = (ptL + ptR) * 0.5
+            end
+            
+            offset(0.5, coords.platform.edge)
+            offset(-0.3, coords.platform.central)
+            offset(-0.6, coords.platform.lane)
+            
+            offset(0.5, coords.ceil.edge)
+            offset(-0.2, coords.ceil.central)
+            
+            offset(-(platformWidth - stairsWidth) * 0.5 - 0.3, coords.stairs.outer)
+            offset(-(platformWidth - stairsWidth) * 0.5 - 0.55, coords.stairs.inner)
+        
+        end
+        
+        -- local tlc, trc, tc = mus.biLatCoords(5)(arcs.terrain.l, arcs.terrain.r)
         local function interlaceCoords(coords)
             return {
                 lc = mus.interlace(coords.lc),
@@ -66,22 +80,6 @@ mus.platformArcs = function(platformWidth, stairsWidth)
                 count = c * 2 - 2
             }
         end
-        local coords = {
-            platform = {
-                edge = func.with(arcs.platform.edge, {lc = lsc, rc = rsc, mc = mus.mc(lsc, rsc), c = c}),
-                central = func.with(arcs.platform.central, {lc = lsuc, rc = rsuc, mc = mus.mc(lsuc, rsuc), c = c}),
-                lane = func.with(arcs.platform.lane, {lc = lc, rc = rc, mc = mus.mc(lc, rc), c = c})
-            },
-            ceil = {
-                edge = func.with(arcs.ceil.edge, {lc = lpc, rc = rpc, mc = mus.mc(lpc, rpc), c = c}),
-                central = func.with(arcs.ceil.central, {lc = lpic, rc = rpic, mc = mus.mc(lpic, rpic), c = c}),
-            },
-            stairs = {
-                outer = func.with(arcs.stairs.outer, {lc = lsoc, rc = rsoc, mc = mus.mc(lsoc, rsoc), c = c}),
-                inner = func.with(arcs.stairs.inner, {lc = lsic, rc = rsic, mc = mus.mc(lsic, rsic), c = c}),
-            },
-            terrain = func.with(arcs.terrain, {lc = tlc, rc = trc, mc = mus.mc(tlc, trc), c = tc}),
-        }
         
         local blockCoords = {
             platform = {
@@ -97,7 +95,7 @@ mus.platformArcs = function(platformWidth, stairsWidth)
                 outer = interlaceCoords(coords.stairs.outer),
                 inner = interlaceCoords(coords.stairs.inner)
             },
-            terrain = interlaceCoords(coords.terrain)
+            -- terrain = interlaceCoords(coords.terrain)
         }
         
         return {
@@ -133,7 +131,8 @@ mus.platformSideWallModels = function(config, arcRef, isLeft)
     return newModels
 end
 
-mus.upstairsModels = function(config, arcs, fitModel, pos)
+mus.upstairsModels = function(config, arcs, pos)
+    local fitModel = config.fitModel
     local tZ = coor.transZ(config.hPlatform - 1.4)-- model height = 1.93 - 1.4 -> 0.53 -> adjust model level to rail level
     local platformZ = config.hPlatform + 0.53 --target Z
     
@@ -305,7 +304,8 @@ mus.upstairsModels = function(config, arcs, fitModel, pos)
     return (steps + platforms + ceils + tops) * pipe.flatten()
 end
 
-mus.downstairsModels = function(config, arcs, fitModel, pos)
+mus.downstairsModels = function(config, arcs, pos)
+    local fitModel = config.fitModel
     local tZ = coor.transZ(config.hPlatform - 1.4)-- model height = 1.93 - 1.4 -> 0.53 -> adjust model level to rail level
     local platformZ = config.hPlatform + 0.53 --target Z
     
@@ -459,7 +459,8 @@ mus.downstairsModels = function(config, arcs, fitModel, pos)
     return platforms + ceils + tops + steps
 end
 
-mus.platformModels = function(config, arcs, fitModel)
+mus.platformModels = function(config, arcs)
+    local fitModel = config.fitModel
     local tZ = coor.transZ(config.hPlatform - 1.4)-- model height = 1.93 - 1.4 -> 0.53 -> adjust model level to rail level
     local platformZ = config.hPlatform + 0.53 --target Z
     

@@ -65,7 +65,7 @@ local function params()
             name = _("Platform Length") .. " " .. "(m)",
             values = func.map(musm.trackLengths, tostring),
             uiType = "SLIDER",
-            defaultIndex = 7
+            defaultIndex = 5
         },
         {
             key = "hPlatform",
@@ -119,7 +119,27 @@ function data()
                     icon = "ui/construction/station/rail/mus.tga"
                 },
                 data = {
-                    params = {}
+                    params = {
+                        {
+                            key = "trackNb",
+                            name = _("Track numbers"),
+                            values = func.map(musm.trackNumberList, tostring),
+                            uiType = "SLIDER",
+                            defaultIndex = 1
+                        },
+                        {
+                            key = "platformLeft",
+                            name = _("Platform on the left"),
+                            uiType = "CHECKBOX",
+                            values = {"0", "1"},
+                        },
+                        {
+                            key = "platformRight",
+                            name = _("Platform on the right"),
+                            uiType = "CHECKBOX",
+                            values = {"0", "1"},
+                        },
+                    }
                 },
             }
         }
@@ -198,6 +218,7 @@ function data()
         
         result.allArcs = {}
         result.config = {
+            fitModel = slope == 0 and mus.fitModel2D or mus.fitModel,
             hPlatform = hPlatform,
             refZ = hPlatform,
             slope = slope,

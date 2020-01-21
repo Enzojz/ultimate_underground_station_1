@@ -53,7 +53,7 @@ function data()
                 and mus.platformSideWallModels(result.config, allArcs, true) 
                 or (rank == #result.arcs) and mus.platformSideWallModels(result.config, allArcs, false) 
                 or {}
-            local newModels = mus.platformModels(result.config, allArcs, mus.fitModel) + sideWall
+            local newModels = mus.platformModels(result.config, allArcs) + sideWall
             local withTag = general.withTag(tag)
             
             local refArc = pipe.new
