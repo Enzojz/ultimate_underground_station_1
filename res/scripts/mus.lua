@@ -29,7 +29,7 @@ mus.slotInfo = function(slotId)
     -- Stairs
     -- 1 ~ 3 : pos x
     -- 4 : 2 for downstairs 3 for upstairs
-    -- 5 : group
+    -- git 
     -- 6 ~ 8 : pos y
     local d13 = slotId % 1000
     local d14 = slotId % 10000
