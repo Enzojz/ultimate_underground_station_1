@@ -45,6 +45,7 @@ function data()
         
         updateFn = function(result, transform, tag, slotId, addModelFn, params)
             local rank = result.slotId2Rank[slotId]
+            local info = mus.slotInfo(slotId)
             local allArcs = platformArcs(result.config, result.arcs[rank])
             
             result.allArcs[slotId] = allArcs
@@ -57,7 +58,7 @@ function data()
             local withTag = general.withTag(tag)
             
             local refArc = pipe.new
-                * {allArcs[3]()()(-2.5), allArcs[3]()()(2.5)}
+                * {allArcs[1]()()(-2.5), allArcs[1]()()(2.5)}
                 * pipe.map(pipe.map(mus.arc2Edges))
                 * pipe.flatten()
                 * pipe.flatten()
@@ -87,7 +88,7 @@ function data()
                     + withTag(linkings)
             end
             
-            result.terminalInfo[rank] = {
+            result.terminalInfo[info.pos.x] = {
                 {#result.models, #result.models + terminalCounts - 1},
                 {#result.models + terminalCounts, #result.models + terminalCounts + terminalCounts - 1},
             }

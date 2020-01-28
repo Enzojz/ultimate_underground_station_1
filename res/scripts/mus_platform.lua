@@ -20,15 +20,10 @@ local e = math.exp(1)
 local unpack = table.unpack
 
 mus.platformArcs = function(platformWidth, stairsWidth)
-    return function(config, arcs)
+    return function(config, arcRef)
         local refZ = config.hPlatform + 0.53
-        local arcRef, arcL, arcR = unpack(arcs)
-        local general = {
-            l = arcL(refZ)(),
-            r = arcR(refZ)()
-        }
         
-        local baseL, baseR, c = mus.biLatCoords(5)(general.l(0), general.r(0))
+        local baseL, baseR, c = mus.biLatCoords(5)(arcRef(refZ)()(-platformWidth * 0.5), arcRef(refZ)()(platformWidth * 0.5))
         
         
         local coords = {
@@ -99,9 +94,7 @@ mus.platformArcs = function(platformWidth, stairsWidth)
         }
         
         return {
-            [1] = arcL,
-            [2] = arcR,
-            [3] = arcRef,
+            [1] = arcRef,
             count = c,
             blockCount = c * 2 - 2,
             coords = coords,

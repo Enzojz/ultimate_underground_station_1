@@ -20,21 +20,20 @@ local e = math.exp(1)
 local unpack = table.unpack
 
 mus.trackArcs = function(trackWidth)
-    return function(config, arcs)
+    return function(config, arcRef)
         local refZ = config.hPlatform + 0.53
         
-        local arc = arcs[1]
         local ceil = mus.arcGen(
             {
-                l = arc(refZ)(),
-                r = arc(refZ)()
+                l = arcRef(refZ)(),
+                r = arcRef(refZ)()
             },
             -trackWidth * 0.5)
         
         local terrain = mus.arcGen(
             {
-                l = arc(refZ + 7.75)(function(l) return l + 5 end),
-                r = arc(refZ + 7.75)(function(l) return l + 5 end)
+                l = arcRef(refZ + 7.75)(function(l) return l + 5 end),
+                r = arcRef(refZ + 7.75)(function(l) return l + 5 end)
             },
             -trackWidth * 0.5)
         
@@ -42,7 +41,7 @@ mus.trackArcs = function(trackWidth)
         local ltc, rtc, tc = mus.biLatCoords(5)(terrain.l, terrain.r)
         
         return {
-            [1] = arc,
+            [1] = arcRef,
             count = c,
             ceil = func.with(ceil, {lc = lpc, rc = rpc, mc = mus.mc(lpc, rpc), c = c}),
             terrain = func.with(terrain, {lc = ltc, rc = rtc, mc = mus.mc(ltc, rtc), c = tc}),
