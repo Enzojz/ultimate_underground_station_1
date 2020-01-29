@@ -294,6 +294,8 @@ mus.upstairsModels = function(config, arcs, pos)
         )
         end
     )
+
+
     return (steps + platforms + ceils + tops) * pipe.flatten()
 end
 
@@ -304,8 +306,6 @@ mus.downstairsModels = function(config, arcs, pos)
     
     local buildPlatform = mus.buildSurface(fitModel, config, platformZ, tZ)
     local buildCeil = mus.buildSurface(fitModel, config, platformZ, coor.I())
-    
-    local c = arcs.count
     
     local models = {
         platform = {
@@ -644,6 +644,56 @@ mus.generateTerminals = function(arcs)
         func.map(newLanes, pipe.select("r")),
         (newLanes * pipe.map(pipe.select("link")) * pipe.filter(pipe.noop())),
         2 * arcs.count - 2
+end
+
+mus.platformSigns = function(config, arcs, isLeftmost, isRightmost)
+    local transZ = coor.xyz(0, 0, -config.hPlatform - 0.53 + 4)
+    local cModels = 2 * arcs.count - 2
+    
+    local indices = func.seq(1, cModels)
+    
+    local indicesN = pipe.new * indices 
+        * pipe.fold({pipe.new}, function(r, i) return i and func.with(r, {[#r] = r[#r] / i}) or func.with(r, {[#r + 1] = pipe.new}) end)
+        * pipe.filter(function(g) return #g > 6 end)
+        * pipe.map(
+            function(g)
+                local n = floor(#g / 6)
+                local length = #g / n
+                return
+                    pipe.new
+                    * func.seq(1, n)
+                    * pipe.map(function(i) return g[1] + length * (i - 0.5) end)
+                    * pipe.map(function(p) return p < arcs.count and floor(p) or ceil(p) end)
+            end)
+        * pipe.flatten()
+
+    local fn = function()
+        return pipe.mapn(
+            indices,
+            arcs.blockCoords.platform.central.mc,
+            arcs.blockCoords.stairs.inner.lc,
+            arcs.blockCoords.stairs.inner.rc
+        )
+        (function(i, mc, lw, rw)
+            if (func.contains(indicesN, i)) then
+                local transL = quat.byVec(coor.xyz(-1, 0, 0), lw.i - lw.s):mRot() * coor.trans((i < arcs.count and lw.s or lw.i) + transZ)
+                local transR = quat.byVec(coor.xyz(1, 0, 0), rw.i - rw.s):mRot() * coor.trans((i < arcs.count and rw.s or rw.i) + transZ)
+                local transM = quat.byVec(coor.xyz(1, 0, 0), mc.i - mc.s):mRot() * coor.trans((i < arcs.count and mc.s or mc.i) + transZ)
+                return
+                    pipe.new
+                    / (isLeftmost and func.with(general.newModel("mus/signs/platform_signs_2.mdl", transL), {pos = i}) or nil)
+                    / (isRightmost and func.with(general.newModel("mus/signs/platform_signs_2.mdl", transR), {pos = i}) or nil)
+                    / (not (isRightmost or isLeftmost) and func.with(general.newModel("mus/signs/platform_signs_2_arm.mdl", transM), {pos = i}) or nil)
+            else
+                return false
+            end
+        end)
+    end
+    
+    return pipe.new * fn()
+        * pipe.filter(pipe.noop())
+        * pipe.flatten()
+
 end
 
 return mus

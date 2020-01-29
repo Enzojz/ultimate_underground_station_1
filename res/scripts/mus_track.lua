@@ -28,7 +28,7 @@ mus.trackArcs = function(trackWidth)
                 l = arcRef(refZ)(),
                 r = arcRef(refZ)()
             },
-            -trackWidth * 0.5)
+            -trackWidth * 0.5 + 0.05)
         
         local terrain = mus.arcGen(
             {
@@ -81,5 +81,51 @@ mus.trackSideWallModels = function(config, arcRef, isLeft)
     return newModels
 end
 
+mus.trackSigns = function(config, arcs, isLeftmost, isRightmost)
+    local transZ = coor.xyz(0, 0, -config.hPlatform - 0.53 + 4)
+    local cModels = 2 * arcs.count - 2
+    
+    local indices = func.seq(1, cModels)
+    
+    local indicesN = pipe.new * indices
+        * pipe.fold({pipe.new}, function(r, i) return i and func.with(r, {[#r] = r[#r] / i}) or func.with(r, {[#r + 1] = pipe.new}) end)
+        * pipe.filter(function(g) return #g > 6 end)
+        * pipe.map(
+            function(g)
+                local n = floor(#g / 6)
+                local length = #g / n
+                return
+                    pipe.new
+                    * func.seq(1, n)
+                    * pipe.map(function(i) return g[1] + length * (i - 0.5) end)
+                    * pipe.map(function(p) return p < arcs.count and floor(p) or ceil(p) end)
+            end)
+        * pipe.flatten()
+    
+    local fn = function()
+        return pipe.mapn(
+            indices,
+            mus.interlace(arcs.ceil.lc),
+            mus.interlace(arcs.ceil.rc)
+        )(function(i, lc, rc)
+            if (indicesN * pipe.contains(i)) then
+                local transL = quat.byVec(coor.xyz(-1, 0, 0), lc.i - lc.s):mRot() * coor.trans((i < arcs.count and lc.s or lc.i) + transZ)
+                local transR = quat.byVec(coor.xyz(1, 0, 0), rc.i - rc.s):mRot() * coor.trans((i < arcs.count and rc.s or rc.i) + transZ)
+                return
+                    pipe.new
+                    / (isLeftmost and func.with(general.newModel("mus/signs/platform_signs_2.mdl", transL), {pos = i}) or nil)
+                    / (isRightmost and func.with(general.newModel("mus/signs/platform_signs_2.mdl", transR), {pos = i}) or nil)
+            else
+                return false
+            end
+        end
+    )
+    end
+    
+    return pipe.new * fn()
+        * pipe.filter(pipe.noop())
+        * pipe.flatten()
+
+end
 
 return mus

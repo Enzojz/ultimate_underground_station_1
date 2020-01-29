@@ -22,27 +22,31 @@ local unpack = table.unpack
 local segmentLength = 20
 
 mus.slotInfo = function(slotId)
-    -- Platform/track
-    -- 1 ~ 3 : pos x (0~500 > right, 501 ~ 999 < left)
-    -- 4: 1 for platform, 0 for track
-    -- 5: group (pos z)
-    -- Stairs
-    -- 1 ~ 3 : pos x
-    -- 4 : 2 for downstairs 3 for upstairs
-    -- 5: group (pos z)
-    -- 6 ~ 8 : pos y
-    local d13 = slotId % 1000
-    local d14 = slotId % 10000
-    local d15 = slotId % 100000
-    local posX = d13
-    local typeId = (d14 - d13) / 1000
-    local posZ = (d15 - d14) / 10000
-    local posY = (slotId - d15) / 100000
-    if posX > 500 then posX = posX - 1000 end
-    return {
-        pos = coor.xyz(posX, posY, posZ),
-        typeId = typeId
-    }
+        -- Platform/track
+        -- 1 ~ 3 : pos x (0~500 > right, 501 ~ 999 < left)
+        -- 4: 1 for platform, 0 for track
+        -- 5: group (pos z)
+        -- Stairs
+        -- 1 ~ 3 : pos x
+        -- 4 : 2 for downstairs 3 for upstairs
+        -- 5: group (pos z)
+        -- 6 ~ 8 : pos y
+        -- Information holder
+        -- 1 ~ 3: 999
+        -- 4: 9
+        -- 5: group
+        local d13 = slotId % 1000
+        local d14 = slotId % 10000
+        local d15 = slotId % 100000
+        local posX = d13
+        local typeId = (d14 - d13) / 1000
+        local posZ = (d15 - d14) / 10000
+        local posY = (slotId - d15) / 100000
+        if posX > 500 then posX = posX - 1000 end
+        return {
+            pos = coor.xyz(posX, posY, posZ),
+            typeId = typeId
+        }
 end
 
 mus.normalizeRad = function(rad)

@@ -1,0 +1,31 @@
+local mType = "mus_holder"
+function data()
+    return {
+        availability = {
+            yearFrom = 1830,
+            yearTo = 1830,
+        },
+        buildMode = "SINGLE",
+        cost = { price = 0 },
+        description = {
+            name = _("Underground station information holder"),
+            description = _("Do not use"),
+        },
+        category = {
+            categories = {},
+        },
+        type = mType,
+        order = {
+            value = 260,
+        },
+        metadata = {
+            width = 5,
+            type = mType
+        },
+        
+        updateFn = function(result, transform, tag, slotId, addModelFn, params) end,
+        
+        getModelsFn = function(params) return {} end
+    }
+
+end

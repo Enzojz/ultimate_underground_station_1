@@ -45,6 +45,15 @@ function data()
             local allArcs = result.allArcs[refSlot]
             local newModels = mus.upstairsModels(result.config, allArcs, pos)
             
+            local signFn = function(coords)
+                local trans = quat.byVec(coor.xyz(1, 0, 0), coords.i - coords.s):mRot() 
+                    * coor.trans(coords.i + coor.xyz(0, 0, -result.config.hPlatform - 0.53 + 4))
+                return general.newModel("mus/signs/platform_signs_2.mdl", trans)
+            end
+
+            local signL = group.modules[info.pos.x - 1] and signFn(allArcs.blockCoords.stairs.outer.lc[pos]) or nil
+            local signR = group.modules[info.pos.x + 1] and signFn(allArcs.blockCoords.stairs.outer.rc[pos]) or nil
+            
             local startBlock = allArcs.blockCoords.platform.lane.mc[pos - 1]
             local pt1 = startBlock.i:avg(startBlock.s)
             local pt2 = allArcs.blockCoords.platform.lane.mc[pos].s
@@ -55,7 +64,7 @@ function data()
                     general.newModel("mus/person_lane.mdl", general.mRot(pt3 - pt2), coor.trans(pt2))
                 }
             
-            newModels = newModels + lane
+            newModels = newModels + lane + {signL, signR}
             
             local connector = group.connectors[info.pos.x] and group.connectors[info.pos.x] or {up = pipe.new * {}, down = pipe.new * {}}
             connector.up = connector.up / pt3

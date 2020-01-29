@@ -67,7 +67,9 @@ function data()
             local leftSideWall = group.modules[info.pos.x - 1] and {} or mus.trackSideWallModels(result.config, allArcs, true) 
             local rightSideWall = group.modules[info.pos.x + 1] and {} or mus.trackSideWallModels(result.config, allArcs, false) 
             
-            local newModels = mus.trackModels(result.config, allArcs) + leftSideWall + rightSideWall
+            local sign = mus.trackSigns(result.config, allArcs, not group.modules[info.pos.x - 1], not group.modules[info.pos.x + 1])
+
+            local newModels = mus.trackModels(result.config, allArcs) + leftSideWall + rightSideWall + sign
             group.terminalInfo[info.pos.x] = true
             
             result.invoke[#result.invoke + 1] = function()

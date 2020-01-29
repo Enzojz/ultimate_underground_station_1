@@ -53,7 +53,9 @@ function data()
             local leftSideWall = group.modules[info.pos.x - 1] and {} or mus.platformSideWallModels(result.config, allArcs, true)
             local rightSideWall = group.modules[info.pos.x + 1] and {} or mus.platformSideWallModels(result.config, allArcs, false)
 
-            local newModels = mus.platformModels(result.config, allArcs) + leftSideWall + rightSideWall
+            local sign = mus.platformSigns(result.config, allArcs, not group.modules[info.pos.x - 1], not group.modules[info.pos.x + 1])
+
+            local newModels = mus.platformModels(result.config, allArcs) + leftSideWall + rightSideWall + sign
             local withTag = general.withTag(tag)
             
             local refArc = pipe.new
