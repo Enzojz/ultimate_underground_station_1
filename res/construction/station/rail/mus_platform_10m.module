@@ -44,21 +44,20 @@ function data()
         },
         
         updateFn = function(result, transform, tag, slotId, addModelFn, params)
-            local rank = result.slotId2Rank[slotId]
             local info = mus.slotInfo(slotId)
-            local allArcs = platformArcs(result.config, result.arcs[rank])
+            local group = result.group[info.pos.z]
+            local allArcs = platformArcs(result.config, group.arcs[info.pos.x])
             
             result.allArcs[slotId] = allArcs
             
-            local sideWall = (rank == 1) 
-                and mus.platformSideWallModels(result.config, allArcs, true) 
-                or (rank == #result.arcs) and mus.platformSideWallModels(result.config, allArcs, false) 
-                or {}
-            local newModels = mus.platformModels(result.config, allArcs) + sideWall
+            local leftSideWall = group.modules[info.pos.x - 1] and {} or mus.platformSideWallModels(result.config, allArcs, true)
+            local rightSideWall = group.modules[info.pos.x + 1] and {} or mus.platformSideWallModels(result.config, allArcs, false)
+
+            local newModels = mus.platformModels(result.config, allArcs) + leftSideWall + rightSideWall
             local withTag = general.withTag(tag)
             
             local refArc = pipe.new
-                * {allArcs[1]()()(-2.5), allArcs[1]()()(2.5)}
+                * {allArcs.ref()()(-2.5), allArcs.ref()()(2.5)}
                 * pipe.map(pipe.map(mus.arc2Edges))
                 * pipe.flatten()
                 * pipe.flatten()
@@ -88,7 +87,7 @@ function data()
                     + withTag(linkings)
             end
             
-            result.terminalInfo[info.pos.x] = {
+            group.terminalInfo[info.pos.x] = {
                 {#result.models, #result.models + terminalCounts - 1},
                 {#result.models + terminalCounts, #result.models + terminalCounts + terminalCounts - 1},
             }

@@ -41,7 +41,7 @@ mus.trackArcs = function(trackWidth)
         local ltc, rtc, tc = mus.biLatCoords(5)(terrain.l, terrain.r)
         
         return {
-            [1] = arcRef,
+            ref = arcRef,
             count = c,
             ceil = func.with(ceil, {lc = lpc, rc = rpc, mc = mus.mc(lpc, rpc), c = c}),
             terrain = func.with(terrain, {lc = ltc, rc = rtc, mc = mus.mc(ltc, rtc), c = tc}),

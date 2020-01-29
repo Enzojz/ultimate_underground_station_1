@@ -94,7 +94,7 @@ mus.platformArcs = function(platformWidth, stairsWidth)
         }
         
         return {
-            [1] = arcRef,
+            ref = arcRef,
             count = c,
             blockCount = c * 2 - 2,
             coords = coords,

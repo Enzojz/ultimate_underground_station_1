@@ -39,6 +39,7 @@ function data()
         
         updateFn = function(result, transform, tag, slotId, addModelFn, params)
             local info = mus.slotInfo(slotId)
+            local group = result.group[info.pos.z]
             local pos = info.pos.y
             local refSlot = slotId % 100000 - 1000
 
@@ -57,9 +58,9 @@ function data()
             
             newModels = newModels + lane
             
-            local connector = result.connectors[info.pos.x] and result.connectors[info.pos.x] or { up = pipe.new * {}, down = pipe.new * {}}
+            local connector = group.connectors[info.pos.x] and group.connectors[info.pos.x] or { up = pipe.new * {}, down = pipe.new * {}}
             connector.down = connector.down / pt3
-            result.connectors[info.pos.x] = connector
+            group.connectors[info.pos.x] = connector
 
             result.invoke[#result.invoke + 1] = function()
                 result.models = result.models * pipe.filter(function(m) return m.tag ~= "__module_" .. refSlot or m.pos ~= pos or m.wall end) + general.withTag(tag)(newModels)

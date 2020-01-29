@@ -25,11 +25,11 @@ mus.slotInfo = function(slotId)
     -- Platform/track
     -- 1 ~ 3 : pos x (0~500 > right, 501 ~ 999 < left)
     -- 4: 1 for platform, 0 for track
-    -- 5: group
+    -- 5: group (pos z)
     -- Stairs
     -- 1 ~ 3 : pos x
     -- 4 : 2 for downstairs 3 for upstairs
-    -- git 
+    -- 5: group (pos z)
     -- 6 ~ 8 : pos y
     local d13 = slotId % 1000
     local d14 = slotId % 10000
@@ -39,7 +39,6 @@ mus.slotInfo = function(slotId)
     local posZ = (d15 - d14) / 10000
     local posY = (slotId - d15) / 100000
     if posX > 500 then posX = posX - 1000 end
-    if posZ > 5 then posZ = posZ - 10 end
     return {
         pos = coor.xyz(posX, posY, posZ),
         typeId = typeId

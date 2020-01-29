@@ -42,11 +42,12 @@ function data()
         
         updateFn = function(result, transform, tag, slotId, addModelFn, params)
             local withTag = general.withTag(tag)
-            local rank = result.slotId2Rank[slotId]
             local info = mus.slotInfo(slotId)
-            local allArcs = mus.trackArcs(trackWidth)(result.config, result.arcs[rank])
+            local group = result.group[info.pos.z]
+            local allArcs = mus.trackArcs(trackWidth)(result.config, group.arcs[info.pos.x])
+            result.allArcs[slotId] = allArcs
             
-            local refArc = pipe.new * allArcs[1]()()() * pipe.map(mus.arc2Edges) * pipe.flatten() * pipe.map(pipe.map(coor.vec2Tuple))
+            local refArc = pipe.new * allArcs.ref()()() * pipe.map(mus.arc2Edges) * pipe.flatten() * pipe.map(pipe.map(coor.vec2Tuple))
             local edges = {
                 type = "TRACK",
                 alignTerrain = false,
@@ -63,13 +64,11 @@ function data()
                 }
             }
             
-            local sideWall = (rank == 1) 
-                and mus.trackSideWallModels(result.config, allArcs, true) 
-                or (rank == #result.arcs) and mus.trackSideWallModels(result.config, allArcs, false) 
-                or {}
+            local leftSideWall = group.modules[info.pos.x - 1] and {} or mus.trackSideWallModels(result.config, allArcs, true) 
+            local rightSideWall = group.modules[info.pos.x + 1] and {} or mus.trackSideWallModels(result.config, allArcs, false) 
             
-            local newModels = mus.trackModels(result.config, allArcs) + sideWall
-            result.terminalInfo[info.pos.x] = true
+            local newModels = mus.trackModels(result.config, allArcs) + leftSideWall + rightSideWall
+            group.terminalInfo[info.pos.x] = true
             
             result.invoke[#result.invoke + 1] = function()
                 result.models = result.models + withTag(newModels)
