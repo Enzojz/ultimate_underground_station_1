@@ -90,7 +90,7 @@ mus.platformArcs = function(platformWidth, stairsWidth)
                 outer = interlaceCoords(coords.stairs.outer),
                 inner = interlaceCoords(coords.stairs.inner)
             },
-            -- terrain = interlaceCoords(coords.terrain)
+        -- terrain = interlaceCoords(coords.terrain)
         }
         
         return {
@@ -294,8 +294,7 @@ mus.upstairsModels = function(config, arcs, pos)
         )
         end
     )
-
-
+    
     return (steps + platforms + ceils + tops) * pipe.flatten()
 end
 
@@ -652,7 +651,7 @@ mus.platformSigns = function(config, arcs, isLeftmost, isRightmost)
     
     local indices = func.seq(1, cModels)
     
-    local indicesN = pipe.new * indices 
+    local indicesN = pipe.new * indices
         * pipe.fold({pipe.new}, function(r, i) return i and func.with(r, {[#r] = r[#r] / i}) or func.with(r, {[#r + 1] = pipe.new}) end)
         * pipe.filter(function(g) return #g > 6 end)
         * pipe.map(
@@ -666,7 +665,7 @@ mus.platformSigns = function(config, arcs, isLeftmost, isRightmost)
                     * pipe.map(function(p) return p < arcs.count and floor(p) or ceil(p) end)
             end)
         * pipe.flatten()
-
+    
     local fn = function()
         return pipe.mapn(
             indices,
@@ -695,5 +694,58 @@ mus.platformSigns = function(config, arcs, isLeftmost, isRightmost)
         * pipe.flatten()
 
 end
+
+mus.platformChairs = function(config, arcs, isLeftmost, isRightmost)
+    local cModels = 2 * arcs.count - 2
+    
+    local indices = func.seq(1, cModels)
+    
+    local indicesN = pipe.new * indices
+        * pipe.fold({pipe.new}, function(r, i) return i and func.with(r, {[#r] = r[#r] / i}) or func.with(r, {[#r + 1] = pipe.new}) end)
+        * pipe.filter(function(g) return #g > 4 end)
+        * pipe.map(
+            function(g)
+                local n = floor(#g / 4)
+                local length = #g / n
+                return
+                    pipe.new
+                    * func.seq(1, n)
+                    * pipe.map(function(i) return g[1] + length * (i - 0.5) end)
+                    * pipe.map(function(p) return p < arcs.count and floor(p) or ceil(p) end)
+            end)
+        * pipe.flatten()
+    
+    local fn = function()
+        return pipe.mapn(
+            indices,
+            arcs.blockCoords.stairs.inner.lc,
+            arcs.blockCoords.stairs.inner.rc,
+            arcs.blockCoords.platform.central.mc
+        )
+        (function(i, lc, rc, mc, lw, rw)
+            if (indicesN * pipe.contains(i)) then
+                local newModel = function(...) return func.with(general.newModel(...), {pos = i}) end
+                local transL = quat.byVec(coor.xyz(-1, 0, 0), lc.i - lc.s):mRot()
+                local transR = quat.byVec(coor.xyz(1, 0, 0), rc.i - rc.s):mRot()
+                local transM = quat.byVec(coor.xyz(1, 0, 0), mc.i - mc.s):mRot()
+                return
+                    pipe.new
+                    / (isLeftmost and newModel(config.models.chair .. ".mdl", coor.rotZ(0.5 * pi), transL, coor.trans(lc.s)) or nil)
+                    / (isLeftmost and newModel(config.models.chair .. ".mdl", coor.rotZ(0.5 * pi), transL, coor.trans(lc.i)) or nil)
+                    / (isRightmost and newModel(config.models.chair .. ".mdl", coor.rotZ(0.5 * pi), transR, coor.trans(rc.s)) or nil)
+                    / (isRightmost and newModel(config.models.chair .. ".mdl", coor.rotZ(0.5 * pi), transR, coor.trans(rc.i)) or nil)
+                    / (not (isRightmost or isLeftmost) and newModel(config.models.chair .. ".mdl", coor.rotZ(0.5 * pi), transM, coor.trans(mc.s)) or nil)
+                    / (not (isRightmost or isLeftmost) and newModel(config.models.chair .. ".mdl", coor.rotZ(0.5 * pi), transM, coor.trans(mc.i)) or nil)
+            else
+                return false
+            end
+        end)
+    end
+    
+    return pipe.new * fn()
+        * pipe.filter(pipe.noop())
+        * pipe.flatten()
+end
+
 
 return mus
