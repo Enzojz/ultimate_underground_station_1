@@ -72,6 +72,8 @@ function data()
         en = {
             ["name"] = "Ultimate Underground Station",
             ["desc"] = descEN,
+            ["UNDERPASS_WARNING"] = [["Modular underground station" mod requires both "Underpass" mod and "Shader Enhancement" mod, you will not be able to build up station and get correct rendering without either.]],
+
         },
         zh_CN = {
             ["name"] = "终极地下车站",

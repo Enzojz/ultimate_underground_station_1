@@ -17,5 +17,8 @@
             },
             tags = {"Train Station", "Station"},
         },
+        runFn = function(_)
+            game.config.undergroundStationMod = true
+        end
     }
 end

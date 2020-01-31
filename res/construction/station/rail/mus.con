@@ -164,7 +164,7 @@ function data()
                 terrainAlignmentLists = {{type = "EQUAL", faces = {}}}
             }
         end
-        
+        dump()(params)
         local result = {}
         
         local radius = musm.rList[params.radius + 1] * 1000

@@ -5,51 +5,49 @@ local coor = require "entry/coor"
 local dump = require "luadump"
 
 local state = {
-    constructionSlotConfig = {}
+    warningShaderMod = false
 }
 
-local cov = function(m)
-    return func.seqMap({0, 3}, function(r)
-        return func.seqMap({1, 4}, function(c)
-            return m[r * 4 + c]
-        end)
-    end)
-end
-
-local pure = function(pa)
-    local params = {}
-    for key, value in pairs(pa) do
-        if (key ~= "seed") then
-            params[key] = value
+local entryWarning = function()
+    if (not (game.config.underpassMod and game.config.shaderMod)) then
+        if not state.warningShaderMod then
+            local textview = gui.textView_create(
+                "mus.warning.textView",
+                _("UNDERPASS_WARNING"),
+                400
+            )
+            local layout = gui.boxLayout_create("mus.warning.boxLayout", "VERTICAL")
+            layout:addItem(textview)
+            state.warningShaderMod = gui.window_create(
+                "mus.warning.window",
+                _("Warning"),
+                layout
+            )
+            state.warningShaderMod:onClose(function()state.warningShaderMod = false end)
         end
+        
+        local mainView = game.gui.getContentRect("mainView")
+        local mainMenuHeight = game.gui.getContentRect("mainMenuTopBar")[4] + game.gui.getContentRect("mainMenuBottomBar")[4]
+        local size = game.gui.calcMinimumSize(state.warningShaderMod.id)
+        local y = mainView[4] - size[2] - mainMenuHeight
+        local x = mainView[3] - size[1]
+        
+        game.gui.window_setPosition(state.warningShaderMod.id, x * 0.5, y * 0.5)
+        game.gui.setHighlighted(state.warningShaderMod.id, true)
     end
-    return params
 end
 
 local script = {
-    save = function() return state end,
-    load = function(data)
-        if data then
-            state.constructionSlotConfig = {}
-            for k, v in pairs(data.constructionSlotConfig) do
-                state.constructionSlotConfig[k] = data.constructionSlotConfig[k]
-            end
-        end
-    end,
-    handleEvent = function(src, id, name, param)
-    end,
     guiHandleEvent = function(id, name, param)
         if name == "builder.apply" then
-            local toRemove = param.proposal.toRemove
             local toAdd = param.proposal.toAdd
-            if toRemove then
-                end
             if toAdd and #toAdd > 0 then
                 for i = 1, #toAdd do
                     local con = toAdd[i]
-                    if (con.fileName == [[station/rail/mus2.con]]) then
-                        
-                        end
+                    if (con.fileName == [[station/rail/mus.con]]) then
+                        entryWarning()
+                        game.interface.sendScriptEvent("__underpassEvent__", "new", {id = param.result[1], isStation = true})
+                    end
                 end
             end
         end
