@@ -43,11 +43,11 @@ function data()
             local refSlot = slotId % 100000 - 2000
             
             local allArcs = result.allArcs[refSlot]
-            local newModels = mus.upstairsModels(result.config, allArcs, pos)
+            local newModels = mus.upstairsModels(group.config, allArcs, pos)
             
             local signFn = function(coords)
                 local trans = quat.byVec(coor.xyz(1, 0, 0), coords.i - coords.s):mRot() 
-                    * coor.trans(coords.i + coor.xyz(0, 0, -result.config.hPlatform - 0.53 + 4))
+                    * coor.trans(coords.i + coor.xyz(0, 0, -group.config.hPlatform - 0.53 + 4))
                 return general.newModel("mus/signs/platform_signs_2.mdl", trans)
             end
 

@@ -291,27 +291,7 @@ mus.interlace = pipe.interlace({"s", "i"})
 
 mus.unitLane = function(f, t) return ((t - f):length2() > 1e-2 and (t - f):length2() < 562500) and general.newModel("mus/person_lane.mdl", general.mRot(t - f), coor.trans(f)) or nil end
 
--- mus.generateTerrain = function(config)
---     return pipe.mapFlatten(function(arcs)
---         return pipe.new
---             / {
---                 greater = pipe.new
---                 * pipe.mapn(mus.interlace(arcs.terrain.lc), mus.interlace(arcs.terrain.rc))
---                 (function(lc, rc)
---                     local size = assembleSize(lc, rc)
---                     return pipe.new / size.lt / size.lb / size.rb / size.rt * station.finalizePoly
---                 end)
---             }
---     end)
--- end
-mus.arcGen = function(p, o) return {
-    l = p.l(o),
-    r = p.r(-o)
-} end
-
-mus.mc = function(lc, rc) return func.map2(lc, rc, function(l, r) return l:avg(r) end) end
-
-mus.buildSurface = function(fitModel, config, platformZ, tZ)
+mus.buildSurface = function(config, platformZ, tZ)
     return function(w, fnSize)
         local fnSize = fnSize or function(_, lc, rc) return mus.assembleSize(lc, rc) end
         return function(i, s, ...)
@@ -319,8 +299,8 @@ mus.buildSurface = function(fitModel, config, platformZ, tZ)
             
             return s
                 and pipe.new
-                / func.with(general.newModel(s .. "_tl.mdl", tZ, fitModel(w, 5, platformZ, sizeS, true, true)), {pos = i})
-                / func.with(general.newModel(s .. "_br.mdl", tZ, fitModel(w, 5, platformZ, sizeS, false, false)), {pos = i})
+                / func.with(general.newModel(s .. "_tl.mdl", tZ, config.fitModel(w, 5, platformZ, sizeS, true, true)), {pos = i})
+                / func.with(general.newModel(s .. "_br.mdl", tZ, config.fitModel(w, 5, platformZ, sizeS, false, false)), {pos = i})
                 or pipe.new * {}
         end
     end

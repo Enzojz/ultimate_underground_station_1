@@ -98,6 +98,27 @@ local offsetGen = function(meta)
     return gen(pipe.new * {}, 0, nil, {width = 0}, unpack(meta))
 end
 
+local makeConfig = function(params)
+    local radius = musm.rList[params.radius + 1] * 1000
+    local length = min(musm.trackLengths[params.lPlatform + 1], abs(radius * pi * 1.5))
+    local hPlatform = musm.hPlatformList[params.hPlatform + 1] * 0.001
+    local slope = musm.slopeList[params.slope + 1] * 0.001 * (params.slopeSign == 0 and 1 or -1)
+    
+    local arcPacker = mus.arcPacker(length, slope, radius)
+    
+    local modelType = mus.models({platform = params.floor + 1, wall = params.wall + 1})
+      
+    return {
+        arcPacker = arcPacker,
+        fitModel = slope == 0 and mus.fitModel2D or mus.fitModel,
+        hPlatform = hPlatform,
+        radius = radius,
+        refZ = hPlatform + 0.53,
+        slope = slope,
+        models = modelType
+    } 
+end
+
 function data()
     local constructionTemplates =
         {
@@ -141,7 +162,7 @@ function data()
     
     local createTemplateFn = function(params)
         local result = {
-            [999] = "station/rail/mus_track.module",
+            -- [999] = "station/rail/mus_track.module",
             [1000] = "station/rail/mus_platform_10m.module",
             [1] = "station/rail/mus_track.module",
         }
@@ -164,17 +185,8 @@ function data()
                 terrainAlignmentLists = {{type = "EQUAL", faces = {}}}
             }
         end
-        dump()(params)
+
         local result = {}
-        
-        local radius = musm.rList[params.radius + 1] * 1000
-        local length = min(musm.trackLengths[params.lPlatform + 1], abs(radius * pi * 1.5))
-        local hPlatform = musm.hPlatformList[params.hPlatform + 1] * 0.001
-        local slope = musm.slopeList[params.slope + 1] * 0.001 * (params.slopeSign == 0 and 1 or -1)
-        
-        local arcPacker = mus.arcPacker(length, slope, radius)
-        
-        result.modelType = mus.models({platform = params.floor + 1, wall = params.wall + 1})
         
         result.group = {}
         result.allArcs = {}
@@ -194,6 +206,22 @@ function data()
                         arcs = {},
                         terminalInfo = {}
                     }
+                if (params.modules[slotId].params) then
+                    result.group[info.pos.z].config = makeConfig(params.modules[slotId].params)
+                    result.group[info.pos.z].transf = params.modules[slotId].transf
+                    local _, mr, _ = coor.decomposite(params.modules[slotId].transf)
+                    result.group[info.pos.z].config.transf = {
+                        pt = params.modules[slotId].transf,
+                        vec = mr
+                    }
+                else
+                    result.group[info.pos.z].config = makeConfig(params)
+                    
+                    result.group[info.pos.z].config.transf = {
+                        pt = coor.I(),
+                        vec = coor.I()
+                    }
+                end
             end
             if info.typeId < 2 then
                 local gr = result.group[info.pos.z]
@@ -207,14 +235,11 @@ function data()
                     }
             )
             end
-            if info.typeId == 9 then
-                local gr = result.group[info.pos.z]
-                gr.params = m.transf
-            end
         end
         
-        for _, g in pairs(result.group) do
+        for n, g in pairs(result.group) do
             g.allPos = g.allPos * pipe.sort()
+            local config = g.config
             local posMin = func.min(g.allPos)
             local posMax = func.max(g.allPos)
             
@@ -231,7 +256,7 @@ function data()
             local entityOffsets = offsets * pipe.fold(pipe.new * {}, function(r, o) return func.contains(g.allPos, o[1]) and r / o[2] or r end)
             
             for i, pos in ipairs(g.allPos) do
-                g.arcs[pos] = arcPacker(radius - entityOffsets[i], coor.xyz(radius, 0, 0))
+                g.arcs[pos] = config.arcPacker(config.radius - entityOffsets[i], coor.xyz(config.radius, 0, 0))
             end
             
             local slots = offsets
@@ -239,14 +264,14 @@ function data()
                     local pos, offset = unpack(ph)
                     return {
                         {
-                            id = pos < 0 and (pos + 1000) or pos,
-                            transf = coor.transX(offset),
+                            id = n * 10000 + (pos < 0 and (pos + 1000) or pos),
+                            transf = coor.transX(offset) * g.config.transf.pt,
                             type = "mus_track",
                             spacing = {2.5, 2.5, 5, 5}
                         },
                         {
-                            id = pos < 0 and (pos + 1000 + 1000) or (pos + 1000),
-                            transf = coor.transX(offset),
+                            id = n * 10000 + (pos < 0 and (pos + 1000 + 1000) or (pos + 1000)),
+                            transf = coor.transX(offset) * g.config.transf.pt,
                             type = "mus_platform",
                             spacing = {2.5, 2.5, 5, 5}
                         }
@@ -256,15 +281,6 @@ function data()
             result.slots = result.slots + slots
         end
         
-        result.config = {
-            fitModel = slope == 0 and mus.fitModel2D or mus.fitModel,
-            hPlatform = hPlatform,
-            refZ = hPlatform,
-            slope = slope,
-            models = result.modelType,
-        }
-        
-        result.newSlots = pipe.new * {}
         result.models = pipe.new * {}
         
         result.colliders = {}
@@ -273,7 +289,7 @@ function data()
         result.terminalGroups = {}
         result.stations = {}
         result.dependentSlots = {}
-        result.edgeLists = {}
+        result.edgeLists = pipe.new * {}
         result.slotConfig = {}
         
         result.occupied = {{}, {}, {}, {}}
@@ -288,7 +304,7 @@ function data()
                 for pos, m in pairs(modules) do
                     if m.metadata.track then
                         if (modules[pos - 1] and modules[pos - 1].metadata.platform) then
-                            local node = (pos - 1) * 12 + 1
+                            local node = g.terminalInfo[pos] + 1
                             result.terminalGroups[#result.terminalGroups + 1] = {
                                 callbacks = {},
                                 terminals = func.seqMap(g.terminalInfo[pos - 1][2], function(t) return {t, 0} end),
@@ -298,7 +314,7 @@ function data()
                             }
                         end
                         if (modules[pos + 1] and modules[pos + 1].metadata.platform) then
-                            local node = (pos - 1) * 12 + 7
+                            local node = g.terminalInfo[pos] + 7
                             result.terminalGroups[#result.terminalGroups + 1] = {
                                 callbacks = {},
                                 terminals = func.seqMap(g.terminalInfo[pos + 1][1], function(t) return {t, 0} end),

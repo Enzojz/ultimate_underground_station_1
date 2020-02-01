@@ -44,7 +44,7 @@ function data()
             local refSlot = slotId % 100000 - 1000
 
             local allArcs = result.allArcs[refSlot]
-            local newModels = mus.downstairsModels(result.config, allArcs, pos)
+            local newModels = mus.downstairsModels(group.config, allArcs, pos)
 
             local blocks = allArcs.blockCoords.platform.lane.mc
             local pt1 = (blocks[pos - 1].i):avg(blocks[pos - 1].s)

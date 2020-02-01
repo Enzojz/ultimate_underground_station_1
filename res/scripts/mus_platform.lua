@@ -21,10 +21,7 @@ local unpack = table.unpack
 
 mus.platformArcs = function(platformWidth, stairsWidth)
     return function(config, arcRef)
-        local refZ = config.hPlatform + 0.53
-        
-        local baseL, baseR, c = mus.biLatCoords(5)(arcRef(refZ)()(-platformWidth * 0.5), arcRef(refZ)()(platformWidth * 0.5))
-        
+        local baseL, baseR, c = mus.biLatCoords(5)(arcRef(config.refZ)()(-platformWidth * 0.5), arcRef(config.refZ)()(platformWidth * 0.5))
         
         local coords = {
             platform = {
@@ -39,13 +36,12 @@ mus.platformArcs = function(platformWidth, stairsWidth)
             stairs = {
                 outer = {lc = {}, rc = {}, mc = {}, c = c},
                 inner = {lc = {}, rc = {}, mc = {}, c = c},
-            },
-        -- terrain = func.with(arcs.terrain, {lc = tlc, rc = trc, mc = mus.mc(tlc, trc), c = tc}),
+            }
         }
         
         for i = 1, (c * 2 - 1) do
-            local ptL = baseL[i]
-            local ptR = baseR[i]
+            local ptL = baseL[i] .. config.transf.pt
+            local ptR = baseR[i] .. config.transf.pt
             
             local transL = (ptL - ptR):normalized()
             local function offset(o, ls)
@@ -106,7 +102,6 @@ mus.platformArcs = function(platformWidth, stairsWidth)
 end
 
 mus.platformSideWallModels = function(config, arcRef, isLeft)
-    local platformZ = config.hPlatform + 0.53
     local newModels =
         pipe.new * (isLeft and arcRef.blockCoords.stairs.inner.lc or arcRef.blockCoords.stairs.inner.rc)
         * pipe.mapi(function(ic, i)
@@ -114,7 +109,7 @@ mus.platformSideWallModels = function(config, arcRef, isLeft)
             return func.with(
                 general.newModel(config.models.wallPlatform .. ".mdl",
                     coor.rotZ(isLeft and -0.5 * pi or 0.5 * pi),
-                    coor.scaleZ(5 - platformZ),
+                    coor.scaleZ(5 - config.refZ),
                     coor.scaleX(vec:length() / 5),
                     quat.byVec(coor.xyz(5, 0, 0), vec):mRot(),
                     coor.trans(ic.s:avg(ic.i))),
@@ -125,13 +120,11 @@ mus.platformSideWallModels = function(config, arcRef, isLeft)
 end
 
 mus.upstairsModels = function(config, arcs, pos)
-    local fitModel = config.fitModel
     local tZ = coor.transZ(config.hPlatform - 1.4)-- model height = 1.93 - 1.4 -> 0.53 -> adjust model level to rail level
-    local platformZ = config.hPlatform + 0.53 --target Z
     
-    local buildPlatform = mus.buildSurface(fitModel, config, platformZ, tZ)
-    local buildCeil = mus.buildSurface(fitModel, config, platformZ, coor.I())
-    local buildWall = mus.buildSurface(fitModel, config, platformZ, coor.scaleZ(5 - platformZ) * coor.transZ(platformZ))
+    local buildPlatform = mus.buildSurface(config, config.refZ, tZ)
+    local buildCeil = mus.buildSurface(config, config.refZ, coor.I())
+    local buildWall = mus.buildSurface(config, config.refZ, coor.scaleZ(5 - config.refZ) * coor.transZ(config.refZ))
     
     local c = arcs.count
     
@@ -299,12 +292,10 @@ mus.upstairsModels = function(config, arcs, pos)
 end
 
 mus.downstairsModels = function(config, arcs, pos)
-    local fitModel = config.fitModel
     local tZ = coor.transZ(config.hPlatform - 1.4)-- model height = 1.93 - 1.4 -> 0.53 -> adjust model level to rail level
-    local platformZ = config.hPlatform + 0.53 --target Z
     
-    local buildPlatform = mus.buildSurface(fitModel, config, platformZ, tZ)
-    local buildCeil = mus.buildSurface(fitModel, config, platformZ, coor.I())
+    local buildPlatform = mus.buildSurface(config, config.refZ, tZ)
+    local buildCeil = mus.buildSurface(config, config.refZ, coor.I())
     
     local models = {
         platform = {
@@ -452,13 +443,11 @@ mus.downstairsModels = function(config, arcs, pos)
 end
 
 mus.platformModels = function(config, arcs)
-    local fitModel = config.fitModel
     local tZ = coor.transZ(config.hPlatform - 1.4)-- model height = 1.93 - 1.4 -> 0.53 -> adjust model level to rail level
-    local platformZ = config.hPlatform + 0.53 --target Z
     
-    local buildPlatform = mus.buildSurface(fitModel, config, platformZ, tZ)
-    local buildCeil = mus.buildSurface(fitModel, config, platformZ, coor.I())
-    local buildWall = mus.buildSurface(fitModel, config, platformZ, coor.scaleZ(5 - platformZ) * coor.transZ(platformZ))
+    local buildPlatform = mus.buildSurface(config, config.refZ, tZ)
+    local buildCeil = mus.buildSurface(config, config.refZ, coor.I())
+    local buildWall = mus.buildSurface(config, config.refZ, coor.scaleZ(5 - config.refZ) * coor.transZ(config.refZ))
     
     local c = arcs.count
     local cModels = 2 * c - 2
@@ -581,7 +570,7 @@ mus.platformModels = function(config, arcs)
         local lc, rc = unpack(c)
         local vec = rc - lc
         return general.newModel(m .. ".mdl",
-            coor.scale(coor.xyz(vec:length() / w, 1, 5 - platformZ)),
+            coor.scale(coor.xyz(vec:length() / w, 1, 5 - config.refZ)),
             quat.byVec(coor.xyz(1, 0, 0), vec):mRot(),
             coor.trans(lc:avg(rc))
     )
@@ -605,13 +594,13 @@ mus.platformModels = function(config, arcs)
         local vec = rc - lc
         return {
             general.newModel(config.models.wallExtremityPlatform .. "_" .. p .. ".mdl",
-                coor.transZ(-platformZ),
+                coor.transZ(-config.refZ),
                 tZ, r,
                 quat.byVec(coor.xyz(1, 0, 0), vec):mRot(),
                 coor.trans(lc:avg(rc))
             ),
             general.newModel(config.models.wallExtremityTop .. "_" .. p .. ".mdl",
-                coor.transZ(-platformZ),
+                coor.transZ(-config.refZ),
                 r,
                 quat.byVec(coor.xyz(1, 0, 0), vec):mRot(),
                 coor.trans(lc:avg(rc))
@@ -646,7 +635,7 @@ mus.generateTerminals = function(arcs)
 end
 
 mus.platformSigns = function(config, arcs, isLeftmost, isRightmost)
-    local transZ = coor.xyz(0, 0, -config.hPlatform - 0.53 + 4)
+    local transZ = coor.xyz(0, 0, -config.refZ + 4)
     local cModels = 2 * arcs.count - 2
     
     local indices = func.seq(1, cModels)

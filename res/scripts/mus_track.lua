@@ -21,71 +21,89 @@ local unpack = table.unpack
 
 mus.trackArcs = function(trackWidth)
     return function(config, arcRef)
-        local refZ = config.hPlatform + 0.53
+        local baseL, baseR, c = mus.biLatCoords(5)(arcRef(config.refZ)()(-trackWidth * 0.5), arcRef(config.refZ)()(trackWidth * 0.5))
         
-        local ceil = mus.arcGen(
-            {
-                l = arcRef(refZ)(),
-                r = arcRef(refZ)()
-            },
-            -trackWidth * 0.5 + 0.05)
+        local coords = {
+            ceil = {lc = {}, rc = {}, mc = {}, c = c},
+            wall = {lc = {}, rc = {}, mc = {}, c = c},
+        }
         
-        local terrain = mus.arcGen(
-            {
-                l = arcRef(refZ + 7.75)(function(l) return l + 5 end),
-                r = arcRef(refZ + 7.75)(function(l) return l + 5 end)
-            },
-            -trackWidth * 0.5)
+        for i = 1, (c * 2 - 1) do
+            local ptL = baseL[i] .. config.transf.pt
+            local ptR = baseR[i] .. config.transf.pt
+            
+            local transL = (ptL - ptR):normalized()
+            local function offset(o, ls)
+                ls.lc[i] = ptL + transL * o
+                ls.rc[i] = ptR - transL * o
+                ls.mc[i] = (ptL + ptR) * 0.5
+            end
+            
+            offset(0, coords.ceil)
+            offset(-0.05, coords.wall)
+        end
         
-        local lpc, rpc, c = mus.biLatCoords(5)(ceil.l, ceil.r)
-        local ltc, rtc, tc = mus.biLatCoords(5)(terrain.l, terrain.r)
+        -- local tlc, trc, tc = mus.biLatCoords(5)(arcs.terrain.l, arcs.terrain.r)
+        local function interlaceCoords(coords)
+            return {
+                lc = mus.interlace(coords.lc),
+                rc = mus.interlace(coords.rc),
+                mc = mus.interlace(coords.mc),
+                count = c * 2 - 2
+            }
+        end
         
+        local blockCoords = {
+            ceil = interlaceCoords(coords.ceil),
+            wall = interlaceCoords(coords.wall)
+        }
+        
+        -- local terrain = mus.arcGen(
+        --     {
+        --         l = arcRef(config.refZ + 7.75)(function(l) return l + 5 end),
+        --         r = arcRef(config.refZ + 7.75)(function(l) return l + 5 end)
+        --     },
+        --     -trackWidth * 0.5)
         return {
             ref = arcRef,
             count = c,
-            ceil = func.with(ceil, {lc = lpc, rc = rpc, mc = mus.mc(lpc, rpc), c = c}),
-            terrain = func.with(terrain, {lc = ltc, rc = rtc, mc = mus.mc(ltc, rtc), c = tc}),
+            blockCount = c * 2 - 2,
+            coords = coords,
+            blockCoords = blockCoords,
             isTrack = true
         }
     end
 end
 
 mus.trackModels = function(config, arcs)
-    local fitModel = config.fitModel
-    local platformZ = config.hPlatform + 0.53 --target Z
-    local buildCeil = mus.buildSurface(fitModel, config, platformZ, coor.I())
-    local ceilTop = pipe.rep(2 * arcs.ceil.c - 2)(config.models.top.track.central)
+    local buildCeil = mus.buildSurface(config, config.refZ, coor.I())
+    local ceilTop = pipe.rep(arcs.blockCount)(config.models.top.track.central)
     
     return pipe.new
         * pipe.mapn(
-            func.seq(1, 2 * arcs.ceil.c - 2),
+            func.seq(1, arcs.blockCount),
             ceilTop,
-            mus.interlace(arcs.ceil.lc), mus.interlace(arcs.ceil.rc)
+            arcs.blockCoords.ceil.lc, arcs.blockCoords.ceil.rc
         )(buildCeil(5))
         * pipe.flatten()
 end
 
 mus.trackSideWallModels = function(config, arcRef, isLeft)
-    local platformZ = config.hPlatform + 0.53
-    local c = isLeft and arcRef.ceil.lc or arcRef.ceil.rc
-    local newModels =
-        pipe.new * mus.interlace(c)
-        * pipe.map(function(ic)
+    return func.map(
+        isLeft and arcRef.blockCoords.wall.lc or arcRef.blockCoords.wall.rc,
+        function(ic)
             local vec = ic.i - ic.s
             return general.newModel(config.models.wallTrack .. ".mdl",
                 coor.rotZ(isLeft and -0.5 * pi or 0.5 * pi),
                 coor.scaleX(vec:length() / 5),
                 quat.byVec(coor.xyz(5, 0, 0), vec):mRot(),
-                coor.trans(ic.s:avg(ic.i) + coor.xyz(0, 0, -platformZ)))
+                coor.trans(ic.s:avg(ic.i) + coor.xyz(0, 0, -config.refZ)))
         end)
-    return newModels
 end
 
 mus.trackSigns = function(config, arcs, isLeftmost, isRightmost)
-    local transZ = coor.xyz(0, 0, -config.hPlatform - 0.53 + 4)
-    local cModels = 2 * arcs.count - 2
-    
-    local indices = func.seq(1, cModels)
+    local transZ = coor.xyz(0, 0, -config.refZ + 4)
+    local indices = func.seq(1, arcs.blockCount)
     
     local indicesN = pipe.new * indices
         * pipe.fold({pipe.new}, function(r, i) return i and func.with(r, {[#r] = r[#r] / i}) or func.with(r, {[#r + 1] = pipe.new}) end)
@@ -105,8 +123,8 @@ mus.trackSigns = function(config, arcs, isLeftmost, isRightmost)
     local fn = function()
         return pipe.mapn(
             indices,
-            mus.interlace(arcs.ceil.lc),
-            mus.interlace(arcs.ceil.rc)
+            arcs.blockCoords.wall.lc,
+            arcs.blockCoords.wall.rc
         )(function(i, lc, rc)
             if (indicesN * pipe.contains(i)) then
                 local transL = quat.byVec(coor.xyz(-1, 0, 0), lc.i - lc.s):mRot() * coor.trans((i < arcs.count and lc.s or lc.i) + transZ)
