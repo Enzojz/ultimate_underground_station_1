@@ -46,7 +46,6 @@ function data()
             local group = result.group[info.pos.z]
             local allArcs = mus.trackArcs(trackWidth)(group.config, group.arcs[info.pos.x])
             result.allArcs[slotId] = allArcs
-            
 
             local refArc = pipe.new 
                 * allArcs.ref()()() 
@@ -85,6 +84,13 @@ function data()
             
             result.edgeLists = result.edgeLists / edges
 
+            local terrainFaces = mus.trackTerrain(group.config, allArcs)
+            table.insert(result.terrainAlignmentLists, {type = "GREATER", faces = terrainFaces})
+            if (not params.isFinalized) then
+                for _, f in ipairs(terrainFaces) do
+                    table.insert(result.groundFaces, {face = f, modes = {{type = "FILL", key = "hole"}}})
+                end
+            end
                 
         end,
         

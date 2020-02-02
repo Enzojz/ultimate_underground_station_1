@@ -179,66 +179,68 @@ mus.assembleSize = function(lc, rc)
     }
 end
 
-mus.fitModel2D = function(w, h, _, size, fitTop, fitLeft)
-    local s = {
-        coor.xyz(0, 0),
-        coor.xyz(fitLeft and w or -w, 0),
-        coor.xyz(0, fitTop and -h or h),
-    }
-    
-    local t = fitTop and
-        {
-            fitLeft and size.lt or size.rt,
-            fitLeft and size.rt or size.lt,
-            fitLeft and size.lb or size.rb,
-        } or {
-            fitLeft and size.lb or size.rb,
-            fitLeft and size.rb or size.lb,
-            fitLeft and size.lt or size.rt,
+mus.fitModel2D = function(zOffset)
+    return function(w, h, _, size, fitTop, fitLeft)
+        local s = {
+            coor.xyz(0, 0),
+            coor.xyz(fitLeft and w or -w, 0),
+            coor.xyz(0, fitTop and -h or h),
         }
-    
-    local mX = {
-        {s[1].x, s[1].y, 1},
-        {s[2].x, s[2].y, 1},
-        {s[3].x, s[3].y, 1},
-    }
-    
-    local mU = {
-        t[1].x, t[1].y, 1,
-        t[2].x, t[2].y, 1,
-        t[3].x, t[3].y, 1,
-    }
-    
-    local dX = coor.det(mX)
-    
-    local miX = coor.minor(mX)
-    local mXI = func.mapFlatten(func.seq(1, 3),
-        function(l)
-            return func.seqMap({1, 3}, function(c)
-                return ((l + c) % 2 == 0 and 1 or -1) * coor.det(miX(c, l)) / dX
+        
+        local t = fitTop and
+            {
+                fitLeft and size.lt or size.rt,
+                fitLeft and size.rt or size.lt,
+                fitLeft and size.lb or size.rb,
+            } or {
+                fitLeft and size.lb or size.rb,
+                fitLeft and size.rb or size.lb,
+                fitLeft and size.lt or size.rt,
+            }
+        
+        local mX = {
+            {s[1].x, s[1].y, 1},
+            {s[2].x, s[2].y, 1},
+            {s[3].x, s[3].y, 1},
+        }
+        
+        local mU = {
+            t[1].x, t[1].y, 1,
+            t[2].x, t[2].y, 1,
+            t[3].x, t[3].y, 1,
+        }
+        
+        local dX = coor.det(mX)
+        
+        local miX = coor.minor(mX)
+        local mXI = func.mapFlatten(func.seq(1, 3),
+            function(l)
+                return func.seqMap({1, 3}, function(c)
+                    return ((l + c) % 2 == 0 and 1 or -1) * coor.det(miX(c, l)) / dX
+                end)
             end)
-        end)
-    
-    local function mul(m1, m2)
-        local m = function(line, col)
-            local l = (line - 1) * 3
-            return m1[l + 1] * m2[col + 0] + m1[l + 2] * m2[col + 3] + m1[l + 3] * m2[col + 6]
+        
+        local function mul(m1, m2)
+            local m = function(line, col)
+                local l = (line - 1) * 3
+                return m1[l + 1] * m2[col + 0] + m1[l + 2] * m2[col + 3] + m1[l + 3] * m2[col + 6]
+            end
+            return {
+                m(1, 1), m(1, 2), m(1, 3),
+                m(2, 1), m(2, 2), m(2, 3),
+                m(3, 1), m(3, 2), m(3, 3),
+            }
         end
-        return {
-            m(1, 1), m(1, 2), m(1, 3),
-            m(2, 1), m(2, 2), m(2, 3),
-            m(3, 1), m(3, 2), m(3, 3),
-        }
+        
+        local mXi = mul(mXI, mU)
+        
+        return coor.I() * {
+            mXi[1], mXi[2], 0, mXi[3],
+            mXi[4], mXi[5], 0, mXi[6],
+            0, 0, 1, 0,
+            mXi[7], mXi[8], 0, mXi[9]
+        } * coor.transZ(zOffset)
     end
-    
-    local mXi = mul(mXI, mU)
-    
-    return coor.I() * {
-        mXi[1], mXi[2], 0, mXi[3],
-        mXi[4], mXi[5], 0, mXi[6],
-        0, 0, 1, 0,
-        mXi[7], mXi[8], 0, mXi[9]
-    }
 end
 
 mus.fitModel = function(w, h, d, size, fitTop, fitLeft)
@@ -291,7 +293,7 @@ mus.interlace = pipe.interlace({"s", "i"})
 
 mus.unitLane = function(f, t) return ((t - f):length2() > 1e-2 and (t - f):length2() < 562500) and general.newModel("mus/person_lane.mdl", general.mRot(t - f), coor.trans(f)) or nil end
 
-mus.buildSurface = function(config, platformZ, tZ)
+mus.buildSurface = function(config, tZ)
     return function(w, fnSize)
         local fnSize = fnSize or function(_, lc, rc) return mus.assembleSize(lc, rc) end
         return function(i, s, ...)
@@ -299,8 +301,8 @@ mus.buildSurface = function(config, platformZ, tZ)
             
             return s
                 and pipe.new
-                / func.with(general.newModel(s .. "_tl.mdl", tZ, config.fitModel(w, 5, platformZ, sizeS, true, true)), {pos = i})
-                / func.with(general.newModel(s .. "_br.mdl", tZ, config.fitModel(w, 5, platformZ, sizeS, false, false)), {pos = i})
+                / func.with(general.newModel(s .. "_tl.mdl", tZ, config.fitModel(w, 5, config.refZ, sizeS, true, true)), {pos = i})
+                / func.with(general.newModel(s .. "_br.mdl", tZ, config.fitModel(w, 5, config.refZ, sizeS, false, false)), {pos = i})
                 or pipe.new * {}
         end
     end

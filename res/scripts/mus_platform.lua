@@ -36,7 +36,8 @@ mus.platformArcs = function(platformWidth, stairsWidth)
             stairs = {
                 outer = {lc = {}, rc = {}, mc = {}, c = c},
                 inner = {lc = {}, rc = {}, mc = {}, c = c},
-            }
+            },
+            terrain = {lc = {}, rc = {}, mc = {}, c = c}
         }
         
         for i = 1, (c * 2 - 1) do
@@ -59,10 +60,15 @@ mus.platformArcs = function(platformWidth, stairsWidth)
             
             offset(-(platformWidth - stairsWidth) * 0.5 - 0.3, coords.stairs.outer)
             offset(-(platformWidth - stairsWidth) * 0.5 - 0.55, coords.stairs.inner)
+
+            offset(2, coords.terrain)
+
+            coords.terrain.lc[i].z = coords.terrain.lc[i].z + 8
+            coords.terrain.rc[i].z = coords.terrain.rc[i].z + 8 
+            coords.terrain.mc[i].z = coords.terrain.mc[i].z + 8 
         
         end
         
-        -- local tlc, trc, tc = mus.biLatCoords(5)(arcs.terrain.l, arcs.terrain.r)
         local function interlaceCoords(coords)
             return {
                 lc = mus.interlace(coords.lc),
@@ -86,7 +92,7 @@ mus.platformArcs = function(platformWidth, stairsWidth)
                 outer = interlaceCoords(coords.stairs.outer),
                 inner = interlaceCoords(coords.stairs.inner)
             },
-        -- terrain = interlaceCoords(coords.terrain)
+            terrain = interlaceCoords(coords.terrain)
         }
         
         return {
@@ -122,9 +128,9 @@ end
 mus.upstairsModels = function(config, arcs, pos)
     local tZ = coor.transZ(config.hPlatform - 1.4)-- model height = 1.93 - 1.4 -> 0.53 -> adjust model level to rail level
     
-    local buildPlatform = mus.buildSurface(config, config.refZ, tZ)
-    local buildCeil = mus.buildSurface(config, config.refZ, coor.I())
-    local buildWall = mus.buildSurface(config, config.refZ, coor.scaleZ(5 - config.refZ) * coor.transZ(config.refZ))
+    local buildPlatform = mus.buildSurface(config, tZ)
+    local buildCeil = mus.buildSurface(config, coor.I())
+    local buildWall = mus.buildSurface(config, coor.scaleZ(5 - config.refZ) * coor.transZ(config.refZ))
     
     local c = arcs.count
     
@@ -294,8 +300,8 @@ end
 mus.downstairsModels = function(config, arcs, pos)
     local tZ = coor.transZ(config.hPlatform - 1.4)-- model height = 1.93 - 1.4 -> 0.53 -> adjust model level to rail level
     
-    local buildPlatform = mus.buildSurface(config, config.refZ, tZ)
-    local buildCeil = mus.buildSurface(config, config.refZ, coor.I())
+    local buildPlatform = mus.buildSurface(config, tZ)
+    local buildCeil = mus.buildSurface(config, coor.I())
     
     local models = {
         platform = {
@@ -445,9 +451,9 @@ end
 mus.platformModels = function(config, arcs)
     local tZ = coor.transZ(config.hPlatform - 1.4)-- model height = 1.93 - 1.4 -> 0.53 -> adjust model level to rail level
     
-    local buildPlatform = mus.buildSurface(config, config.refZ, tZ)
-    local buildCeil = mus.buildSurface(config, config.refZ, coor.I())
-    local buildWall = mus.buildSurface(config, config.refZ, coor.scaleZ(5 - config.refZ) * coor.transZ(config.refZ))
+    local buildPlatform = mus.buildSurface(config, tZ)
+    local buildCeil = mus.buildSurface(config, coor.I())
+    local buildWall = mus.buildSurface(config, coor.scaleZ(5 - config.refZ) * coor.transZ(config.refZ))
     
     local c = arcs.count
     local cModels = 2 * c - 2
@@ -736,5 +742,15 @@ mus.platformChairs = function(config, arcs, isLeftmost, isRightmost)
         * pipe.flatten()
 end
 
+
+mus.platformTerrain = function(config, arcs)
+    return pipe.mapn(
+        arcs.blockCoords.terrain.lc,
+        arcs.blockCoords.terrain.rc
+    )(function(lc, rc)
+        local size = mus.assembleSize(lc, rc)
+        return pipe.new / size.lt / size.lb / size.rb / size.rt * pipe.map(coor.vec2Tuple)
+    end)
+end
 
 return mus

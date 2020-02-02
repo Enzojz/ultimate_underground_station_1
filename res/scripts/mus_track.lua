@@ -26,6 +26,7 @@ mus.trackArcs = function(trackWidth)
         local coords = {
             ceil = {lc = {}, rc = {}, mc = {}, c = c},
             wall = {lc = {}, rc = {}, mc = {}, c = c},
+            terrain = {lc = {}, rc = {}, mc = {}, c = c}
         }
         
         for i = 1, (c * 2 - 1) do
@@ -38,9 +39,14 @@ mus.trackArcs = function(trackWidth)
                 ls.rc[i] = ptR - transL * o
                 ls.mc[i] = (ptL + ptR) * 0.5
             end
-            
+
             offset(0, coords.ceil)
             offset(-0.05, coords.wall)
+            offset(2, coords.terrain)
+
+            coords.terrain.lc[i].z = coords.terrain.lc[i].z + 8
+            coords.terrain.rc[i].z = coords.terrain.rc[i].z + 8 
+            coords.terrain.mc[i].z = coords.terrain.mc[i].z + 8 
         end
         
         -- local tlc, trc, tc = mus.biLatCoords(5)(arcs.terrain.l, arcs.terrain.r)
@@ -55,7 +61,8 @@ mus.trackArcs = function(trackWidth)
         
         local blockCoords = {
             ceil = interlaceCoords(coords.ceil),
-            wall = interlaceCoords(coords.wall)
+            wall = interlaceCoords(coords.wall),
+            terrain = interlaceCoords(coords.terrain)
         }
         
         -- local terrain = mus.arcGen(
@@ -76,7 +83,7 @@ mus.trackArcs = function(trackWidth)
 end
 
 mus.trackModels = function(config, arcs)
-    local buildCeil = mus.buildSurface(config, config.refZ, coor.I())
+    local buildCeil = mus.buildSurface(config, coor.I())
     local ceilTop = pipe.rep(arcs.blockCount)(config.models.top.track.central)
     
     return pipe.new
@@ -144,6 +151,16 @@ mus.trackSigns = function(config, arcs, isLeftmost, isRightmost)
         * pipe.filter(pipe.noop())
         * pipe.flatten()
 
+end
+
+mus.trackTerrain = function(config, arcs)
+    return pipe.mapn(
+        arcs.blockCoords.terrain.lc,
+        arcs.blockCoords.terrain.rc
+    )(function(lc, rc)
+        local size = mus.assembleSize(lc, rc)
+        return pipe.new / size.lt / size.lb / size.rb / size.rt * pipe.map(coor.vec2Tuple)
+    end)
 end
 
 return mus
