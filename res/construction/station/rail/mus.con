@@ -157,6 +157,13 @@ function data()
                             uiType = "CHECKBOX",
                             values = {"0", "1"},
                         },
+                        {
+                            key = "isFinalized",
+                            name = _("Force to use"),
+                            uiType = "CHECKBOX",
+                            values = {"0", "1"},
+                            defaultIndex = 0
+                        },
                     }
                 },
             }
@@ -194,10 +201,10 @@ function data()
             slots = pipe.new * {},
             invoke = {},
             models = pipe.new * {},
-            terrainAlignmentLists = pipe.new * {},
+            terrainAlignmentLists = {},
             edgeLists = pipe.new * {},
             colliders = {},
-            groundFaces = pipe.new * {},
+            groundFaces = {},
             terminalGroups = {},
             stations = {},
             dependentSlots = {},
@@ -354,6 +361,8 @@ function data()
                     + mus.linkConnectors(allConnectors * pipe.map(pipe.select("down")))
             
             end
+
+
         end
         
         return result

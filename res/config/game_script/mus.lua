@@ -46,7 +46,9 @@ local script = {
                     local con = toAdd[i]
                     if (con.fileName == [[station/rail/mus.con]]) then
                         entryWarning()
-                        game.interface.sendScriptEvent("__underpassEvent__", "new", {id = param.result[1], isStation = true})
+                        if(con.params.isFinalized == 0) then
+                            game.interface.sendScriptEvent("__underpassEvent__", "new", {id = param.result[1], isStation = true})
+                        end
                     end
                 end
             end

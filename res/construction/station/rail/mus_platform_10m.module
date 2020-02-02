@@ -52,10 +52,10 @@ function data()
             
             local leftSideWall = group.modules[info.pos.x - 1] and {} or mus.platformSideWallModels(group.config, allArcs, true)
             local rightSideWall = group.modules[info.pos.x + 1] and {} or mus.platformSideWallModels(group.config, allArcs, false)
-
+            
             local sign = mus.platformSigns(group.config, allArcs, not group.modules[info.pos.x - 1], not group.modules[info.pos.x + 1])
-            local chairs =  mus.platformChairs(group.config, allArcs, not group.modules[info.pos.x - 1], not group.modules[info.pos.x + 1])
-
+            local chairs = mus.platformChairs(group.config, allArcs, not group.modules[info.pos.x - 1], not group.modules[info.pos.x + 1])
+            
             local newModels = mus.platformModels(group.config, allArcs) + leftSideWall + rightSideWall + sign + chairs
             local withTag = general.withTag(tag)
             
@@ -102,7 +102,6 @@ function data()
                 + withTag(leftTerminals)
                 + withTag(rightTerminals)
             
-            
             result.slots = result.slots
                 + func.mapi(allArcs.blockCoords.platform.central.mc,
                     function(mc, i)
@@ -125,11 +124,16 @@ function data()
                         }
                     end)
             
+            result.dependentSlots[slotId] = pipe.new 
+                * func.mapi(allArcs.blockCoords.platform.central.mc, function(mc, i) return {slotId + 1000 + i * 100000, slotId + 2000 + i * 100000} end)
+                * pipe.flatten()
+            
+            
             local terrainFaces = mus.trackTerrain(group.config, allArcs)
             table.insert(result.terrainAlignmentLists, {type = "GREATER", faces = terrainFaces})
-            if (not params.isFinalized) then
+            if (params.isFinalized == 0) then
                 for _, f in ipairs(terrainFaces) do
-                    table.insert(result.groundFaces, {face = f, modes = {{type = "FILL", key = "hole"}}})
+                    table.insert(result.groundFaces, {face = f, modes = {{type = "FILL", key = "hole.lua"}}})
                 end
             end
         end,
