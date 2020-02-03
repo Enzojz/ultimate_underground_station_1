@@ -99,25 +99,117 @@ local offsetGen = function(meta)
     return gen(pipe.new * {}, 0, nil, {width = 0}, unpack(meta))
 end
 
-local makeConfig = function(params)
+local function connectionNetwork2(lhs, rhs)
+    local result
+    for i, l in ipairs(lhs) do
+        for j, r in ipairs(rhs) do
+            local distance = (l - r):length2()
+            table.insert(result, {
+                distance = distance,
+                pt = {l, r}
+            })
+        end
+    end
+    return func.min(result, function(l, r) return l.distance < r.distance end)
+end
+
+local ptToSetDistance = function(pt)
+    return function(pts, i)
+        local distances = pipe.new * pts
+            * pipe.filter(pt.up
+                and function(p) return (p.up and abs(p.z - pt.z) < 9) or (not p.up and p.z > pt.z) end
+                or function(p) return (not p.up and abs(p.z - pt.z) < 9) or (p.up and p.z < pt.z) end)
+            * pipe.map(function(p) return {pt = p, distance = (p - pt):length()} end)
+            * pipe.sort(function(l, r) return l.distance < r.distance end)
+        return #distances > 0 and {
+            pt = pt,
+            set = pts,
+            avg = func.fold(distances, 0, function(r, d) return r + d.distance end) / #distances,
+            min = distances[1].distance,
+            result = distances,
+            order = i
+        } or false
+    end
+end
+
+local function generateConnectionNetwork(result, ctable, current, ...)
+    local allRest = pipe.new * {...}
+    local current = pipe.new * current
+    
+    if (#allRest == 0) then return result, ctable end
+    if (#current == 0) then return generateConnectionNetwork(result, ctable, ...) end
+    
+    local allPairs = current
+        * pipe.map(function(pt) return func.mapi(allRest, ptToSetDistance(pt)) end)
+        * pipe.map(pipe.filter(pipe.noop()))
+        * pipe.flatten()
+        * pipe.sort(function(l, r) return l.min < r.min end)
+    
+    local shortestPair = allPairs[1]
+    local rest = allRest * pipe.mapi(function(pts, i) return i ~= shortestPair.order and pts or false end) * pipe.filter(pipe.noop())
+    
+    local current = current + shortestPair.set
+    
+    local avgResultIndex = ceil(#shortestPair.result * 0.5)
+    
+    local newResult = pipe.new
+        / {shortestPair.pt, shortestPair.result[1].pt}
+        / (avgResultIndex > 1 and {shortestPair.pt, shortestPair.result[avgResultIndex].pt} or #shortestPair.result > 1 and {shortestPair.pt, shortestPair.result[2].pt} or nil)
+    
+    local ctable = ctable + newResult * pipe.flatten() * pipe.map(function(pt) return {pt.parent, pt.toUpLevel} end)
+    return generateConnectionNetwork(result + newResult, ctable, current, unpack(rest))
+end
+
+
+local function connectionNetwork(result, current, ...)
+    local rest = pipe.new * {...}
+    if (#rest == 0) then return result end 
+    local dist = rest 
+        * pipe.map( 
+        function(restConnectors)
+            local result = {}
+            for i, l in ipairs(current) do
+                for j, r in ipairs(restConnectors) do
+                    local distance = (l - r):length2()
+                    table.insert(result, {
+                        distance = distance,
+                        pt = {l, r}
+                    })
+                end
+            end
+            return {
+                conn = restConnectors, 
+                result = func.min(result, function(l, r) return l.distance < r.distance end)
+            }
+
+        end)
+        * pipe.sort(function(l, r) return l.result.distance < r.result.distance end)
+    return connectionNetwork(result / dist[1].result.pt, unpack(dist * pipe.map(pipe.select("conn")) * pipe.range(2, #dist)))
+end
+
+local makeConfig = function(params, transf)
     local radius = musm.rList[params.radius + 1] * 1000
     local length = min(musm.trackLengths[params.lPlatform + 1], abs(radius * pi * 1.5))
     local hPlatform = musm.hPlatformList[params.hPlatform + 1] * 0.001
     local slope = musm.slopeList[params.slope + 1] * 0.001 * (params.slopeSign == 0 and 1 or -1)
     
-    local arcPacker = mus.arcPacker(length, slope, radius)
-    
     local modelType = mus.models({platform = params.floor + 1, wall = params.wall + 1})
-      
+    
+    local trans, mr, _ = coor.decomposite(transf)
+
     return {
-        arcPacker = arcPacker,
-        fitModel = slope == 0 and mus.fitModel2D(depth) or mus.fitModel,
+        fitModel = slope == 0 and mus.fitModel2D(depth + trans.z) or mus.fitModel,
         hPlatform = hPlatform,
         radius = radius,
         refZ = hPlatform + 0.53,
         slope = slope,
         models = modelType,
-        depth = depth
+        depth = depth,
+        length = length,
+        transf = {
+            pt = transf * coor.transZ(depth),
+            vec = mr
+        }
     } 
 end
 
@@ -216,36 +308,28 @@ function data()
         
         for slotId, m in pairs(params.modules) do
             local info = mus.slotInfo(slotId)
-            if (not result.group[info.pos.z]) then
-                result.group[info.pos.z] =
-                {
-                    allPos = pipe.new * {},
-                    pos2Slot = {},
-                    connectors = {},
-                    modules = {},
-                    arcs = {},
-                    terminalInfo = {}
-                }
+            if (info.pos.z < 9) then
+                if (not result.group[info.pos.z]) then
+                    result.group[info.pos.z] =
+                    {
+                        allPos = pipe.new * {},
+                        pos2Slot = {},
+                        connectors = {},
+                        modules = {},
+                        arcs = {},
+                        terminalInfo = {}
+                    }
 
-            end
-            if (params.modules[slotId].params and not result.group[info.pos.z].config) then
-                local config = makeConfig(params.modules[slotId].params)
-                local _, mr, _ = coor.decomposite(params.modules[slotId].transf)
-                config.transf = {
-                    pt = params.modules[slotId].transf * coor.transZ(config.depth),
-                    vec = mr
-                }
-                result.group[info.pos.z].config = config
+                end
+                if (params.modules[slotId].params and not result.group[info.pos.z].config) then
+                    result.group[info.pos.z].config = makeConfig(params.modules[slotId].params, params.modules[slotId].transf)
+                end
             end
         end
 
         for _, g in pairs(result.group) do
             if (not g.config) then
-                g.config = makeConfig(params)
-                g.config.transf = {
-                    pt = coor.transZ(g.config.depth),
-                    vec = coor.I()
-                }
+                g.config = makeConfig(params, coor.I())
             end
         end
 
@@ -280,6 +364,11 @@ function data()
             
             local reOffset = func.filter(offsets, function(o) return o[1] == 0 end)[1][2]
             offsets = offsets * pipe.map(function(o) return {o[1], o[2] - reOffset} end)
+
+            local mrr = config.radius < 0 and (config.radius - offsets[1][2]) or (-config.radius + offsets[#offsets][2])
+
+            local refLength = (config.radius / mrr) * config.length
+            config.arcPacker = mus.arcPacker(refLength, config.slope, config.radius)
             
             local entityOffsets = offsets * pipe.fold(pipe.new * {}, function(r, o) return func.contains(g.allPos, o[1]) and r / o[2] or r end)
             
@@ -309,9 +398,10 @@ function data()
             result.slots = result.slots + slots
         end
         
-        
         result.terminateConstructionHook = function()
             for _, f in ipairs(result.invoke) do f() end
+            
+            local connectors = pipe.new * {}
             
             for _, g in pairs(result.group) do
                 local modules = g.modules
@@ -359,10 +449,14 @@ function data()
                 result.models = result.models
                     + mus.linkConnectors(allConnectors * pipe.map(pipe.select("up")))
                     + mus.linkConnectors(allConnectors * pipe.map(pipe.select("down")))
-            
+                
+                table.insert(connectors, (allConnectors * pipe.map(pipe.select("up")) + allConnectors * pipe.map(pipe.select("down"))) * pipe.flatten())
             end
 
-
+            local conn, ctable = generateConnectionNetwork(pipe.new * {}, pipe.new * {}, unpack(connectors))
+            local conn = conn * pipe.map(function(c) return mus.unitLane(c[1], c[2]) end)
+            
+            result.models = result.models + conn
         end
         
         return result

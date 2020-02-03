@@ -67,7 +67,7 @@ function data()
             newModels = newModels + lane + {signL, signR}
             
             local connector = group.connectors[info.pos.x] and group.connectors[info.pos.x] or {up = pipe.new * {}, down = pipe.new * {}}
-            connector.up = connector.up / pt3
+            connector.up = connector.up / func.with(pt3, {up = true, down = false})
             group.connectors[info.pos.x] = connector
             
             result.invoke[#result.invoke + 1] = function()

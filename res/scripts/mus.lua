@@ -31,10 +31,8 @@ mus.slotInfo = function(slotId)
         -- 4 : 2 for downstairs 3 for upstairs
         -- 5: group (pos z)
         -- 6 ~ 8 : pos y
-        -- Information holder
-        -- 1 ~ 3: 999
-        -- 4: 9
-        -- 5: group
+        -- Entries
+        -- 5: 9
         local d13 = slotId % 1000
         local d14 = slotId % 10000
         local d15 = slotId % 100000

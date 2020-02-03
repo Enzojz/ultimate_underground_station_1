@@ -14,9 +14,4 @@ musm.rList = pipe.new * musm.rList * pipe.map(pipe.neg()) * pipe.rev() / infi + 
 
 musm.slopeList = pipe.new * musm.slopeList * pipe.map(pipe.neg()) * pipe.rev() / 0 + musm.slopeList
 
-musm.exclu = function(...)
-    local keys = {...}
-    return pipe.filter(function(i) return not func.contains(keys, i.key) end)
-end
-
 return musm
