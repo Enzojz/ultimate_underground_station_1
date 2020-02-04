@@ -191,7 +191,8 @@ local makeConfig = function(params, transf)
     local radius = musm.rList[params.radius + 1] * 1000
     local length = min(musm.trackLengths[params.lPlatform + 1], abs(radius * pi * 1.5))
     local hPlatform = musm.hPlatformList[params.hPlatform + 1] * 0.001
-    local slope = musm.slopeList[params.slope + 1] * 0.001 * (params.slopeSign == 0 and 1 or -1)
+    local slope = musm.slopeList[params.slope + 1] * 0.001
+    dump()(slope)
     
     local modelType = mus.models({platform = params.floor + 1, wall = params.wall + 1})
     
@@ -349,7 +350,7 @@ local updateFn = function(params)
         local reOffset = func.filter(offsets, function(o) return o[1] == 0 end)[1][2]
         offsets = offsets * pipe.map(function(o) return {o[1], o[2] - reOffset} end)
 
-        local mrr = config.radius < 0 and (config.radius - offsets[1][2]) or (-config.radius + offsets[#offsets][2])
+        local mrr = config.radius - offsets[config.radius < 0 and 1 or #offsets][2]
 
         local refLength = (config.radius / mrr) * config.length
         config.arcPacker = mus.arcPacker(refLength, config.slope, config.radius)

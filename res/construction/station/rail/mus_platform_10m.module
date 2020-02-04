@@ -72,7 +72,7 @@ function data()
                 alignTerrain = false,
                 params = {
                     type = "uus_mock.lua",
-                    catenary = true,
+                    catenary = false,
                 },
                 edgeType = "TUNNEL",
                 edgeTypeName = "ust_void.lua",
@@ -131,7 +131,7 @@ function data()
             
             local terrainFaces = mus.trackTerrain(group.config, allArcs)
             table.insert(result.terrainAlignmentLists, {type = "GREATER", faces = terrainFaces})
-            if (params.isFinalized == 0) then
+            if (not group.config.isFinalized) then
                 for _, f in ipairs(terrainFaces) do
                     table.insert(result.groundFaces, {face = f, modes = {{type = "FILL", key = "hole.lua"}}})
                 end

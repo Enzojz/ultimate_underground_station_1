@@ -294,7 +294,7 @@ mus.upstairsModels = function(config, arcs, pos)
         end
     )
     
-    return (steps + platforms + ceils + tops) * pipe.flatten()
+    return (steps + platforms + (config.isFinalized and ceils or {}) + tops) * pipe.flatten()
 end
 
 mus.downstairsModels = function(config, arcs, pos)
@@ -445,7 +445,7 @@ mus.downstairsModels = function(config, arcs, pos)
             arcs.blockCoords.stairs.outer.rc[pos],
             arcs.blockCoords.ceil.edge.rc[pos]
     )
-    return platforms + ceils + tops + steps
+    return platforms + (config.isFinalized and ceils or {}) + tops + steps
 end
 
 mus.platformModels = function(config, arcs)
@@ -453,7 +453,6 @@ mus.platformModels = function(config, arcs)
     
     local buildPlatform = mus.buildSurface(config, tZ)
     local buildCeil = mus.buildSurface(config, coor.I())
-    local buildWall = mus.buildSurface(config, coor.scaleZ(5 - config.refZ) * coor.transZ(config.refZ))
     
     local c = arcs.count
     local cModels = 2 * c - 2
@@ -614,7 +613,7 @@ mus.platformModels = function(config, arcs)
         }
     end)
     
-    return (pipe.new / platforms / ceils / tops / extremityPlatform) * pipe.flatten() * pipe.flatten() + extremity
+    return (pipe.new / platforms / (config.isFinalized and ceils or {}) / tops / extremityPlatform) * pipe.flatten() * pipe.flatten() + extremity
 end
 
 mus.generateTerminals = function(arcs)
