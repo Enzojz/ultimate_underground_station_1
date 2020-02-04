@@ -104,7 +104,8 @@ function data()
             
             result.slots = result.slots
                 + func.mapi(allArcs.blockCoords.platform.central.mc,
-                    function(mc, i)
+                    function(mc, p)
+                        local i = p < allArcs.count and (p * 2 - 1) or ((allArcs.blockCount - p) * 2 + 2)
                         return {
                             id = slotId + 1000 + i * 100000,
                             transf = quat.byVec(coor.xyz(0, 1, 0), (mc.s - mc.i)):mRot() * coor.trans((mc.s + mc.i) * 0.5),
@@ -114,7 +115,8 @@ function data()
                         }
                     end)
                 + func.mapi(mus.interlace(allArcs.blockCoords.platform.central.mc),
-                    function(mc, i)
+                    function(mc, p)
+                        local i = p < allArcs.count and (p * 2 - 1) or ((allArcs.blockCount - p) * 2)
                         return {
                             id = slotId + 2000 + i * 100000,
                             transf = quat.byVec(coor.xyz(0, 1, 0), (mc.s.s - mc.i.i)):mRot() * coor.trans(mc.i.s),

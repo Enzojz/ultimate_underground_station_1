@@ -39,7 +39,7 @@ mus.slotInfo = function(slotId)
         local posX = d13
         local typeId = (d14 - d13) / 1000
         local posZ = (d15 - d14) / 10000
-        local posY = (slotId - d15) / 100000
+        local posY = (slotId > 0 and (slotId - d15) or (slotId + d15)) / 100000
         if posX > 500 then posX = posX - 1000 end
         return {
             pos = coor.xyz(posX, posY, posZ),

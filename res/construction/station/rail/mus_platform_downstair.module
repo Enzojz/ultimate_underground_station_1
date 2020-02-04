@@ -40,10 +40,11 @@ function data()
         updateFn = function(result, transform, tag, slotId, addModelFn, params)
             local info = mus.slotInfo(slotId)
             local group = result.group[info.pos.z]
-            local pos = info.pos.y
             local refSlot = slotId % 100000 - 1000
-
             local allArcs = result.allArcs[refSlot]
+            local pos = info.pos.y % 2 == 0 and (allArcs.blockCount - (info.pos.y - 2) / 2) or ((info.pos.y + 1) / 2) 
+            dump()(slotId, pos)
+
             local newModels = mus.downstairsModels(group.config, allArcs, pos)
 
             local blocks = allArcs.blockCoords.platform.lane.mc
