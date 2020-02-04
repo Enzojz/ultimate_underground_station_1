@@ -239,17 +239,23 @@ local makeLayout = function(totalTracks, ignoreFst, ignoreLst)
 end
 
 local createTemplateFn = function(params)
+    local radius = musm.rList[params.radius + 1] * 1000
+    local length = min(musm.trackLengths[params.lPlatform + 1], abs(radius * pi * 1.5))
+
     local nbTracks = musm.trackNumberList[params.trackNb + 1]
     local layout = makeLayout(nbTracks, params.platformLeft == 0, params.platformRight == 0)
     local midPos = ceil(#layout / 2)
-    local offsets = layout * pipe.mapi(function(t, i) return { isTrack = t, pos = i - midPos, width = t and 5 or 10 } end) * offsetGen
-    
+    local nSeg = length / 5
+    local stair = floor(nSeg / 4)
     local result = {}
     for i, t in ipairs(layout) do
         if t then
             result[(i - midPos >= 0 and i or 1000 + i) - midPos] = "station/rail/mus_track.module"
         else
-            result[(i - midPos >= 0 and i or 1000 + i) + 1000 - midPos] = "station/rail/mus_platform_10m.module"
+            local slot = (i - midPos >= 0 and i or 1000 + i) + 1000 - midPos
+            result[slot] = "station/rail/mus_platform_10m.module"
+            result[slot + 2000 + stair * 100000] = "station/rail/mus_platform_upstair.module"
+            result[slot + 2000 + (stair + 1) * 100000] = "station/rail/mus_platform_upstair.module"
         end
     end
     

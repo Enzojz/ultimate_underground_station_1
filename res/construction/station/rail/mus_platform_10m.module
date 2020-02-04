@@ -133,11 +133,11 @@ function data()
             
             local terrainFaces = mus.trackTerrain(group.config, allArcs)
             table.insert(result.terrainAlignmentLists, {type = "GREATER", faces = terrainFaces})
-            if (not group.config.isFinalized) then
+            -- if (not group.config.isFinalized) then
                 for _, f in ipairs(terrainFaces) do
                     table.insert(result.groundFaces, {face = f, modes = {{type = "FILL", key = "hole.lua"}}})
                 end
-            end
+            -- end
         end,
         
         getModelsFn = function(params)

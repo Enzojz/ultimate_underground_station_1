@@ -43,14 +43,13 @@ function data()
             local refSlot = slotId % 100000 - 1000
             local allArcs = result.allArcs[refSlot]
             local pos = info.pos.y % 2 == 0 and (allArcs.blockCount - (info.pos.y - 2) / 2) or ((info.pos.y + 1) / 2) 
-            dump()(slotId, pos)
-
-            local newModels = mus.downstairsModels(group.config, allArcs, pos)
+            local isBackward = pos < allArcs.count
+            local newModels = mus.downstairsModels(group.config, allArcs, pos, isBackward)
 
             local blocks = allArcs.blockCoords.platform.lane.mc
-            local pt1 = (blocks[pos - 1].i):avg(blocks[pos - 1].s)
-            local pt2 = blocks[pos].s
-            local pt3 = blocks[pos].i - coor.xyz(0, 0, 3)
+            local pt1 = (blocks[isBackward and (pos + 1) or (pos - 1)].i):avg(blocks[isBackward and (pos + 1) or (pos - 1)].s)
+            local pt2 = isBackward and blocks[pos].i or blocks[pos].s
+            local pt3 = (isBackward and blocks[pos].s or blocks[pos].i) - coor.xyz(0, 0, 3)
             local lane =
                 {
                     general.newModel("mus/person_lane.mdl", general.mRot(pt2 - pt1), coor.trans(pt1)),

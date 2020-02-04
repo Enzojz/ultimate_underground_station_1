@@ -43,7 +43,9 @@ function data()
             local allArcs = result.allArcs[refSlot]
             local pos = info.pos.y % 2 == 0 and (allArcs.blockCount - info.pos.y / 2) or ((info.pos.y + 1) / 2) 
             
-            local newModels = mus.upstairsModels(group.config, allArcs, pos)
+            local isBackward = pos < allArcs.count
+
+            local newModels = mus.upstairsModels(group.config, allArcs, pos, isBackward)
             
             local signFn = function(coords)
                 local trans = quat.byVec(coor.xyz(1, 0, 0), coords.i - coords.s):mRot() 
@@ -54,10 +56,11 @@ function data()
             local signL = group.modules[info.pos.x - 1] and signFn(allArcs.blockCoords.stairs.outer.lc[pos]) or nil
             local signR = group.modules[info.pos.x + 1] and signFn(allArcs.blockCoords.stairs.outer.rc[pos]) or nil
             
-            local startBlock = allArcs.blockCoords.platform.lane.mc[pos - 1]
+
+            local startBlock = allArcs.blockCoords.platform.lane.mc[isBackward and (pos + 1) or (pos - 1)]
             local pt1 = startBlock.i:avg(startBlock.s)
-            local pt2 = allArcs.blockCoords.platform.lane.mc[pos].s
-            local pt3 = allArcs.blockCoords.platform.lane.mc[pos + 1].i + coor.xyz(0, 0, 6)
+            local pt2 = isBackward and allArcs.blockCoords.platform.lane.mc[pos + 1].i or allArcs.blockCoords.platform.lane.mc[pos].s
+            local pt3 = (isBackward and allArcs.blockCoords.platform.lane.mc[pos].s or allArcs.blockCoords.platform.lane.mc[pos + 1].i) + coor.xyz(0, 0, 6)
             local lane =
                 {
                     general.newModel("mus/person_lane.mdl", general.mRot(pt2 - pt1), coor.trans(pt1)),
