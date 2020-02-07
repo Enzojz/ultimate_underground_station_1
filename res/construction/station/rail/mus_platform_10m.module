@@ -4,11 +4,6 @@ local pipe = require "entry/pipe"
 local general = require "entry/general"
 local mus = require "mus_platform"
 local quat = require "entry/quaternion"
-local dump = require "luadump"
-
-local unpack = table.unpack
-local ma = math
-local pi = ma.pi
 
 local platformWidth = 10
 local stairsWidth = 7
@@ -71,11 +66,11 @@ function data()
                 type = "TRACK",
                 alignTerrain = false,
                 params = {
-                    type = "uus_mock.lua",
+                    type = "mus_mock.lua",
                     catenary = false,
                 },
                 edgeType = "TUNNEL",
-                edgeTypeName = "ust_void.lua",
+                edgeTypeName = "mus_void.lua",
                 edges = refArc,
                 snapNodes = {},
                 tag2nodes = {

@@ -1,9 +1,3 @@
--- local dump = require "luadump"
-local pipe = require "entry/pipe"
-local func = require "entry/func"
-local coor = require "entry/coor"
-local dump = require "luadump"
-
 local state = {
     warningShaderMod = false
 }

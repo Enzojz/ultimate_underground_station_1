@@ -3,12 +3,6 @@ local coor = require "entry/coor"
 local pipe = require "entry/pipe"
 local general = require "entry/general"
 local mus = require "mus_track"
-local quat = require "entry/quaternion"
-local dump = require "luadump"
-
-local unpack = table.unpack
-local ma = math
-local pi = ma.pi
 
 local trackWidth = 5
 local mType = "mus_track"
@@ -62,7 +56,7 @@ function data()
                     catenary = true,
                 },
                 edgeType = group.config.isFinalized and "TUNNEL" or nil,
-                edgeTypeName = "ust_void.lua",
+                edgeTypeName = "mus_void.lua",
                 edges = refArc,
                 snapNodes = {5, 11},
                 tag2nodes = {

@@ -1,11 +1,8 @@
 local func = require "entry/func"
 local coor = require "entry/coor"
 local arc = require "mus/coorarc"
-local line = require "mus/coorline"
-local quat = require "entry/quaternion"
 local general = require "entry/general"
 local pipe = require "entry/pipe"
-local dump = require "luadump"
 
 local mus = {}
 
@@ -14,9 +11,6 @@ local pi = math.pi
 local abs = math.abs
 local ceil = math.ceil
 local floor = math.floor
-local pow = math.pow
-local min = math.min
-local e = math.exp(1)
 local unpack = table.unpack
 
 local segmentLength = 20

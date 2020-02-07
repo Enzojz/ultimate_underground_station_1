@@ -1,17 +1,11 @@
-local paramsutil = require "paramsutil"
 local func = require "entry/func"
 local coor = require "entry/coor"
-local general = require "entry/general"
-local line = require "mus/coorline"
-local trackEdge = require "mus/trackedge"
-local quat = require "entry/quaternion"
 local pipe = require "entry/pipe"
 local mus = require "mus"
 local musm = require "mus_menu"
 
 local dump = require "luadump"
 
--- local musm = require "mus_menu"
 local ma = math
 local abs = ma.abs
 local ceil = ma.ceil

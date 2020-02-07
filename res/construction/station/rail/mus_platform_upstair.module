@@ -4,8 +4,6 @@ local pipe = require "entry/pipe"
 local general = require "entry/general"
 local mus = require "mus_platform"
 local quat = require "entry/quaternion"
-local dump = require "luadump"
-local unpack = table.unpack
 
 local mType = "mus_upstairs"
 function data()

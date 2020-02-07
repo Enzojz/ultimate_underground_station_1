@@ -1,4 +1,3 @@
-local func = require "entry/func"
 local pipe = require "entry/pipe"
 local musm = {}
 
