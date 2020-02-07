@@ -79,8 +79,7 @@ function data()
                     result.models = result.models
                         * pipe.filter(function(m) return
                             m.tag ~= "__module_" .. refSlot
-                            or not
-                            (
+                            or not (
                             m.chair
                             and (m.pos <= pos + 2 and m.pos >= pos - 1)
                             or (m.pos == pos or m.pos == pos + 1)

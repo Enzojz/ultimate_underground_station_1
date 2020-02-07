@@ -230,7 +230,6 @@ local updateFn = function(params)
         }
     end
 
-
     local result = {
         group = {},
         allArcs = {},
@@ -247,6 +246,7 @@ local updateFn = function(params)
         slotConfig = {},
         occupied = {{}, {}, {}, {}},
         terminalInfo = {},
+        entryConnectors = {},
         cost = 0
     }
     
@@ -268,6 +268,15 @@ local updateFn = function(params)
             if (params.modules[slotId].params and not result.group[info.pos.z].config) then
                 result.group[info.pos.z].config = makeConfig(params.modules[slotId].params, params.modules[slotId].transf)
             end
+        elseif (info.pos.z == 9) then
+            table.insert(result.slots,
+            {
+                id = slotId,
+                transf = m.transf,
+                type = "entry",
+                spacing = {0, 0, 0, 0}
+            }
+            )
         end
     end
 
@@ -279,7 +288,7 @@ local updateFn = function(params)
 
     for slotId, m in pairs(params.modules) do
         local info = mus.slotInfo(slotId)
-        if info.typeId < 2 then
+        if info.pos.z < 9 and info.typeId < 2 then
             local gr = result.group[info.pos.z]
             local pos = info.pos.x
             gr.allPos[#gr.allPos + 1] = pos
@@ -403,10 +412,42 @@ local updateFn = function(params)
             table.insert(connectors, (allConnectors * pipe.map(pipe.select("up")) + allConnectors * pipe.map(pipe.select("down"))) * pipe.flatten())
         end
         
-        -- local conn, ctable = generateConnectionNetwork(pipe.new * {}, pipe.new * {}, unpack(connectors))
-        -- local conn = conn * pipe.map(function(c) return mus.unitLane(c[1], c[2]) end)
         local conn = connectionNetwork(connectors)
         result.models = result.models + conn
+
+        local allUpConn = connectors * pipe.flatten() * pipe.filter(function(c) return c.up end)
+        local entrySide = {}
+        for i = 1, #result.entryConnectors do
+            entrySide[i] = {false, false}
+            local dist = {}
+            for j = 1, #allUpConn do
+                dist[#dist+1] = pipe.new 
+                    * func.seq(1, 2)
+                    * pipe.map(function(u)
+                        local vec = result.entryConnectors[i][u] - allUpConn[j]
+                        return {
+                            conn = mus.unitLane(result.entryConnectors[i][u], allUpConn[j]),
+                            distance = vec:length2(),
+                            vec = vec:normalized(),
+                            info = {i, u}
+                        }
+                    end)
+                    * pipe.min(function(l, r) return l.distance < r.distance end)
+            end
+            dist = func.sort(dist, function(l, r) return l.distance < r.distance end)
+            if (#dist == 1) then
+                table.insert(result.models, dist[1].conn)
+            elseif (#dist > 1) then
+                local vecl = dist[1].vec
+                local vecr = dist[2].vec
+                if (vecl:cross(vecr).z > 0.5) then
+                    table.insert(result.models, dist[1].conn)
+                    table.insert(result.models, dist[2].conn)
+                else
+                    table.insert(result.models, dist[1].conn)
+                end
+            end
+        end
     end
     
     return result
