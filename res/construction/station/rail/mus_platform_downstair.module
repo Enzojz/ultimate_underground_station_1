@@ -38,14 +38,16 @@ function data()
             local group = result.group[info.pos.z]
             local refSlot = slotId % 100000 - 1000
             local allArcs = result.allArcs[refSlot]
-            local pos = info.pos.y % 2 == 0 and (allArcs.blockCount - (info.pos.y - 2) / 2) or ((info.pos.y + 1) / 2) 
+            local pos = info.pos.y % 2 == 0 and (allArcs.blockCount - (info.pos.y - 2) / 2) or ((info.pos.y + 1) / 2)
             local isBackward = pos < allArcs.count
             local newModels = mus.downstairsModels(group.config, allArcs, pos, isBackward)
-
+            local withTag = general.withTag(tag)
+            
             local blocks = allArcs.blockCoords.platform.lane.mc
             local pt1 = (blocks[isBackward and (pos + 1) or (pos - 1)].i):avg(blocks[isBackward and (pos + 1) or (pos - 1)].s)
             local pt2 = isBackward and blocks[pos].i or blocks[pos].s
             local pt3 = (isBackward and blocks[pos].s or blocks[pos].i) - coor.xyz(0, 0, 3)
+            pt3 = (pt3 - pt2):normalized() * 3 + pt3
             local lane =
                 {
                     general.newModel("mus/person_lane.mdl", general.mRot(pt2 - pt1), coor.trans(pt1)),
@@ -54,13 +56,23 @@ function data()
             
             newModels = newModels + lane
             
-            local connector = group.connectors[info.pos.x] and group.connectors[info.pos.x] or { up = pipe.new * {}, down = pipe.new * {}}
+            local connector = group.connectors[info.pos.x] and group.connectors[info.pos.x] or {up = pipe.new * {}, down = pipe.new * {}}
             connector.down = connector.down / func.with(pt3, {down = true, up = false})
             group.connectors[info.pos.x] = connector
-
-            result.invoke[#result.invoke + 1] = function()
-                result.models = result.models * pipe.filter(function(m) return m.tag ~= "__module_" .. refSlot or m.pos ~= pos or m.wall end) + general.withTag(tag)(newModels)
-            end
+            table.insert(result.invoke[2],
+                function()
+                    result.models = result.models
+                        * pipe.filter(function(m) return
+                            m.tag ~= "__module_" .. refSlot
+                            or m.wall
+                            or not (
+                            m.pos == pos or
+                            (m.chair and (m.pos == pos - 1 or m.pos == pos + 1))
+                        )
+                        end)
+                        + withTag(newModels)
+                        + (group.config.isFinalized and {} or withTag({general.newModel("mus/remove_helper.mdl", coor.rotX(math.pi * 0.5) * coor.scale(coor.xyz(3, 3, 1)) * coor.transZ(25) * transform)}))
+                end)
         end,
         
         getModelsFn = function(params)

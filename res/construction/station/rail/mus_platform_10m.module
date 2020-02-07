@@ -80,15 +80,17 @@ function data()
             
             local leftTerminals, rightTerminals, linkings, terminalCounts = mus.generateTerminals(allArcs)
             
-            result.invoke[#result.invoke + 1] = function()
-                result.models = result.models
-                    + withTag(newModels)
-                    + withTag(linkings)
-                
-                if (group.config.isFinalized) then
-                    result.edgeLists = result.edgeLists / edges
-                end
-            end
+            table.insert(result.invoke[1], 
+                function() 
+                    result.models = result.models
+                        + withTag(newModels)
+                        + withTag(linkings)
+                        + (group.config.isFinalized and {} or withTag({general.newModel("mus/remove_helper.mdl", coor.rotX(math.pi * 0.5) * coor.scale(coor.xyz(3, 3, 1)) * coor.transZ(25) * transform)}))
+                    
+                    if (group.config.isFinalized) then
+                        result.edgeLists = result.edgeLists / edges
+                    end
+                end)
             
             group.terminalInfo[info.pos.x] = {
                 {#result.models, #result.models + terminalCounts - 1},

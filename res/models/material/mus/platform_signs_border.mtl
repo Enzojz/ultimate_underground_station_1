@@ -8,7 +8,7 @@ function data()
             },
             map_albedo = {
                 compressionAllowed = true,
-                fileName = "models/livetext/CFF000000.dds",
+                fileName = "models/mus/albedo/sign_border.dds",
                 magFilter = "LINEAR",
                 minFilter = "LINEAR_MIPMAP_LINEAR",
                 mipmapAlphaScale = 0,

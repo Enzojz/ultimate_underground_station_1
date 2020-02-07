@@ -235,7 +235,7 @@ local updateFn = function(params)
         group = {},
         allArcs = {},
         slots = pipe.new * {},
-        invoke = {},
+        invoke = {{},{}},
         models = pipe.new * {},
         terrainAlignmentLists = {},
         edgeLists = pipe.new * {},
@@ -342,7 +342,8 @@ local updateFn = function(params)
     end
     
     result.terminateConstructionHook = function()
-        for _, f in ipairs(result.invoke) do f() end
+        for _, f in ipairs(result.invoke[1]) do f() end
+        for _, f in ipairs(result.invoke[2]) do f() end
         
         local connectors = pipe.new * {}
         
@@ -405,7 +406,6 @@ local updateFn = function(params)
         -- local conn, ctable = generateConnectionNetwork(pipe.new * {}, pipe.new * {}, unpack(connectors))
         -- local conn = conn * pipe.map(function(c) return mus.unitLane(c[1], c[2]) end)
         local conn = connectionNetwork(connectors)
-        dump()(conn)
         result.models = result.models + conn
     end
     

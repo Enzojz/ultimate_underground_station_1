@@ -72,9 +72,12 @@ function data()
             local newModels = mus.trackModels(group.config, allArcs) + leftSideWall + rightSideWall + sign
             group.terminalInfo[info.pos.x] = func.fold(result.edgeLists, 0, function(sum, e) return sum + #e.edges end)
             
-            result.invoke[#result.invoke + 1] = function()
-                result.models = result.models + withTag(newModels)
-            end
+            table.insert(result.invoke[1], 
+                function() 
+                    result.models = result.models 
+                        + withTag(newModels)
+                        + (group.config.isFinalized and {} or withTag({general.newModel("mus/remove_helper.mdl", coor.rotX(math.pi * 0.5) * coor.scale(coor.xyz(3, 3, 1)) * coor.transZ(25) * transform)}))
+                end)
             
             result.edgeLists = result.edgeLists / edges
 

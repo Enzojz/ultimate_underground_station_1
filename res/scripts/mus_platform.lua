@@ -721,7 +721,7 @@ mus.platformChairs = function(config, arcs, isLeftmost, isRightmost)
         )
         (function(i, lc, rc, mc, lw, rw)
             if (indicesN * pipe.contains(i)) then
-                local newModel = function(...) return func.with(general.newModel(...), {pos = i}) end
+                local newModel = function(...) return func.with(general.newModel(...), {pos = i, chair = true}) end
                 local transL = quat.byVec(coor.xyz(-1, 0, 0), lc.i - lc.s):mRot()
                 local transR = quat.byVec(coor.xyz(1, 0, 0), rc.i - rc.s):mRot()
                 local transM = quat.byVec(coor.xyz(1, 0, 0), mc.i - mc.s):mRot()
