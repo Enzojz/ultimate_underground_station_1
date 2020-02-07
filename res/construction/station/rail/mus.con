@@ -99,92 +99,50 @@ local offsetGen = function(meta)
     return gen(pipe.new * {}, 0, nil, {width = 0}, unpack(meta))
 end
 
-local function connectionNetwork2(lhs, rhs)
-    local result
-    for i, l in ipairs(lhs) do
-        for j, r in ipairs(rhs) do
-            local distance = (l - r):length2()
-            table.insert(result, {
-                distance = distance,
-                pt = {l, r}
-            })
+local function connectionLevel(lhs, rhs)
+    local result = lhs
+    * pipe.map(
+        function(l) 
+            return func.map(rhs, 
+            function(r) 
+                return {
+                    distance = (l - r):length2(),
+                    pt = {l, r}
+                }
+            end)
+        end)
+    * pipe.flatten()
+    * pipe.sort(function(l, r) return l.distance < r.distance end)
+    
+    return result[1]
+end
+
+local function closestConnection(result, measure, ...)
+    local rest = {...}
+    if (#rest == 0) then return result end
+    local r = false
+    for i = 1, #rest do
+        local a = rest[i]
+        for j = 1, #result do
+            local b = result[j].index
+            r = r and r.measure and r.measure.distance < measure[a][b].distance and r or {index = a, measure = measure[a][b]}
         end
     end
-    return func.min(result, function(l, r) return l.distance < r.distance end)
+    return closestConnection(result / r, measure, unpack(func.filter(rest, function(i) return i ~= r.index end)))
 end
 
-local ptToSetDistance = function(pt)
-    return function(pts, i)
-        local distances = pipe.new * pts
-            * pipe.filter(pt.up
-                and function(p) return (p.up and abs(p.z - pt.z) < 9) or (not p.up and p.z > pt.z) end
-                or function(p) return (not p.up and abs(p.z - pt.z) < 9) or (p.up and p.z < pt.z) end)
-            * pipe.map(function(p) return {pt = p, distance = (p - pt):length()} end)
-            * pipe.sort(function(l, r) return l.distance < r.distance end)
-        return #distances > 0 and {
-            pt = pt,
-            set = pts,
-            avg = func.fold(distances, 0, function(r, d) return r + d.distance end) / #distances,
-            min = distances[1].distance,
-            result = distances,
-            order = i
-        } or false
+local function connectionNetwork(allConns)
+    local measure = {}
+    for i = 1, #allConns do
+        measure[i] = {}
+        for j = 1, i - 1 do
+            measure[i][j] = connectionLevel(allConns[i], allConns[j])
+            measure[j][i] = measure[i][j]
+        end
     end
-end
 
-local function generateConnectionNetwork(result, ctable, current, ...)
-    local allRest = pipe.new * {...}
-    local current = pipe.new * current
-    
-    if (#allRest == 0) then return result, ctable end
-    if (#current == 0) then return generateConnectionNetwork(result, ctable, ...) end
-    
-    local allPairs = current
-        * pipe.map(function(pt) return func.mapi(allRest, ptToSetDistance(pt)) end)
-        * pipe.map(pipe.filter(pipe.noop()))
-        * pipe.flatten()
-        * pipe.sort(function(l, r) return l.min < r.min end)
-    
-    local shortestPair = allPairs[1]
-    local rest = allRest * pipe.mapi(function(pts, i) return i ~= shortestPair.order and pts or false end) * pipe.filter(pipe.noop())
-    
-    local current = current + shortestPair.set
-    
-    local avgResultIndex = ceil(#shortestPair.result * 0.5)
-    
-    local newResult = pipe.new
-        / {shortestPair.pt, shortestPair.result[1].pt}
-        / (avgResultIndex > 1 and {shortestPair.pt, shortestPair.result[avgResultIndex].pt} or #shortestPair.result > 1 and {shortestPair.pt, shortestPair.result[2].pt} or nil)
-    
-    local ctable = ctable + newResult * pipe.flatten() * pipe.map(function(pt) return {pt.parent, pt.toUpLevel} end)
-    return generateConnectionNetwork(result + newResult, ctable, current, unpack(rest))
-end
-
-
-local function connectionNetwork(result, current, ...)
-    local rest = pipe.new * {...}
-    if (#rest == 0) then return result end 
-    local dist = rest 
-        * pipe.map( 
-        function(restConnectors)
-            local result = {}
-            for i, l in ipairs(current) do
-                for j, r in ipairs(restConnectors) do
-                    local distance = (l - r):length2()
-                    table.insert(result, {
-                        distance = distance,
-                        pt = {l, r}
-                    })
-                end
-            end
-            return {
-                conn = restConnectors, 
-                result = func.min(result, function(l, r) return l.distance < r.distance end)
-            }
-
-        end)
-        * pipe.sort(function(l, r) return l.result.distance < r.result.distance end)
-    return connectionNetwork(result / dist[1].result.pt, unpack(dist * pipe.map(pipe.select("conn")) * pipe.range(2, #dist)))
+    local result = closestConnection(pipe.new / {index = 1}, measure, unpack(func.seq(2, #allConns)))
+    return result * pipe.filter(pipe.select("measure")) * pipe.map(function(r) return  mus.unitLane(unpack(r.measure.pt)) end)
 end
 
 local makeConfig = function(params, transf)
@@ -396,38 +354,44 @@ local updateFn = function(params)
         
         for _, g in pairs(result.group) do
             local modules = g.modules
-            for pos, m in pairs(modules) do
-                if m.metadata.track then
-                    if (modules[pos - 1] and modules[pos - 1].metadata.platform) then
-                        local node = g.terminalInfo[pos] + 1
-                        result.terminalGroups[#result.terminalGroups + 1] = {
-                            callbacks = {},
-                            terminals = func.seqMap(g.terminalInfo[pos - 1][2], function(t) return {t, 0} end),
-                            vehicleNodeOverride = node,
-                            vehicleNodeOverrideList = {node},
-                            vehicleNodeOverrideListCenter = {node + 3}
-                        }
+            local posSeq = pipe.new * func.seq(func.min(g.allPos), func.max(g.allPos))
+            local initPos = modules[0] and modules[0].metadata.platform and 1 or 0
+            local orderedPos = posSeq * pipe.filter(function(pos) return pos >= initPos end) + posSeq * pipe.filter(function(pos) return pos < initPos end) * pipe.rev()
+            for _, pos in ipairs(orderedPos) do
+                local m = modules[pos]
+                if m then
+                    if m.metadata.track then
+                        if (modules[pos - 1] and modules[pos - 1].metadata.platform) then
+                            local node = g.terminalInfo[pos] + 1
+                            result.terminalGroups[#result.terminalGroups + 1] = {
+                                callbacks = {},
+                                terminals = func.seqMap(g.terminalInfo[pos - 1][2], function(t) return {t, 0} end),
+                                vehicleNodeOverride = node,
+                                vehicleNodeOverrideList = {node},
+                                vehicleNodeOverrideListCenter = {node + 3}
+                            }
+                        end
+                        if (modules[pos + 1] and modules[pos + 1].metadata.platform) then
+                            local node = g.terminalInfo[pos] + 7
+                            result.terminalGroups[#result.terminalGroups + 1] = {
+                                callbacks = {},
+                                terminals = func.seqMap(g.terminalInfo[pos + 1][1], function(t) return {t, 0} end),
+                                vehicleNodeOverride = node,
+                                vehicleNodeOverrideList = {node},
+                                vehicleNodeOverrideListCenter = {node + 3}
+                            }
+                        end
                     end
-                    if (modules[pos + 1] and modules[pos + 1].metadata.platform) then
-                        local node = g.terminalInfo[pos] + 7
-                        result.terminalGroups[#result.terminalGroups + 1] = {
-                            callbacks = {},
-                            terminals = func.seqMap(g.terminalInfo[pos + 1][1], function(t) return {t, 0} end),
-                            vehicleNodeOverride = node,
-                            vehicleNodeOverrideList = {node},
-                            vehicleNodeOverrideListCenter = {node + 3}
-                        }
-                    end
-                end
-                if m.metadata.platform then
-                    if (g.connectors[pos]) then
-                        local lanes = pipe.new * {
-                            #g.connectors[pos].up > 1 and func.interlace(g.connectors[pos].up) or {},
-                            #g.connectors[pos].down > 1 and func.interlace(g.connectors[pos].down) or {}
-                        }
-                        * pipe.flatten()
-                        * pipe.map(function(c) return mus.unitLane(unpack(c)) end)
-                        result.models = result.models + lanes
+                    if m.metadata.platform then
+                        if (g.connectors[pos]) then
+                            local lanes = pipe.new * {
+                                #g.connectors[pos].up > 1 and func.interlace(g.connectors[pos].up) or {},
+                                #g.connectors[pos].down > 1 and func.interlace(g.connectors[pos].down) or {}
+                            }
+                            * pipe.flatten()
+                            * pipe.map(function(c) return mus.unitLane(unpack(c)) end)
+                            result.models = result.models + lanes
+                        end
                     end
                 end
             end
@@ -443,10 +407,11 @@ local updateFn = function(params)
             
             table.insert(connectors, (allConnectors * pipe.map(pipe.select("up")) + allConnectors * pipe.map(pipe.select("down"))) * pipe.flatten())
         end
-
-        local conn, ctable = generateConnectionNetwork(pipe.new * {}, pipe.new * {}, unpack(connectors))
-        local conn = conn * pipe.map(function(c) return mus.unitLane(c[1], c[2]) end)
         
+        -- local conn, ctable = generateConnectionNetwork(pipe.new * {}, pipe.new * {}, unpack(connectors))
+        -- local conn = conn * pipe.map(function(c) return mus.unitLane(c[1], c[2]) end)
+        local conn = connectionNetwork(connectors)
+        dump()(conn)
         result.models = result.models + conn
     end
     

@@ -417,6 +417,16 @@ mus.defaultParams = function(params)
     end
 end
 
+mus.terrain = function(config, ref)
+    return pipe.mapn(
+        ref.lc,
+        ref.rc
+    )(function(lc, rc)
+        local size = mus.assembleSize(lc, rc)
+        return pipe.new / size.lt / size.lb / size.rb / size.rt * pipe.map(coor.vec2Tuple)
+    end)
+end
+
 mus.safeBuild = function(params, updateFn)
     local defaultParams = mus.defaultParams(params)
     local paramsOnFail = params() *

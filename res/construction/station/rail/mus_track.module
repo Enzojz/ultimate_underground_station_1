@@ -61,7 +61,7 @@ function data()
                     type = "high_speed.lua",
                     catenary = true,
                 },
-                edgeType = "TUNNEL",
+                edgeType = group.config.isFinalized and "TUNNEL" or nil,
                 edgeTypeName = "ust_void.lua",
                 edges = refArc,
                 snapNodes = {5, 11},
@@ -84,7 +84,8 @@ function data()
             
             result.edgeLists = result.edgeLists / edges
 
-            local terrainFaces = mus.trackTerrain(group.config, allArcs)
+            
+            local terrainFaces = mus.terrain(group.config, allArcs.blockCoords.terrain.high)
             table.insert(result.terrainAlignmentLists, {type = "GREATER", faces = terrainFaces})
             if (not group.config.isFinalized) then
                 for _, f in ipairs(terrainFaces) do

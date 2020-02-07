@@ -26,7 +26,10 @@ mus.trackArcs = function(trackWidth)
         local coords = {
             ceil = {lc = {}, rc = {}, mc = {}, c = c},
             wall = {lc = {}, rc = {}, mc = {}, c = c},
-            terrain = {lc = {}, rc = {}, mc = {}, c = c}
+            terrain = {
+                low = {lc = {}, rc = {}, mc = {}, c = c},
+                high = {lc = {}, rc = {}, mc = {}, c = c}
+            }
         }
         
         for i = 1, (c * 2 - 1) do
@@ -42,14 +45,13 @@ mus.trackArcs = function(trackWidth)
 
             offset(0, coords.ceil)
             offset(-0.05, coords.wall)
-            offset(2, coords.terrain)
-
-            coords.terrain.lc[i].z = coords.terrain.lc[i].z + 8
-            coords.terrain.rc[i].z = coords.terrain.rc[i].z + 8 
-            coords.terrain.mc[i].z = coords.terrain.mc[i].z + 8 
+            offset(2, coords.terrain.low)
+            
+            coords.terrain.high.lc[i] = coords.terrain.low.lc[i] + coor.xyz(0, 0, 8)
+            coords.terrain.high.rc[i] = coords.terrain.low.rc[i] + coor.xyz(0, 0, 8)
+            coords.terrain.high.mc[i] = coords.terrain.low.mc[i] + coor.xyz(0, 0, 8)
         end
         
-        -- local tlc, trc, tc = mus.biLatCoords(5)(arcs.terrain.l, arcs.terrain.r)
         local function interlaceCoords(coords)
             return {
                 lc = mus.interlace(coords.lc),
@@ -62,15 +64,12 @@ mus.trackArcs = function(trackWidth)
         local blockCoords = {
             ceil = interlaceCoords(coords.ceil),
             wall = interlaceCoords(coords.wall),
-            terrain = interlaceCoords(coords.terrain)
+            terrain = {
+                low = interlaceCoords(coords.terrain.low),
+                high = interlaceCoords(coords.terrain.high)
+            }
         }
         
-        -- local terrain = mus.arcGen(
-        --     {
-        --         l = arcRef(config.refZ + 7.75)(function(l) return l + 5 end),
-        --         r = arcRef(config.refZ + 7.75)(function(l) return l + 5 end)
-        --     },
-        --     -trackWidth * 0.5)
         return {
             ref = arcRef,
             count = c,
@@ -151,16 +150,6 @@ mus.trackSigns = function(config, arcs, isLeftmost, isRightmost)
         * pipe.filter(pipe.noop())
         * pipe.flatten()
 
-end
-
-mus.trackTerrain = function(config, arcs)
-    return pipe.mapn(
-        arcs.blockCoords.terrain.lc,
-        arcs.blockCoords.terrain.rc
-    )(function(lc, rc)
-        local size = mus.assembleSize(lc, rc)
-        return pipe.new / size.lt / size.lb / size.rb / size.rt * pipe.map(coor.vec2Tuple)
-    end)
 end
 
 return mus

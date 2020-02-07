@@ -90,7 +90,9 @@ function data()
                     + withTag(newModels)
                     + withTag(linkings)
                 
-                result.edgeLists = result.edgeLists / edges
+                if (group.config.isFinalized) then
+                    result.edgeLists = result.edgeLists / edges
+                end
             end
             
             group.terminalInfo[info.pos.x] = {
@@ -126,18 +128,17 @@ function data()
                         }
                     end)
             
-            result.dependentSlots[slotId] = pipe.new 
-                * func.mapi(allArcs.blockCoords.platform.central.mc, function(mc, i) return {slotId + 1000 + i * 100000, slotId + 2000 + i * 100000} end)
-                * pipe.flatten()
+            -- result.dependentSlots[slotId] = pipe.new 
+            --     * func.mapi(allArcs.blockCoords.platform.central.mc, function(mc, i) return {slotId + 1000 + i * 100000, slotId + 2000 + i * 100000} end)
+            --     * pipe.flatten()
             
-            
-            local terrainFaces = mus.trackTerrain(group.config, allArcs)
+            local terrainFaces = mus.terrain(group.config, allArcs.blockCoords.terrain.high)
             table.insert(result.terrainAlignmentLists, {type = "GREATER", faces = terrainFaces})
-            -- if (not group.config.isFinalized) then
+            if (not group.config.isFinalized) then
                 for _, f in ipairs(terrainFaces) do
                     table.insert(result.groundFaces, {face = f, modes = {{type = "FILL", key = "hole.lua"}}})
                 end
-            -- end
+            end
         end,
         
         getModelsFn = function(params)

@@ -37,7 +37,10 @@ mus.platformArcs = function(platformWidth, stairsWidth)
                 outer = {lc = {}, rc = {}, mc = {}, c = c},
                 inner = {lc = {}, rc = {}, mc = {}, c = c},
             },
-            terrain = {lc = {}, rc = {}, mc = {}, c = c}
+            terrain = {
+                low = {lc = {}, rc = {}, mc = {}, c = c},
+                high = {lc = {}, rc = {}, mc = {}, c = c}
+            }
         }
         
         for i = 1, (c * 2 - 1) do
@@ -60,13 +63,12 @@ mus.platformArcs = function(platformWidth, stairsWidth)
             
             offset(-(platformWidth - stairsWidth) * 0.5 - 0.3, coords.stairs.outer)
             offset(-(platformWidth - stairsWidth) * 0.5 - 0.55, coords.stairs.inner)
-
-            offset(2, coords.terrain)
-
-            coords.terrain.lc[i].z = coords.terrain.lc[i].z + 8
-            coords.terrain.rc[i].z = coords.terrain.rc[i].z + 8 
-            coords.terrain.mc[i].z = coords.terrain.mc[i].z + 8 
-        
+            
+            offset(2, coords.terrain.low)
+            
+            coords.terrain.high.lc[i] = coords.terrain.low.lc[i] + coor.xyz(0, 0, 8)
+            coords.terrain.high.rc[i] = coords.terrain.low.rc[i] + coor.xyz(0, 0, 8)
+            coords.terrain.high.mc[i] = coords.terrain.low.mc[i] + coor.xyz(0, 0, 8)
         end
         
         local function interlaceCoords(coords)
@@ -92,7 +94,10 @@ mus.platformArcs = function(platformWidth, stairsWidth)
                 outer = interlaceCoords(coords.stairs.outer),
                 inner = interlaceCoords(coords.stairs.inner)
             },
-            terrain = interlaceCoords(coords.terrain)
+            terrain = {
+                low = interlaceCoords(coords.terrain.low),
+                high = interlaceCoords(coords.terrain.high)
+            }
         }
         
         return {
@@ -165,7 +170,7 @@ mus.upstairsModels = function(config, arcs, pos, isBackward)
     
     local pos0 = isBackward and pos + 1 or pos
     local pos1 = isBackward and pos or pos + 1
-
+    
     local steps = pipe.new
         / buildWall(4.5, isBackward and function(i, lc, rc) return mus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s}) end or nil)(
             pos,
@@ -294,8 +299,9 @@ mus.upstairsModels = function(config, arcs, pos, isBackward)
         )
         end
     )
-    
-    return (steps + platforms + (config.isFinalized and ceils or {}) + tops) * pipe.flatten()
+    return config.isFinalized 
+        and (steps + platforms + ceils + tops) * pipe.flatten()
+        or (steps + platforms + tops) * pipe.flatten()
 end
 
 mus.downstairsModels = function(config, arcs, pos, isBackward)
@@ -445,7 +451,9 @@ mus.downstairsModels = function(config, arcs, pos, isBackward)
             arcs.blockCoords.stairs.outer.rc[pos],
             arcs.blockCoords.ceil.edge.rc[pos]
     )
-    return platforms + (config.isFinalized and ceils or {}) + tops + steps
+    return config.isFinalized
+        and platforms + ceils + tops + steps
+        or platforms + steps + tops
 end
 
 mus.platformModels = function(config, arcs)
@@ -613,7 +621,9 @@ mus.platformModels = function(config, arcs)
         }
     end)
     
-    return (pipe.new / platforms / (config.isFinalized and ceils or {}) / tops / extremityPlatform) * pipe.flatten() * pipe.flatten() + extremity
+    return config.isFinalized
+        and (pipe.new + platforms + ceils + tops + extremityPlatform) * pipe.flatten() + extremity
+        or (pipe.new + platforms + tops + extremityPlatform) * pipe.flatten() + extremity
 end
 
 mus.generateTerminals = function(arcs)
@@ -739,17 +749,6 @@ mus.platformChairs = function(config, arcs, isLeftmost, isRightmost)
     return pipe.new * fn()
         * pipe.filter(pipe.noop())
         * pipe.flatten()
-end
-
-
-mus.platformTerrain = function(config, arcs)
-    return pipe.mapn(
-        arcs.blockCoords.terrain.lc,
-        arcs.blockCoords.terrain.rc
-    )(function(lc, rc)
-        local size = mus.assembleSize(lc, rc)
-        return pipe.new / size.lt / size.lb / size.rb / size.rt * pipe.map(coor.vec2Tuple)
-    end)
 end
 
 return mus
