@@ -21,16 +21,16 @@ function data()
             price = 15000,
         },
         description = {
-            name = _("10m Underground platform"),
-            description = _("An underground platform of 10m wide"),
-            icon = "ui/construction/street/underpass_entry.tga"
+            name = _("MENU_PLATFORM_20_NAME"),
+            description = _("MENU_PLATFORM_20_DESC"),
+            icon = "ui/construction/station/rail/mus_platform_20.tga"
         },
         category = {
             categories = {"platform"},
         },
         type = mType,
         order = {
-            value = 261,
+            value = 4,
         },
         metadata = {
             platform = true,

@@ -3,7 +3,7 @@ local coor = require "entry/coor"
 local pipe = require "entry/pipe"
 local mus = require "mus"
 local musm = require "mus_menu"
-local dump = require "luadump"
+-- local dump = require "luadump"
 
 local ma = math
 local abs = ma.abs
@@ -25,7 +25,7 @@ local function params()
     return {
         {
             key = "wall",
-            name = _("Wall"),
+            name = _("MENU_WALL"),
             values = {
                 "ui/construction/station/rail/tiles.tga",
                 "ui/construction/station/rail/tiles_classic.tga"
@@ -35,7 +35,7 @@ local function params()
         },
         {
             key = "floor",
-            name = _("Floor Style"),
+            name = _("MENU_FLOOR_STYLE"),
             values = {
                 "ui/construction/station/rail/marble.tga",
                 "ui/construction/station/rail/honeycomb.tga",
@@ -44,33 +44,32 @@ local function params()
                 "ui/construction/station/rail/asphalt.tga"
             },
             uiType = "ICON_BUTTON",
-            tooltip = _("Floor Style"),
             defaultIndex = 0
         },
         {
             key = "radius",
-            name = _("Radius") .. " " .. "(m)",
+            name = _("MENU_RADIUS"),
             values = musm.rList * pipe.map(function(r) return r > 15 and "∞" or tostring(math.floor(r * 1000)) end),
             uiType = "SLIDER",
             defaultIndex = (#musm.rList - 1) / 2
         },
         {
             key = "lPlatform",
-            name = _("Platform Length") .. " " .. "(m)",
+            name = _("MENU_PLATFORM_LENGTH"),
             values = func.map(musm.trackLengths, tostring),
             uiType = "SLIDER",
             defaultIndex = 5
         },
         {
             key = "hPlatform",
-            name = _("Platform Height") .. " " .. "(mm)",
+            name = _("MENU_PLATFORM_HEIGHT"),
             values = func.map(musm.hPlatformList, tostring),
             uiType = "SLIDER",
             defaultIndex = 3
         },
         {
             key = "slope",
-            name = _("Slope") .. " " .. "(‰)",
+            name = _("MENU_SLOPE"),
             values = func.map(musm.slopeList, tostring),
             uiType = "SLIDER",
             defaultIndex = (#musm.slopeList - 1) / 2
@@ -139,7 +138,6 @@ local function connectionNetwork(allConns)
 end
 
 local makeConfig = function(params, transf)
-    dump()(params.isFinalized)
     local radius = musm.rList[params.radius + 1] * 1000
     local length = min(musm.trackLengths[params.lPlatform + 1], abs(radius * pi * 1.5))
     local hPlatform = musm.hPlatformList[params.hPlatform + 1] * 0.001
@@ -199,9 +197,10 @@ local createTemplateFn = function(params)
     local nSeg = length / 5
     local stair = floor(nSeg / 4)
     local result = {}
+    local trackType = musm.trackTypeList[(params.catenary) + (params.highspeed) * 2 + 1]
     for i, t in ipairs(layout) do
         if t then
-            result[(i - midPos >= 0 and i or 1000 + i) - midPos] = "station/rail/mus_track_std_catenary.module"
+            result[(i - midPos >= 0 and i or 1000 + i) - midPos] = trackType
         else
             local slot = (i - midPos >= 0 and i or 1000 + i) + 1000 - midPos
             result[slot] = "station/rail/mus_platform_10m.module"
@@ -218,7 +217,6 @@ local upgradeFn = function(params)
 end
 
 local updateFn = function(params)
-    dump()(params.isFinalized)
     if #func.keys(params.modules) == 0 then
         return {
             edgeLists = {},
@@ -250,7 +248,6 @@ local updateFn = function(params)
         cost = 0
     }
     
-    dump()(params.modules)
     for slotId, m in pairs(params.modules) do
         local info = mus.slotInfo(slotId)
         if (info.pos.z < 9) then
@@ -465,34 +462,48 @@ function data()
                     yearTo = 0
                 },
                 description = {
-                    name = _("Underground Station"),
-                    description = _("An underground level for a station, width adjustable platform width and radius."),
+                    name = _("MENU_NAME"),
+                    description = _("MENU_DESC"),
                     icon = "ui/construction/station/rail/mus.tga"
                 },
                 data = {
                     params = {
                         {
                             key = "trackNb",
-                            name = _("Track numbers"),
+                            name = _("MENU_TRACK_NR"),
                             values = func.map(musm.trackNumberList, tostring),
                             uiType = "SLIDER",
                             defaultIndex = 1
                         },
                         {
+                            key = "catenary",
+                            name = _("MENU_TRACK_CAT"),
+                            uiType = "CHECKBOX",
+                            values = {"0", "1"},
+                            defaultIndex = 1
+                        },
+                        {
+                            key = "highspeed",
+                            name = _("MENU_TRACK_HS"),
+                            uiType = "CHECKBOX",
+                            values = {"0", "1"},
+                            defaultIndex = 1
+                        },
+                        {
                             key = "platformLeft",
-                            name = _("Platform on the left"),
+                            name = _("MENU_PLATFORM_LEFT"),
                             uiType = "CHECKBOX",
                             values = {"0", "1"},
                         },
                         {
                             key = "platformRight",
-                            name = _("Platform on the right"),
+                            name = _("MENU_PLATFORM_RIGHT"),
                             uiType = "CHECKBOX",
                             values = {"0", "1"},
                         },
                         {
                             key = "isFinalized",
-                            name = _("Force to use"),
+                            name = _("MENU_FORCE_USE"),
                             uiType = "CHECKBOX",
                             values = {"0", "1"},
                             defaultIndex = 0
@@ -505,8 +516,8 @@ function data()
     return {
         type = "RAIL_STATION",
         description = {
-            name = _("Underground Station"),
-            description = _("An underground level for a station, width adjustable platform width and radius.")
+            name = _("MENU_NAME"),
+            description = _("MENU_DESC")
         },
         availability = {
             yearFrom = 0,

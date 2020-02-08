@@ -294,7 +294,7 @@ mus.upstairsModels = function(config, arcs, pos, isBackward)
     )
     return config.isFinalized 
         and (steps + platforms + ceils + tops) * pipe.flatten()
-        or (steps + platforms + tops) * pipe.flatten()
+        or (steps + platforms) * pipe.flatten()
 end
 
 mus.downstairsModels = function(config, arcs, pos, isBackward)
@@ -446,7 +446,7 @@ mus.downstairsModels = function(config, arcs, pos, isBackward)
     )
     return config.isFinalized
         and platforms + ceils + tops + steps
-        or platforms + steps + tops
+        or platforms + steps
 end
 
 mus.platformModels = function(config, arcs)
@@ -616,7 +616,7 @@ mus.platformModels = function(config, arcs)
     
     return config.isFinalized
         and (pipe.new + platforms + ceils + tops + extremityPlatform) * pipe.flatten() + extremity
-        or (pipe.new + platforms + tops + extremityPlatform) * pipe.flatten() + extremity
+        or (pipe.new + platforms + extremityPlatform) * pipe.flatten() + extremity
 end
 
 mus.generateTerminals = function(arcs)

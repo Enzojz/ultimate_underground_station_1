@@ -17,16 +17,16 @@ function data()
             price = 15000,
         },
         description = {
-            name = _("Underground station track"),
-            description = _("An underground station track"),
-            icon = "ui/construction/street/underpass_entry.tga"
+            name = _("MENU_TR_HS_CAT_NAME"),
+            description = _("MENU_TR_HS_CAT_DESC"),
+            icon = "ui/construction/station/rail/modular_station/high_speed_catenary.tga"
         },
         category = {
             categories = {"track"},
         },
         type = mType,
         order = {
-            value = 260,
+            value = 4,
         },
         metadata = {
             track = true,
