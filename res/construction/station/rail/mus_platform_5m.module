@@ -5,8 +5,8 @@ local general = require "entry/general"
 local mus = require "mus_platform"
 local quat = require "entry/quaternion"
 
-local platformWidth = 10
-local stairsWidth = 7
+local platformWidth = 5
+local stairsWidth = 3
 
 local platformArcs = mus.platformArcs(platformWidth, stairsWidth)
 local mType = "mus_platform"
@@ -30,11 +30,11 @@ function data()
         },
         type = mType,
         order = {
-            value = 260,
+            value = 261,
         },
         metadata = {
             platform = true,
-            width = 10,
+            width = 5,
             type = mType
         },
         
@@ -55,7 +55,7 @@ function data()
             local withTag = general.withTag(tag)
             
             local refArc = pipe.new
-                * {allArcs.ref()()(-2.5), allArcs.ref()()(2.5)}
+                * {allArcs.ref()()(0)}
                 * pipe.map(pipe.map(mus.arc2Edges))
                 * pipe.flatten()
                 * pipe.flatten()

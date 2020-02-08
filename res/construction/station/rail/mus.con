@@ -3,7 +3,6 @@ local coor = require "entry/coor"
 local pipe = require "entry/pipe"
 local mus = require "mus"
 local musm = require "mus_menu"
-
 local dump = require "luadump"
 
 local ma = math
@@ -140,6 +139,7 @@ local function connectionNetwork(allConns)
 end
 
 local makeConfig = function(params, transf)
+    dump()(params.isFinalized)
     local radius = musm.rList[params.radius + 1] * 1000
     local length = min(musm.trackLengths[params.lPlatform + 1], abs(radius * pi * 1.5))
     local hPlatform = musm.hPlatformList[params.hPlatform + 1] * 0.001
@@ -148,7 +148,6 @@ local makeConfig = function(params, transf)
     local modelType = mus.models({platform = params.floor + 1, wall = params.wall + 1})
     
     local trans, mr, _ = coor.decomposite(transf)
-
     return {
         isFinalized = params.isFinalized == 1,
         fitModel = slope == 0 and mus.fitModel2D(depth + trans.z) or mus.fitModel,
@@ -163,7 +162,7 @@ local makeConfig = function(params, transf)
             pt = transf * coor.transZ(depth),
             vec = mr
         }
-    } 
+    }
 end
 
 local makeLayout = function(totalTracks, ignoreFst, ignoreLst)
@@ -202,7 +201,7 @@ local createTemplateFn = function(params)
     local result = {}
     for i, t in ipairs(layout) do
         if t then
-            result[(i - midPos >= 0 and i or 1000 + i) - midPos] = "station/rail/mus_track.module"
+            result[(i - midPos >= 0 and i or 1000 + i) - midPos] = "station/rail/mus_track_std_catenary.module"
         else
             local slot = (i - midPos >= 0 and i or 1000 + i) + 1000 - midPos
             result[slot] = "station/rail/mus_platform_10m.module"
@@ -219,6 +218,7 @@ local upgradeFn = function(params)
 end
 
 local updateFn = function(params)
+    dump()(params.isFinalized)
     if #func.keys(params.modules) == 0 then
         return {
             edgeLists = {},
@@ -250,6 +250,7 @@ local updateFn = function(params)
         cost = 0
     }
     
+    dump()(params.modules)
     for slotId, m in pairs(params.modules) do
         local info = mus.slotInfo(slotId)
         if (info.pos.z < 9) then

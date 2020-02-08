@@ -1,39 +1,33 @@
 local descEN = [[This mod gives you ability to create freely underground station with distinct and interconnected parts, and to create freely street entry at any place you like.
-To build a station, you need follow three steps
 
+This mod requires the following mods to work:
+* Shader Enhancement mod
+* Underpass mod
+
+To build a station, you need follow three steps
 1. Build at least one underground level
 2. Build an entry nearby
-3. Click on "Underground station assembler" to connect them all!
+3. Follow the instruction on the screen to finish the construction
 
-Some hints:
-* Use PageUp/PageDown to adjust the depth of the station
-* You can build station without any entry
-* If you assemble entries without any underground level, it will turn out be pedestrian under-street passage
-* Name any underground level or the entry starting with ## to force the platform sign text, if not the mod will choose a least long name between the elements
-* Name the underground level starting with single # and switch on corresponding option in the parameters to override the platform length, radius and track layout:
-For example:
-#L150R300 -> A station of 150m long and of 300m radius
-#L150TTPTT -> A station of 150m long, with two tracks on the both sides and a central platform
-#PTTTTP -> A station with platform on two sides, and two transit tracks in central
-* The "length" parameter defines the length of the shortest track in the station, if curved.
-* After the station is assembled, you can't directly modify it, to modify "Disassemble" it first.
+This mod is a total reworked mod of Transport Fever Ultimate Underground Station, with generally the same resource the main new features are:
+- It's modular, though not in vanilla mode, you can place different tracks and different platforms as modules, as well as stairs. I didn't choose the vanilla way since in real life, underground station are always regular.
+- An interactive interface to guide you finish the composition of the station
+- More possible values for radius and track numbers etc. thanks to the new parameter menu
+- Use of new station sign text system from the game instead of Livetext mod.
 
-This mod requires the following two mods to work:
-* Shader Enhancement Mod
-* Livetext
+This mod is still in evolution, maybe with some bugs, I will do some updates and bugfixes after the release.
 
-This mod is designed to be easily extended, if you want to add new entry or new internal platform models, please ask me freely I will supply technical support and even update for adaptation.
-The interconnection with Ultimate Station is in considering.
+----------------------------------------------------------------------
 
-Since the successor of Transport Fever has been announced upon the release of the final patch, this mod is probably my last big mod. I have spent too much hours on modding and even played the game too little.
-Honestly I hope the new game would be more modder friendly since lot's of modding mechanism is missing in the game, that limited the possibilities...
-Anyway Thanks to all who love my mod and Urban Games for much technical support.
+I am a Chinese, living in Europe. My motherland is suffering the pandemic caused by the "Novel Coronavirus" 2019-nCov, several tens of thousands of people are contaminated in weeks and hundreds of people died. We are fighting against the virus and we believe that we will win. I pay my highest respect to these who are working hard to save the people. I pay also my highest respect to all the people, healthy or ill, who is confining themselves at home to avoid the propagation virus. 
 
-Changelog
-1.1
-* Better performance on slope = 0
-* Able to run without Livetext (Station Signs won't appear)
-* Fix wrong stairs lanes on some lengths
+However, we are not virus ourselves, and the virus is not called "Chinese virus", these attacks on Chinese just because of our face or because we have masks on the face -- are not justified.
+We are on the same earth, we are on the same boat, if you want to protect yourself and protect others, you should put the mask on, wash your hand frequently, but never attack these innocent people, the virus doesn't hold a nationality, and the violence is not able to kill virus.
+
+Keep fighting Wuhan!
+Keep fighting Hubei!
+Keep fighting China!
+Keep fighting all suffered from Novel Coronavirus!
 ]]
 
 local descCN = [[本MOD能够自由地创建具有各个独立部分并且相互连接地铁站，并在你喜欢的任何地方自由创建入口。
