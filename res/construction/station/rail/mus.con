@@ -3,7 +3,7 @@ local coor = require "entry/coor"
 local pipe = require "entry/pipe"
 local mus = require "mus"
 local musm = require "mus_menu"
--- local dump = require "luadump"
+local dump = require "luadump"
 
 local ma = math
 local abs = ma.abs
@@ -198,12 +198,13 @@ local createTemplateFn = function(params)
     local stair = floor(nSeg / 4)
     local result = {}
     local trackType = musm.trackTypeList[(params.catenary) + (params.highspeed) * 2 + 1]
+    local platformType = musm.platformWidthList[(params.platformWidth) + 1]
     for i, t in ipairs(layout) do
         if t then
             result[(i - midPos >= 0 and i or 1000 + i) - midPos] = trackType
         else
             local slot = (i - midPos >= 0 and i or 1000 + i) + 1000 - midPos
-            result[slot] = "station/rail/mus_platform_10m.module"
+            result[slot] = platformType
             result[slot + 2000 + stair * 100000] = "station/rail/mus_platform_upstair.module"
             result[slot + 2000 + (stair + 1) * 100000] = "station/rail/mus_platform_upstair.module"
         end
@@ -242,9 +243,10 @@ local updateFn = function(params)
         stations = {},
         dependentSlots = {},
         slotConfig = {},
-        occupied = {{}, {}, {}, {}},
         terminalInfo = {},
         entryConnectors = {},
+        entryModules = {},
+        labelText = {},
         cost = 0
     }
     
@@ -267,6 +269,7 @@ local updateFn = function(params)
                 result.group[info.pos.z].config = makeConfig(params.modules[slotId].params, params.modules[slotId].transf)
             end
         elseif (info.pos.z == 9) then
+            result.entryModules[slotId] = m
             table.insert(result.slots,
             {
                 id = slotId,
@@ -276,6 +279,11 @@ local updateFn = function(params)
             }
             )
         end
+    end
+    
+    if (#func.keys(result.group) == 1) then
+        local key = unpack(func.keys(result.group))
+        result.group[key].config = makeConfig(params, coor.I())
     end
 
     for _, g in pairs(result.group) do
@@ -352,18 +360,34 @@ local updateFn = function(params)
         for _, f in ipairs(result.invoke[1]) do f() end
         for _, f in ipairs(result.invoke[2]) do f() end
         
+        local signNrList = {}
+        for i, m in ipairs(result.models) do
+            if (m.posx) then
+                if not signNrList[m.posx] then
+                    signNrList[m.posx] = {left = {}, right = {}}
+                end
+                if m.isNrLeft then
+                   table.insert(signNrList[m.posx].left, i - 1)
+                elseif m.isNrRight then
+                    table.insert(signNrList[m.posx].right, i - 1)
+                end
+            end
+        end
+
+        dump()(signNrList)
+
         local connectors = pipe.new * {}
         
         for _, g in pairs(result.group) do
             local modules = g.modules
             local posSeq = pipe.new * func.seq(func.min(g.allPos), func.max(g.allPos))
-            local initPos = modules[0] and modules[0].metadata.platform and 1 or 0
+            local initPos = modules[0] and modules[0].metadata.isPlatform and 1 or 0
             local orderedPos = posSeq * pipe.filter(function(pos) return pos >= initPos end) + posSeq * pipe.filter(function(pos) return pos < initPos end) * pipe.rev()
             for _, pos in ipairs(orderedPos) do
                 local m = modules[pos]
                 if m then
-                    if m.metadata.track then
-                        if (modules[pos - 1] and modules[pos - 1].metadata.platform) then
+                    if m.metadata.isTrack then
+                        if (modules[pos - 1] and modules[pos - 1].metadata.isPlatform) then
                             local node = g.terminalInfo[pos] + 1
                             result.terminalGroups[#result.terminalGroups + 1] = {
                                 callbacks = {},
@@ -372,8 +396,14 @@ local updateFn = function(params)
                                 vehicleNodeOverrideList = {node},
                                 vehicleNodeOverrideListCenter = {node + 3}
                             }
+                            if signNrList[pos - 1] then
+                                local nr = tostring(#result.terminalGroups)
+                                for _, s in ipairs(signNrList[pos - 1].right) do
+                                    result.labelText[s] = {nr, nr}
+                                end
+                            end
                         end
-                        if (modules[pos + 1] and modules[pos + 1].metadata.platform) then
+                        if (modules[pos + 1] and modules[pos + 1].metadata.isPlatform) then
                             local node = g.terminalInfo[pos] + 7
                             result.terminalGroups[#result.terminalGroups + 1] = {
                                 callbacks = {},
@@ -382,9 +412,15 @@ local updateFn = function(params)
                                 vehicleNodeOverrideList = {node},
                                 vehicleNodeOverrideListCenter = {node + 3}
                             }
+                            if signNrList[pos + 1] then
+                                local nr = tostring(#result.terminalGroups)
+                                for _, s in ipairs(signNrList[pos + 1].left) do
+                                    result.labelText[s] = {nr, nr}
+                                end
+                            end
                         end
                     end
-                    if m.metadata.platform then
+                    if m.metadata.isPlatform then
                         if (g.connectors[pos]) then
                             local lanes = pipe.new * {
                                 #g.connectors[pos].up > 1 and func.interlace(g.connectors[pos].up) or {},
@@ -397,10 +433,10 @@ local updateFn = function(params)
                     end
                 end
             end
-            
+            dump()(result.labelText)
             local allConnectors = pipe.new
                 * g.allPos
-                * pipe.filter(function(pos) return g.modules[pos].metadata.platform end)
+                * pipe.filter(function(pos) return g.modules[pos].metadata.isPlatform end)
                 * pipe.map(function(pos) return g.connectors[pos] end)
             
             result.models = result.models
@@ -487,6 +523,12 @@ function data()
                             name = _("MENU_TRACK_HS"),
                             uiType = "CHECKBOX",
                             values = {"0", "1"},
+                            defaultIndex = 1
+                        },
+                        {
+                            key = "platformWidth",
+                            name = _("MENU_PLATFORM_WIDTH"),
+                            values = {"5", "10", "15", "20"},
                             defaultIndex = 1
                         },
                         {

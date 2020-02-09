@@ -15,6 +15,13 @@ musm.rList = pipe.new * musm.rList * pipe.map(pipe.neg()) * pipe.rev() / musm.in
 
 musm.slopeList = pipe.new * musm.slopeList * pipe.map(pipe.neg()) * pipe.rev() / 0 + musm.slopeList
 
+musm.platformWidthList = {
+    "station/rail/mus_platform_5m.module",
+    "station/rail/mus_platform_10m.module",
+    "station/rail/mus_platform_15m.module",
+    "station/rail/mus_platform_20m.module"
+}
+
 musm.trackTypeList = {
     "station/rail/mus_track_std.module",
     "station/rail/mus_track_std_catenary.module",

@@ -6,6 +6,8 @@ local general = require "entry/general"
 
 local mus = require "mus"
 
+local dump = require "luadump"
+
 local math = math
 local pi = math.pi
 local ceil = math.ceil
@@ -292,7 +294,7 @@ mus.upstairsModels = function(config, arcs, pos, isBackward)
         )
         end
     )
-    return config.isFinalized 
+    return config.isFinalized
         and (steps + platforms + ceils + tops) * pipe.flatten()
         or (steps + platforms) * pipe.flatten()
 end
@@ -642,35 +644,41 @@ mus.generateTerminals = function(arcs)
         2 * arcs.count - 2
 end
 
-mus.platformSigns = function(config, arcs, isLeftmost, isRightmost)
+mus.platformSigns = function(config, arcs, posx, isLeftmost, isRightmost)
     local transZ = coor.xyz(0, 0, -config.refZ + 4)
-    local cModels = 2 * arcs.count - 2
     
-    local indices = func.seq(1, cModels)
+    local indices = func.seq(1, 2 * arcs.count - 2)
     
-    local indicesN = pipe.new * indices
-        * pipe.fold({pipe.new}, function(r, i) return i and func.with(r, {[#r] = r[#r] / i}) or func.with(r, {[#r + 1] = pipe.new}) end)
-        * pipe.filter(function(g) return #g > 6 end)
-        * pipe.map(
-            function(g)
-                local n = floor(#g / 6)
-                local length = #g / n
-                return
-                    pipe.new
-                    * func.seq(1, n)
-                    * pipe.map(function(i) return g[1] + length * (i - 0.5) end)
-                    * pipe.map(function(p) return p < arcs.count and floor(p) or ceil(p) end)
-            end)
-        * pipe.flatten()
+    local indicesN = (function()
+        local n = floor(#indices / 6)
+        local length = #indices / n
+        return
+            pipe.new
+            * func.seq(1, n)
+            * pipe.map(function(i) return indices[1] + length * (i - 0.5) end)
+            * pipe.map(function(p) return p < arcs.count and floor(p) or ceil(p) end)
+    end)()
+    
+    local indicesP = (function()
+        local n = floor(#indices / 3)
+        local length = #indices / n
+        return
+            pipe.new
+            * func.seq(1, n)
+            * pipe.map(function(i) return indices[1] + length * (i - 0.5) end)
+            * pipe.map(function(p) return p < arcs.count and floor(p) or ceil(p) end)
+    end)()
     
     local fn = function()
         return pipe.mapn(
             indices,
             arcs.blockCoords.platform.central.mc,
             arcs.blockCoords.stairs.inner.lc,
-            arcs.blockCoords.stairs.inner.rc
+            arcs.blockCoords.stairs.inner.rc,
+            arcs.blockCoords.platform.lane.lc,
+            arcs.blockCoords.platform.lane.rc
         )
-        (function(i, mc, lw, rw)
+        (function(i, mc, lw, rw, ll, rl)
             if (func.contains(indicesN, i)) then
                 local transL = quat.byVec(coor.xyz(-1, 0, 0), lw.i - lw.s):mRot() * coor.trans((i < arcs.count and lw.s or lw.i) + transZ)
                 local transR = quat.byVec(coor.xyz(1, 0, 0), rw.i - rw.s):mRot() * coor.trans((i < arcs.count and rw.s or rw.i) + transZ)
@@ -680,6 +688,13 @@ mus.platformSigns = function(config, arcs, isLeftmost, isRightmost)
                     / (isLeftmost and func.with(general.newModel("mus/signs/platform_signs_2.mdl", transL), {pos = i}) or nil)
                     / (isRightmost and func.with(general.newModel("mus/signs/platform_signs_2.mdl", transR), {pos = i}) or nil)
                     / (not (isRightmost or isLeftmost) and func.with(general.newModel("mus/signs/platform_signs_2_arm.mdl", transM), {pos = i}) or nil)
+            elseif (func.contains(indicesP, i)) then
+                local transL = quat.byVec(coor.xyz(-1, 0, 0), ll.i - ll.s):mRot() * coor.trans((i < arcs.count and ll.s or ll.i) + transZ)
+                local transR = quat.byVec(coor.xyz(1, 0, 0), rl.i - rl.s):mRot() * coor.trans((i < arcs.count and rl.s or rl.i) + transZ)
+                return
+                    pipe.new
+                    / ((not isLeftmost) and func.with(general.newModel("mus/signs/platform_signs_nr.mdl", coor.rotZ(pi * 0.5) * transL), {pos = i, posx = posx, isNrLeft = true}) or nil)
+                    / ((not isRightmost) and func.with(general.newModel("mus/signs/platform_signs_nr.mdl", coor.rotZ(pi * 0.5) * transR), {pos = i, posx = posx, isNrRight = true}) or nil)
             else
                 return false
             end
@@ -712,8 +727,8 @@ mus.platformChairs = function(config, arcs, isLeftmost, isRightmost)
             end)
         * pipe.flatten()
     
-    local fn = function()
-        return pipe.mapn(
+    return pipe.new
+        * pipe.mapn(
             indices,
             arcs.blockCoords.stairs.inner.lc,
             arcs.blockCoords.stairs.inner.rc,
@@ -737,9 +752,6 @@ mus.platformChairs = function(config, arcs, isLeftmost, isRightmost)
                 return false
             end
         end)
-    end
-    
-    return pipe.new * fn()
         * pipe.filter(pipe.noop())
         * pipe.flatten()
 end

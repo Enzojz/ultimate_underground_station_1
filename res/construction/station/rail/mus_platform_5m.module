@@ -33,7 +33,7 @@ function data()
             value = 1,
         },
         metadata = {
-            platform = true,
+            isPlatform = true,
             width = 5,
             type = mType
         },
@@ -48,7 +48,7 @@ function data()
             local leftSideWall = group.modules[info.pos.x - 1] and {} or mus.platformSideWallModels(group.config, allArcs, true)
             local rightSideWall = group.modules[info.pos.x + 1] and {} or mus.platformSideWallModels(group.config, allArcs, false)
             
-            local sign = mus.platformSigns(group.config, allArcs, not group.modules[info.pos.x - 1], not group.modules[info.pos.x + 1])
+            local sign = mus.platformSigns(group.config, allArcs, info.pos.x, not group.modules[info.pos.x - 1], not group.modules[info.pos.x + 1])
             local chairs = mus.platformChairs(group.config, allArcs, not group.modules[info.pos.x - 1], not group.modules[info.pos.x + 1])
             
             local newModels = mus.platformModels(group.config, allArcs) + leftSideWall + rightSideWall + sign + chairs

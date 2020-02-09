@@ -29,7 +29,7 @@ function data()
             value = 3,
         },
         metadata = {
-            track = true,
+            isTrack = true,
             width = 5,
             type = mType
         },

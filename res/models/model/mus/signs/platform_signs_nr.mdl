@@ -2,7 +2,7 @@ local coor = require "entry/coor"
 
 local height = 0.5
 local thickness = 0.1
-local width = 2.5
+local width = 0.5
 
 function data()
     return {
@@ -19,7 +19,7 @@ function data()
                             mesh = "mus/signs/platform_signs.msh",
                             name = "name_board",
                             transf =
-                            coor.scale(coor.xyz(width + 1, thickness, height)) *
+                            coor.scale(coor.xyz(width, thickness, height)) *
                             coor.trans(coor.xyz(0, 0, 0.25))
                         },
                         {
@@ -27,27 +27,27 @@ function data()
                             mesh = "mus/signs/platform_signs_left.msh",
                             transf =
                             coor.scale(coor.xyz(1, thickness, (height + 0.04) / 1.04)) *
-                            coor.trans(coor.xyz(-width * 0.5 - 0.5, 0, 0.25))
+                            coor.trans(coor.xyz(-width * 0.5, 0, 0.25))
                         },
                         {
                             materials = {"mus/platform_signs_border.mtl"},
                             mesh = "mus/signs/platform_signs_right.msh",
                             transf =
                             coor.scale(coor.xyz(1, thickness, (height + 0.04) / 1.04)) *
-                            coor.trans(coor.xyz(width * 0.5 + 0.5, 0, 0.25))
+                            coor.trans(coor.xyz(width * 0.5, 0, 0.25))
                         },
                         {
                             materials = {"mus/platform_signs_border.mtl"},
                             mesh = "mus/signs/platform_signs_top.msh",
                             transf =
-                            coor.scale(coor.xyz(width + 1, thickness, 1)) *
+                            coor.scale(coor.xyz(width, thickness, 1)) *
                             coor.trans(coor.xyz(0, 0, height * 0.5 + 0.25))
                         },
                         {
                             materials = {"mus/platform_signs_border.mtl"},
                             mesh = "mus/signs/platform_signs_bottom.msh",
                             transf =
-                            coor.scale(coor.xyz(width + 1, thickness, 1)) *
+                            coor.scale(coor.xyz(width, thickness, 1)) *
                             coor.trans(coor.xyz(0, 0, -height * 0.5 + 0.25))
                         },
                         {
@@ -55,15 +55,8 @@ function data()
                             mesh = "mus/signs/platform_signs_arm.msh",
                             transf =
                             coor.scale(coor.xyz(0.05, 0.05, 2)) *
-                            coor.trans(coor.xyz(width * 0.5 + 0.25, 0, 0.5))
+                            coor.trans(coor.xyz(0, 0, 0.5))
                         },
-                        {
-                            materials = {"mus/platform_signs_border.mtl"},
-                            mesh = "mus/signs/platform_signs_arm.msh",
-                            transf =
-                            coor.scale(coor.xyz(0.05, 0.05, 2)) *
-                            coor.trans(coor.xyz(-width * 0.5 - 0.25, 0, 0.5))
-                        }
                     },
                     name = "RootNode",
                     transf = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}
@@ -79,10 +72,10 @@ function data()
                     {
                         transf = coor.rotX(math.pi * 0.5) * coor.trans(coor.xyz(-0.5 * width - 0.25, -thickness, 0.125)),
                         size = { width + 0.5, 0.35 },
-                        type = "STATION_NAME",
+                        type = "CUSTOM",
                         alphaMode = "BLEND",
                         renderMode = "EMISSIVE",
-                        -- alignment = "CENTER",
+                        alignment = "CENTER",
                         verticalAlignment = "CENTER",
                         fitting = "CUT",
                         childId = "RootNode",
@@ -90,10 +83,10 @@ function data()
                     {
                         transf = coor.rotX(math.pi * 0.5) * coor.rotZ(math.pi) * coor.trans(coor.xyz(0.5 * width + 0.25, thickness, 0.125)),
                         size = { width + 0.5, 0.35 },
-                        type = "STATION_NAME",
+                        type = "CUSTOM",
                         alphaMode = "BLEND",
                         renderMode = "EMISSIVE",
-                        -- alignment = "CENTER",
+                        alignment = "CENTER",
                         verticalAlignment = "CENTER",
                         fitting = "CUT",
                         childId = "RootNode",

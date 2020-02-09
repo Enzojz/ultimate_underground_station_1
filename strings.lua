@@ -19,15 +19,15 @@ This mod is still in evolution, maybe with some bugs, I will do some updates and
 
 ----------------------------------------------------------------------
 
-I am a Chinese, living in Europe. My motherland is suffering the pandemic caused by the "Novel Coronavirus" 2019-nCov, several tens of thousands of people are contaminated in weeks and hundreds of people died. We are fighting against the virus and we believe that we will win. I pay my highest respect to these who are working hard to save the people. I pay also my highest respect to all the people, healthy or ill, who is confining themselves at home to avoid the propagation virus. 
+I am Chinese, living in Europe. My motherland is suffering the pandemic caused by the "Novel Coronavirus" 2019-nCov, several tens of thousands of people are contaminated in weeks and hundreds of people died. We are fighting against the virus and we believe that we will win. I pay my highest respect to these who are working hard to save the people. I pay also my highest respect to all the people, healthy or ill, who is confining themselves at home to avoid the propagation of virus. 
 
 However, we are NOT virus ourselves, and the virus is NOT called "Chinese virus", these attacks on Chinese just because of our face or because we have masks on the face -- are not justified.
 We are on the same earth, we are on the same boat, if you want to protect yourself and protect others, you should put the mask on, wash your hand frequently, but never attack on innocent people, the virus doesn't hold a nationality, and the violence does not contribute to killing virus.
 
-Keep fighting Wuhan!
-Keep fighting Hubei!
-Keep fighting China!
-Keep fighting all suffered from Novel Coronavirus!
+Keep fighting, Wuhan!
+Keep fighting, Hubei!
+Keep fighting, China!
+Keep fighting, all suffered from Novel Coronavirus!
 ]]
 
 local descCN = [[本MOD提供建造形式丰富的地下车站的可能。
@@ -79,7 +79,7 @@ local descTC = [[本模組提供建造形式豐富的地下車站之可能。
 中國加油！
 人類一定可以戰勝病魔！
 
-致台港澳同胞，所有華人：
+致臺港澳同胞，所有華人：
 不管您政治立場如何，都改變不了我們是炎黃子孫之事實。瘟疫無邊界，覆巢之下，焉有完卵？值此寒冬，願唯齊心協力，共同與病毒抗爭！
 ]]
 
@@ -103,6 +103,7 @@ function data()
             ["MENU_PLATFORM_LEFT"] = "Platform on the left",
             ["MENU_PLATFORM_RIGHT"] = "Platform on the right",
             ["MENU_FORCE_USE"] = "Force to use",
+            ["MENU_PLATFORM_WIDTH"] = "Platform width(m)",
             ["MENU_PLATFORM_5_NAME"] = "5m wide platform",
             ["MENU_PLATFORM_5_DESC"] = "Underground platform of 5m wide",
             ["MENU_PLATFORM_10_NAME"] = "10m wide platform",
@@ -142,6 +143,7 @@ you will not be able to build up station and get correct rendering without eithe
             ["MENU_PLATFORM_LEFT"] = "最左侧有站台",
             ["MENU_PLATFORM_RIGHT"] = "最右侧有站台",
             ["MENU_FORCE_USE"] = "直接使用",
+            ["MENU_PLATFORM_WIDTH"] = "站台宽度(米)",
             ["MENU_PLATFORM_5_NAME"] = "5米宽站台",
             ["MENU_PLATFORM_5_DESC"] = "5米宽的地下车站站台",
             ["MENU_PLATFORM_10_NAME"] = "10米宽站台",
@@ -178,7 +180,8 @@ you will not be able to build up station and get correct rendering without eithe
             ["MENU_TRACK_HS"] = "高速鐵路",
             ["MENU_PLATFORM_LEFT"] = "最左側有月臺",
             ["MENU_PLATFORM_RIGHT"] = "最右側有月臺",
-            ["MENU_FORCE_USE"] = "直接使用",
+            ["MENU_FORCE_USE"] = "直接使用",            
+            ["MENU_PLATFORM_WIDTH"] = "月臺寬度(米)",
             ["MENU_PLATFORM_5_NAME"] = "5米寬月臺",
             ["MENU_PLATFORM_5_DESC"] = "5米寬的地下車站月臺",
             ["MENU_PLATFORM_10_NAME"] = "10米寬月臺",

@@ -32,6 +32,9 @@ local entryWarning = function()
 end
 
 local script = {
+    init = function()
+        entryWarning()
+    end,
     guiHandleEvent = function(id, name, param)
         if name == "builder.apply" then
             local toAdd = param.proposal.toAdd

@@ -28,7 +28,6 @@ function data()
             value = 2,
         },
         metadata = {
-            platform = true,
             width = 10,
             type = mType
         },
