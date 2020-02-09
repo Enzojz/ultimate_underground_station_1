@@ -367,57 +367,68 @@ local updateFn = function(params)
                     signNrList[m.posx] = {left = {}, right = {}}
                 end
                 if m.isNrLeft then
-                   table.insert(signNrList[m.posx].left, i - 1)
+                   table.insert(signNrList[m.posx].left, i)
                 elseif m.isNrRight then
-                    table.insert(signNrList[m.posx].right, i - 1)
+                    table.insert(signNrList[m.posx].right, i)
                 end
             end
         end
-
-        dump()(signNrList)
 
         local connectors = pipe.new * {}
         
         for _, g in pairs(result.group) do
             local modules = g.modules
             local posSeq = pipe.new * func.seq(func.min(g.allPos), func.max(g.allPos))
-            local initPos = modules[0] and modules[0].metadata.isPlatform and 1 or 0
-            local orderedPos = posSeq * pipe.filter(function(pos) return pos >= initPos end) + posSeq * pipe.filter(function(pos) return pos < initPos end) * pipe.rev()
+            local orderedPos = posSeq * pipe.filter(function(pos) return pos >= 0 end) + posSeq * pipe.filter(function(pos) return pos < 0 end) * pipe.rev()
+            
             for _, pos in ipairs(orderedPos) do
                 local m = modules[pos]
                 if m then
                     if m.metadata.isTrack then
-                        if (modules[pos - 1] and modules[pos - 1].metadata.isPlatform) then
-                            local node = g.terminalInfo[pos] + 1
-                            result.terminalGroups[#result.terminalGroups + 1] = {
-                                callbacks = {},
-                                terminals = func.seqMap(g.terminalInfo[pos - 1][2], function(t) return {t, 0} end),
-                                vehicleNodeOverride = node,
-                                vehicleNodeOverrideList = {node},
-                                vehicleNodeOverrideListCenter = {node + 3}
-                            }
-                            if signNrList[pos - 1] then
-                                local nr = tostring(#result.terminalGroups)
-                                for _, s in ipairs(signNrList[pos - 1].right) do
-                                    result.labelText[s] = {nr, nr}
+                        local fn = {
+                            function()
+                                if (modules[pos - 1] and modules[pos - 1].metadata.isPlatform) then
+                                    local node = g.terminalInfo[pos] + 1
+                                    result.terminalGroups[#result.terminalGroups + 1] = {
+                                        callbacks = {},
+                                        terminals = func.seqMap(g.terminalInfo[pos - 1][2], function(t) return {t, 0} end),
+                                        vehicleNodeOverride = node,
+                                        vehicleNodeOverrideList = {node},
+                                        vehicleNodeOverrideListCenter = {node + 3}
+                                    }
+                                    if signNrList[pos - 1] then
+                                        local nr = tostring(#result.terminalGroups)
+                                        for _, s in ipairs(signNrList[pos - 1].right) do
+                                            result.models[s] = func.with(result.models[s], {nr = nr})
+                                        end
+                                    end
+                                end
+                            end,
+                            function()
+                                if (modules[pos + 1] and modules[pos + 1].metadata.isPlatform) then
+                                    local node = g.terminalInfo[pos] + 7
+                                    result.terminalGroups[#result.terminalGroups + 1] = {
+                                        callbacks = {},
+                                        terminals = func.seqMap(g.terminalInfo[pos + 1][1], function(t) return {t, 0} end),
+                                        vehicleNodeOverride = node,
+                                        vehicleNodeOverrideList = {node},
+                                        vehicleNodeOverrideListCenter = {node + 3}
+                                    }
+                                    if signNrList[pos + 1] then
+                                        local nr = tostring(#result.terminalGroups)
+                                        for _, s in ipairs(signNrList[pos + 1].left) do
+                                            result.models[s] = func.with(result.models[s], {nr = nr})
+                                        end
+                                    end
                                 end
                             end
-                        end
-                        if (modules[pos + 1] and modules[pos + 1].metadata.isPlatform) then
-                            local node = g.terminalInfo[pos] + 7
-                            result.terminalGroups[#result.terminalGroups + 1] = {
-                                callbacks = {},
-                                terminals = func.seqMap(g.terminalInfo[pos + 1][1], function(t) return {t, 0} end),
-                                vehicleNodeOverride = node,
-                                vehicleNodeOverrideList = {node},
-                                vehicleNodeOverrideListCenter = {node + 3}
-                            }
-                            if signNrList[pos + 1] then
-                                local nr = tostring(#result.terminalGroups)
-                                for _, s in ipairs(signNrList[pos + 1].left) do
-                                    result.labelText[s] = {nr, nr}
-                                end
-                            end
+                        }
+                        if (pos >= 0) then
+                            fn[1]()
+                            fn[2]()
+                        else
+                            fn[2]()
+                            fn[1]()
                         end
                     end
                     if m.metadata.isPlatform then
@@ -433,7 +444,15 @@ local updateFn = function(params)
                     end
                 end
             end
-            dump()(result.labelText)
+
+            result.models = result.models * pipe.filter(function(m) return (not m.isNrLeft and not m.isNrRight) or m.nr end)
+            
+            for i, m in ipairs(result.models) do
+                if m.nr then
+                    result.labelText[i - 1] = {m.nr, m.nr}
+                end
+            end
+            
             local allConnectors = pipe.new
                 * g.allPos
                 * pipe.filter(function(pos) return g.modules[pos].metadata.isPlatform end)
@@ -494,7 +513,7 @@ function data()
                 constructionType = "RAIL_STATION",
                 type = "DYNAMIC",
                 availability = {
-                    yearFrom = 0,
+                    yearFrom = 1863,
                     yearTo = 0
                 },
                 description = {
@@ -562,7 +581,7 @@ function data()
             description = _("MENU_DESC")
         },
         availability = {
-            yearFrom = 0,
+            yearFrom = 1863,
             yearTo = 0
         },
         order = 1000,
