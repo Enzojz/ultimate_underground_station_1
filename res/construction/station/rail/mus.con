@@ -388,7 +388,7 @@ local updateFn = function(params)
                         local fn = {
                             function()
                                 if (modules[pos - 1] and modules[pos - 1].metadata.isPlatform) then
-                                    local node = g.terminalInfo[pos] + 1
+                                    local node = g.terminalInfo[pos] + 7
                                     result.terminalGroups[#result.terminalGroups + 1] = {
                                         callbacks = {},
                                         terminals = func.seqMap(g.terminalInfo[pos - 1][2], function(t) return {t, 0} end),
@@ -406,7 +406,7 @@ local updateFn = function(params)
                             end,
                             function()
                                 if (modules[pos + 1] and modules[pos + 1].metadata.isPlatform) then
-                                    local node = g.terminalInfo[pos] + 7
+                                    local node = g.terminalInfo[pos] + 1
                                     result.terminalGroups[#result.terminalGroups + 1] = {
                                         callbacks = {},
                                         terminals = func.seqMap(g.terminalInfo[pos + 1][1], function(t) return {t, 0} end),
