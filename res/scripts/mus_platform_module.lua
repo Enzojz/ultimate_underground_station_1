@@ -16,7 +16,7 @@ local function fn(platformWidth, stairsWidth, desc, order)
             },
             buildMode = "SINGLE",
             cost = {
-                price = 15000,
+                price = 20000,
             },
             description = desc,
             category = {

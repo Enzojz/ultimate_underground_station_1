@@ -6,8 +6,6 @@ local general = require "entry/general"
 
 local mus = require "mus"
 
-local dump = require "luadump"
-
 local math = math
 local pi = math.pi
 local ceil = math.ceil

@@ -3,7 +3,7 @@ local coor = require "entry/coor"
 local pipe = require "entry/pipe"
 local mus = require "mus"
 local musm = require "mus_menu"
-local dump = require "luadump"
+-- local dump = require "luadump"
 
 local ma = math
 local abs = ma.abs
@@ -93,18 +93,18 @@ end
 
 local function connectionLevel(lhs, rhs)
     local result = lhs
-    * pipe.map(
-        function(l) 
-            return func.map(rhs, 
-            function(r) 
-                return {
-                    distance = (l - r):length2(),
-                    pt = {l, r}
-                }
+        * pipe.map(
+            function(l)
+                return func.map(rhs,
+                    function(r)
+                        return {
+                            distance = (l - r):length2(),
+                            pt = {l, r}
+                        }
+                    end)
             end)
-        end)
-    * pipe.flatten()
-    * pipe.sort(function(l, r) return l.distance < r.distance end)
+        * pipe.flatten()
+        * pipe.sort(function(l, r) return l.distance < r.distance end)
     
     return result[1]
 end
@@ -132,9 +132,9 @@ local function connectionNetwork(allConns)
             measure[j][i] = measure[i][j]
         end
     end
-
+    
     local result = closestConnection(pipe.new / {index = 1}, measure, unpack(func.seq(2, #allConns)))
-    return result * pipe.filter(pipe.select("measure")) * pipe.map(function(r) return  mus.unitLane(unpack(r.measure.pt)) end)
+    return result * pipe.filter(pipe.select("measure")) * pipe.map(function(r) return mus.unitLane(unpack(r.measure.pt)) end)
 end
 
 local makeConfig = function(params, transf)
@@ -171,7 +171,7 @@ local makeLayout = function(totalTracks, ignoreFst, ignoreLst)
             local result = ignoreLst and result or (result[#result] and (result / p) or result)
             return result
         elseif (nbTracks == totalTracks and ignoreFst) then
-            return makeLayout(nbTracks - 1, result / t )
+            return makeLayout(nbTracks - 1, result / t)
         elseif (nbTracks == totalTracks and not ignoreFst) then
             return makeLayout(nbTracks - 1, result / p / t)
         elseif (nbTracks == 1 and ignoreLst) then
@@ -190,7 +190,7 @@ end
 local createTemplateFn = function(params)
     local radius = musm.rList[params.radius + 1] * 1000
     local length = min(musm.trackLengths[params.lPlatform + 1], abs(radius * pi * 1.5))
-
+    
     local nbTracks = musm.trackNumberList[params.trackNb + 1]
     local layout = makeLayout(nbTracks, params.platformLeft == 0, params.platformRight == 0)
     local midPos = ceil(#layout / 2)
@@ -214,7 +214,38 @@ local createTemplateFn = function(params)
 end
 
 local upgradeFn = function(params)
-    return {}
+    local modules = {}
+    local slotId = params.slotId
+    if params.modules[slotId] then
+        local function SwapModule(from, to, ...)
+            if (from and to) then
+                if params.modules[slotId].name == from then
+                    table.insert(modules, {slotId, to})
+                elseif params.modules[slotId].name == to then
+                    table.insert(modules, {slotId, from})
+                else
+                    SwapModule(slotId, ...)
+                end
+            end
+        end
+        
+        if (params.catenaryToggle == 1) then
+            SwapModule(
+                "station/rail/mus_track_hs.module",
+                "station/rail/mus_track_hs_catenary.module",
+                "station/rail/mus_track_std.module",
+                "station/rail/mus_track_std_catenary.module"
+        )
+        elseif (params.trackTypeToggle == 1) then
+            SwapModule(
+                "station/rail/mus_track_std.module",
+                "station/rail/mus_track_hs.module",
+                "station/rail/mus_track_std_catenary.module",
+                "station/rail/mus_track_hs_catenary.module"
+        )
+        end
+    end
+    return modules
 end
 
 local updateFn = function(params)
@@ -228,12 +259,12 @@ local updateFn = function(params)
             terrainAlignmentLists = {{type = "EQUAL", faces = {}}}
         }
     end
-
+    
     local result = {
         group = {},
         allArcs = {},
         slots = pipe.new * {},
-        invoke = {{},{}},
+        invoke = {{}, {}},
         models = pipe.new * {},
         terrainAlignmentLists = {},
         edgeLists = pipe.new * {},
@@ -255,15 +286,15 @@ local updateFn = function(params)
         if (info.pos.z < 9) then
             if (not result.group[info.pos.z]) then
                 result.group[info.pos.z] =
-                {
-                    allPos = pipe.new * {},
-                    pos2Slot = {},
-                    connectors = {},
-                    modules = {},
-                    arcs = {},
-                    terminalInfo = {}
-                }
-
+                    {
+                        allPos = pipe.new * {},
+                        pos2Slot = {},
+                        connectors = {},
+                        modules = {},
+                        arcs = {},
+                        terminalInfo = {}
+                    }
+            
             end
             if (params.modules[slotId].params and not result.group[info.pos.z].config) then
                 result.group[info.pos.z].config = makeConfig(params.modules[slotId].params, params.modules[slotId].transf)
@@ -271,13 +302,13 @@ local updateFn = function(params)
         elseif (info.pos.z == 9) then
             result.entryModules[slotId] = m
             table.insert(result.slots,
-            {
-                id = slotId,
-                transf = m.transf,
-                type = "entry",
-                spacing = {0, 0, 0, 0}
-            }
-            )
+                {
+                    id = slotId,
+                    transf = m.transf,
+                    type = "entry",
+                    spacing = {0, 0, 0, 0}
+                }
+        )
         end
     end
     
@@ -285,13 +316,13 @@ local updateFn = function(params)
         local key = unpack(func.keys(result.group))
         result.group[key].config = makeConfig(params, coor.I())
     end
-
+    
     for _, g in pairs(result.group) do
         if (not g.config) then
             g.config = makeConfig(params, coor.I())
         end
     end
-
+    
     for slotId, m in pairs(params.modules) do
         local info = mus.slotInfo(slotId)
         if info.pos.z < 9 and info.typeId < 2 then
@@ -323,9 +354,9 @@ local updateFn = function(params)
         
         local reOffset = func.filter(offsets, function(o) return o[1] == 0 end)[1][2]
         offsets = offsets * pipe.map(function(o) return {o[1], o[2] - reOffset} end)
-
+        
         local mrr = config.radius - offsets[config.radius < 0 and 1 or #offsets][2]
-
+        
         local refLength = (config.radius / mrr) * config.length
         config.arcPacker = mus.arcPacker(refLength, config.slope, config.radius)
         
@@ -367,13 +398,13 @@ local updateFn = function(params)
                     signNrList[m.posx] = {left = {}, right = {}}
                 end
                 if m.isNrLeft then
-                   table.insert(signNrList[m.posx].left, i)
+                    table.insert(signNrList[m.posx].left, i)
                 elseif m.isNrRight then
                     table.insert(signNrList[m.posx].right, i)
                 end
             end
         end
-
+        
         local connectors = pipe.new * {}
         
         for _, g in pairs(result.group) do
@@ -444,7 +475,7 @@ local updateFn = function(params)
                     end
                 end
             end
-
+            
             result.models = result.models * pipe.filter(function(m) return (not m.isNrLeft and not m.isNrRight) or m.nr end)
             
             for i, m in ipairs(result.models) do
@@ -467,14 +498,14 @@ local updateFn = function(params)
         
         local conn = connectionNetwork(connectors)
         result.models = result.models + conn
-
+        
         local allUpConn = connectors * pipe.flatten() * pipe.filter(function(c) return c.up end)
         local entrySide = {}
         for i = 1, #result.entryConnectors do
             entrySide[i] = {false, false}
             local dist = {}
             for j = 1, #allUpConn do
-                dist[#dist+1] = pipe.new 
+                dist[#dist + 1] = pipe.new
                     * func.seq(1, 2)
                     * pipe.map(function(u)
                         local vec = result.entryConnectors[i][u] - allUpConn[j]
@@ -573,7 +604,7 @@ function data()
                 },
             }
         }
-
+    
     return {
         type = "RAIL_STATION",
         description = {

@@ -17,6 +17,18 @@ This mod is a total reworked mod of Transport Fever Ultimate Underground Station
 
 This mod is still in evolution, maybe with some bugs, I will do some updates and bugfixes after the release.
 
+Changelog:
+1.1
+- Fixed conflict with NL Station mod
+- Fixed crashes under non-debug mode
+- Corrected wrong door open side
+- Added "Platform width" option for the construction menu
+- Added station name sign on entry
+- Added platform number sign
+- Improved terminal number stability over station modification
+- Possible to modify station parameter after finish building for case of only one platform level
+- Implementation of track upgrade function
+
 ----------------------------------------------------------------------
 
 I am Chinese, living in Europe. My motherland is suffering the pandemic caused by the "Novel Coronavirus" 2019-nCov, several tens of thousands of people are contaminated in weeks and hundreds of people died. We are fighting against the virus and we believe that we will win. I pay my highest respect to these who are working hard to save the people. I pay also my highest respect to all the people, healthy or ill, who is confining themselves at home to avoid the propagation of virus. 
@@ -53,6 +65,18 @@ local descCN = [[本MOD提供建造形式丰富的地下车站的可能。
 湖北加油！
 中国加油！
 人类一定可以战胜病魔！
+
+更新日志:
+1.1
+- 修复了和荷兰车站模组的冲突
+- 修复了非调试模式下的崩溃
+- 修正了错误的开门方向
+- 在建造参数菜单中增加了“站台宽度”选项
+- 在车站入口处增加了站名牌
+- 增加了站台号牌
+- 改进了修改车站时的站台编号稳定性
+- 恢复了当只有一个站台层时完成建造车站后修改车站参数的能力
+- 实现了轨道升级功能
 ]]
 
 local descTC = [[本模組提供建造形式豐富的地下車站之可能。
@@ -81,6 +105,18 @@ local descTC = [[本模組提供建造形式豐富的地下車站之可能。
 
 致臺港澳同胞，所有華人：
 不管您政治立場如何，都改變不了我們是炎黃子孫之事實。瘟疫無邊界，覆巢之下，焉有完卵？值此寒冬，願唯齊心協力，共同與病毒抗爭！
+
+更新日誌:
+1.1
+- 修復了和荷蘭車站模組的衝突
+- 修復了非調試模式下的崩潰
+- 修正了錯誤的開門方向
+- 在建造參數菜單中增加了“月臺寬度”選項
+- 在車站入口處增加了站名牌
+- 增加了月臺號牌
+- 改進了修改車站時的月臺編號穩定性
+- 恢復了當只有一個月臺層時完成建造車站後修改車站參數的能力
+- 實現了軌道升級功能
 ]]
 
 

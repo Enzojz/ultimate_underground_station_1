@@ -14,7 +14,7 @@ return function(trackWidth, trackType, catenary, desc, order)
             },
             buildMode = "SINGLE",
             cost = {
-                price = 15000,
+                price = 5000,
             },
             description = desc,
             category = {
