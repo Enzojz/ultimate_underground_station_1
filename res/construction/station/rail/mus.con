@@ -4,7 +4,6 @@ local pipe = require "entry/pipe"
 local mus = require "mus"
 local musm = require "mus_menu"
 -- local dump = require "luadump"
-
 local ma = math
 local abs = ma.abs
 local ceil = ma.ceil
@@ -385,6 +384,42 @@ local updateFn = function(params)
             end)
             * pipe.flatten()
         result.slots = result.slots + slots
+        
+        local protectionEdges = pipe.mapn(
+            {posMin, posMax},
+            {-5, 5}
+        )(function(pos, offset)
+            if (g.modules[pos].metadata.isTrack) then
+                return function()
+                    local refArc = pipe.new
+                        * g.arcs[pos]()()(offset)
+                        * pipe.map(mus.arc2Edges)
+                        * pipe.flatten()
+                        * pipe.map(function(e) return {e[1] .. g.config.transf.pt, e[2] .. g.config.transf.vec} end)
+                        * pipe.map(pipe.map(coor.vec2Tuple))
+                    
+                    local edges = {
+                        type = "TRACK",
+                        alignTerrain = false,
+                        params = {
+                            type = "mus_mock.lua",
+                            catenary = false,
+                        },
+                        edgeType = "TUNNEL",
+                        edgeTypeName = "mus_void.lua",
+                        edges = refArc,
+                        snapNodes = {},
+                        tag2nodes = {}
+                    }
+                    
+                    result.edgeLists = result.edgeLists / edges
+                end
+            else
+                return function() end
+            end
+        end)
+        table.insert(result.invoke[2], protectionEdges[1])
+        table.insert(result.invoke[2], protectionEdges[2])
     end
     
     result.terminateConstructionHook = function()

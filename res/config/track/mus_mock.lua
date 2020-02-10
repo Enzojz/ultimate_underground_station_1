@@ -65,7 +65,7 @@ function data()
 		"mus/void.mdl",
 	}
 	
-	t.cost = 150.0
+	t.cost = 0.0
 
 	return t
 end

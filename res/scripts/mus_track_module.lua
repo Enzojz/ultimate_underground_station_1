@@ -51,7 +51,7 @@ return function(trackWidth, trackType, catenary, desc, order)
                         type = trackType,
                         catenary = catenary,
                     },
-                    edgeType = group.config.isFinalized and "TUNNEL" or nil,
+                    edgeType = "TUNNEL",
                     edgeTypeName = "mus_void.lua",
                     edges = refArc,
                     snapNodes = {5, 11},

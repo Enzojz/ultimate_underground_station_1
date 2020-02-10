@@ -6,4 +6,4 @@ local desc = {
     description = _("MENU_PLATFORM_5_DESC"),
     icon = "ui/construction/station/rail/mus_platform_5.tga"
 }
-data = fn(platformWidth, stairsWidth, desc, 1)
+data = fn(platformWidth, stairsWidth, desc, 1, {0})

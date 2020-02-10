@@ -6,7 +6,7 @@ local mus = require "mus_platform"
 local quat = require "entry/quaternion"
 
 local mType = "mus_platform"
-local function fn(platformWidth, stairsWidth, desc, order)
+local function fn(platformWidth, stairsWidth, desc, order, fakeTracks)
     local platformArcs = mus.platformArcs(platformWidth, stairsWidth)
     return function()
         return {
@@ -49,7 +49,8 @@ local function fn(platformWidth, stairsWidth, desc, order)
                 local withTag = general.withTag(tag)
                 
                 local refArc = pipe.new
-                    * {allArcs.ref()()(0)}
+                    * fakeTracks
+                    * pipe.map(function(f) return allArcs.ref()()(f) end)
                     * pipe.map(pipe.map(mus.arc2Edges))
                     * pipe.flatten()
                     * pipe.flatten()

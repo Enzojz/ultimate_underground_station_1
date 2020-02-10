@@ -36,7 +36,7 @@ mus.trackArcs = function(trackWidth)
             end
 
             offset(0, coords.ceil)
-            offset(-0.05, coords.wall)
+            offset(0, coords.wall)
             offset(2, coords.terrain.low)
             
             coords.terrain.high.lc[i] = coords.terrain.low.lc[i] + coor.xyz(0, 0, 8)

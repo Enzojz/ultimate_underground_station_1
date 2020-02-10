@@ -18,6 +18,9 @@ This mod is a total reworked mod of Transport Fever Ultimate Underground Station
 This mod is still in evolution, maybe with some bugs, I will do some updates and bugfixes after the release.
 
 Changelog:
+1.2
+- Fixed some flickering wall issue
+- Fixed tunnel entry issue on unfinished platform
 1.1
 - Fixed conflict with NL Station mod
 - Fixed crashes under non-debug mode
@@ -67,6 +70,9 @@ local descCN = [[本MOD提供建造形式丰富的地下车站的可能。
 人类一定可以战胜病魔！
 
 更新日志:
+1.2
+- 修正了一些墙面闪烁的问题
+- 修正了在未完成修建的站台上连接轨道会出现隧道入口的问题
 1.1
 - 修复了和荷兰车站模组的冲突
 - 修复了非调试模式下的崩溃
@@ -107,6 +113,9 @@ local descTC = [[本模組提供建造形式豐富的地下車站之可能。
 不管您政治立場如何，都改變不了我們是炎黃子孫之事實。瘟疫無邊界，覆巢之下，焉有完卵？值此寒冬，願唯齊心協力，共同與病毒抗爭！
 
 更新日誌:
+1.2
+- 修正了一些牆面閃爍的問題
+- 修正了在未完成修建的月臺上連接軌道會出現隧道入口的問題
 1.1
 - 修復了和荷蘭車站模組的衝突
 - 修復了非調試模式下的崩潰
