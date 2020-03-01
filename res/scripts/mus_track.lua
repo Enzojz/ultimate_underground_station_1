@@ -73,8 +73,11 @@ mus.trackArcs = function(trackWidth)
     end
 end
 
+
 mus.trackModels = function(config, arcs)
-    local buildCeil = mus.buildSurface(config, coor.I())
+    local fitModelCeil = config.fitModel(5, 5, 1.93, true, true)
+
+    local buildCeil = mus.buildSurface(coor.transZ(-config.refZ))
     local ceilTop = pipe.rep(arcs.blockCount)(config.models.top.track.central)
     
     return pipe.new
@@ -82,7 +85,7 @@ mus.trackModels = function(config, arcs)
             func.seq(1, arcs.blockCount),
             ceilTop,
             arcs.blockCoords.ceil.lc, arcs.blockCoords.ceil.rc
-        )(buildCeil(5))
+        )(buildCeil(fitModelCeil))
         * pipe.flatten()
 end
 

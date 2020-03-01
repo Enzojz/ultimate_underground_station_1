@@ -12,6 +12,27 @@ local ceil = math.ceil
 local floor = math.floor
 local unpack = table.unpack
 
+local fitModels = {
+    platform = {
+        central = mus.fitModel(5.0, 5, 1.93, true, true),
+        side = mus.fitModel(1.7, 5, 1.93, true, true),
+        edge = mus.fitModel(0.8, 5, 1.93, true, true)
+    },
+    ceil = {
+        central = mus.fitModel(5.0, 5, 1.93, true, true),
+        side = mus.fitModel(1.8, 5, 1.93, true, true),
+        edge = mus.fitModel(0.7, 5, 1.93, true, true)
+    },
+    top = {
+        central = mus.fitModel(5.0, 5, 1.93, true, true),
+        side = mus.fitModel(2.5, 5, 1.93, true, true)
+    },
+    step = {
+        central = mus.fitModel(4.5, 5, 1.93, true, true),
+        wall = mus.fitModel(0.25, 5, 1.93, true, true),
+    }
+}
+
 mus.platformArcs = function(platformWidth, stairsWidth)
     return function(config, arcRef)
         local baseL, baseR, c = mus.biLatCoords(5)(arcRef(config.refZ)()(-platformWidth * 0.5), arcRef(config.refZ)()(platformWidth * 0.5))
@@ -125,11 +146,9 @@ end
 
 
 mus.upstairsModels = function(config, arcs, pos, isBackward)
-    local tZ = coor.transZ(config.hPlatform - 1.4)-- model height = 1.93 - 1.4 -> 0.53 -> adjust model level to rail level
-    
-    local buildPlatform = mus.buildSurface(config, tZ)
-    local buildCeil = mus.buildSurface(config, coor.I())
-    local buildWall = mus.buildSurface(config, coor.scaleZ(5 - config.refZ) * coor.transZ(config.refZ))
+    local buildPlatform = config.build.platform
+    local buildCeil = config.build.ceil
+    local buildWall = config.build.wall
     
     local c = arcs.count
     
@@ -165,7 +184,7 @@ mus.upstairsModels = function(config, arcs, pos, isBackward)
     local pos1 = isBackward and pos or pos + 1
     
     local steps = pipe.new
-        / buildWall(4.5, isBackward and function(i, lc, rc) return mus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s}) end or nil)(
+        / buildWall(fitModels.step.central, isBackward and function(i, lc, rc) return mus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s}) end or nil)(
             pos,
             models.stair.back,
             arcs.blockCoords.stairs.inner.lc[pos1],
@@ -177,14 +196,14 @@ mus.upstairsModels = function(config, arcs, pos, isBackward)
             models.stair.central,
             {arcs.blockCoords.stairs.inner.lc[pos0], arcs.blockCoords.stairs.inner.lc[pos1]},
             {arcs.blockCoords.stairs.inner.rc[pos0], arcs.blockCoords.stairs.inner.rc[pos1]}
-        )(buildPlatform(4.5, isBackward and function(i, lc, rc) return mus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s}) end) or nil)
+        )(buildPlatform(fitModels.step.central, isBackward and function(i, lc, rc) return mus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s}) end) or nil)
         +
         pipe.mapn(
             {pos, pos + 1},
             models.stair.inner,
             {arcs.blockCoords.stairs.inner.lc[pos0], arcs.blockCoords.stairs.inner.lc[pos1]},
             {arcs.blockCoords.stairs.inner.rc[pos0], arcs.blockCoords.stairs.inner.rc[pos1]}
-        )(buildPlatform(4.5, isBackward and function(i, lc, rc) return mus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s}) end) or nil)
+        )(buildPlatform(fitModels.step.central, isBackward and function(i, lc, rc) return mus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s}) end) or nil)
         +
         pipe.mapn(
             {pos, pos + 1},
@@ -193,7 +212,7 @@ mus.upstairsModels = function(config, arcs, pos, isBackward)
             {arcs.blockCoords.stairs.inner.lc[pos0], arcs.blockCoords.stairs.inner.lc[pos1]},
             {arcs.blockCoords.stairs.outer.rc[pos0], arcs.blockCoords.stairs.outer.rc[pos1]},
             {arcs.blockCoords.stairs.inner.rc[pos0], arcs.blockCoords.stairs.inner.rc[pos1]}
-        )(buildWall(0.25, function(i, loc, lic, roc, ric) return isBackward and mus.assembleSize({s = roc.i, i = roc.s}, {s = ric.i, i = ric.s}) or mus.assembleSize(loc, lic) end))
+        )(buildWall(fitModels.step.wall, function(i, loc, lic, roc, ric) return isBackward and mus.assembleSize({s = roc.i, i = roc.s}, {s = ric.i, i = ric.s}) or mus.assembleSize(loc, lic) end))
         +
         pipe.mapn(
             {pos, pos + 1},
@@ -202,30 +221,30 @@ mus.upstairsModels = function(config, arcs, pos, isBackward)
             {arcs.blockCoords.stairs.inner.lc[pos0], arcs.blockCoords.stairs.inner.lc[pos1]},
             {arcs.blockCoords.stairs.outer.rc[pos0], arcs.blockCoords.stairs.outer.rc[pos1]},
             {arcs.blockCoords.stairs.inner.rc[pos0], arcs.blockCoords.stairs.inner.rc[pos1]}
-        )(buildWall(0.25, function(i, loc, lic, roc, ric) return isBackward and mus.assembleSize({s = lic.i, i = lic.s}, {s = loc.i, i = loc.s}) or mus.assembleSize(ric, roc) end))
+        )(buildWall(fitModels.step.wall, function(i, loc, lic, roc, ric) return isBackward and mus.assembleSize({s = lic.i, i = lic.s}, {s = loc.i, i = loc.s}) or mus.assembleSize(ric, roc) end))
     
     local platforms = func.map({pos, pos + 1},
         function(pos)
             return pipe.new
-                + buildPlatform(1.7)(
+                + buildPlatform(fitModels.platform.side)(
                     pos,
                     models.platform.left,
                     arcs.blockCoords.platform.central.lc[pos],
                     arcs.blockCoords.stairs.outer.lc[pos]
                 )
-                + buildPlatform(1.7)(
+                + buildPlatform(fitModels.platform.side)(
                     pos,
                     models.platform.right,
                     arcs.blockCoords.stairs.outer.rc[pos],
                     arcs.blockCoords.platform.central.rc[pos]
                 )
-                + buildPlatform(0.8)(
+                + buildPlatform(fitModels.platform.edge)(
                     pos,
                     models.platform.edgeLeft,
                     arcs.blockCoords.platform.edge.lc[pos],
                     arcs.blockCoords.platform.central.lc[pos]
                 )
-                + buildPlatform(0.8)(
+                + buildPlatform(fitModels.platform.edge)(
                     pos,
                     models.platform.edgeRight,
                     arcs.blockCoords.platform.central.rc[pos],
@@ -241,25 +260,25 @@ mus.upstairsModels = function(config, arcs, pos, isBackward)
             models.ceil.edge
         )(function(pos, left, right, edge)
             return pipe.new
-                + buildCeil(1.7)(
+                + buildCeil(fitModels.ceil.side)(
                     pos,
                     left,
                     arcs.blockCoords.ceil.central.lc[pos],
                     arcs.blockCoords.stairs.outer.lc[pos]
                 )
-                + buildCeil(1.7)(
+                + buildCeil(fitModels.ceil.side)(
                     pos,
                     right,
                     arcs.blockCoords.stairs.outer.rc[pos],
                     arcs.blockCoords.ceil.central.rc[pos]
                 )
-                + buildCeil(0.8)(
+                + buildCeil(fitModels.ceil.edge)(
                     pos,
                     edge,
                     arcs.blockCoords.ceil.edge.lc[pos],
                     arcs.blockCoords.ceil.central.lc[pos]
                 )
-                + buildCeil(0.8, function(i, lc, rc) return mus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s}) end)(
+                + buildCeil(fitModels.ceil.edge, function(i, lc, rc) return mus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s}) end)(
                     pos,
                     edge,
                     arcs.blockCoords.ceil.central.rc[pos],
@@ -270,21 +289,21 @@ mus.upstairsModels = function(config, arcs, pos, isBackward)
     local tops =
         func.map({pos, pos + 1}, function(pos)
             return pipe.new
-                + buildCeil(5)(
+                + buildCeil(fitModels.top.central)(
                     pos,
                     models.top.central,
                     arcs.blockCoords.stairs.outer.lc[pos],
                     arcs.blockCoords.stairs.outer.rc[pos]
                 )
                 +
-                buildCeil(2.5)(
+                buildCeil(fitModels.top.side)(
                     pos,
                     models.top.left,
                     arcs.blockCoords.ceil.edge.lc[pos],
                     arcs.blockCoords.stairs.outer.lc[pos]
                 )
                 +
-                buildCeil(2.5)(
+                buildCeil(fitModels.top.side)(
                     pos,
                     models.top.right,
                     arcs.blockCoords.stairs.outer.rc[pos],
@@ -298,10 +317,8 @@ mus.upstairsModels = function(config, arcs, pos, isBackward)
 end
 
 mus.downstairsModels = function(config, arcs, pos, isBackward)
-    local tZ = coor.transZ(config.hPlatform - 1.4)-- model height = 1.93 - 1.4 -> 0.53 -> adjust model level to rail level
-    
-    local buildPlatform = mus.buildSurface(config, tZ)
-    local buildCeil = mus.buildSurface(config, coor.I())
+    local buildPlatform = config.build.platform
+    local buildCeil = config.build.ceil
     
     local models = {
         platform = {
@@ -334,21 +351,21 @@ mus.downstairsModels = function(config, arcs, pos, isBackward)
     }
     
     local steps = pipe.new +
-        buildPlatform(4.5, isBackward and function(i, lc, rc) return mus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s}) end or nil)(
+        buildPlatform(fitModels.step.central, isBackward and function(i, lc, rc) return mus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s}) end or nil)(
             pos,
             models.stair.central,
             arcs.blockCoords.stairs.inner.lc[pos],
             arcs.blockCoords.stairs.inner.rc[pos]
         )
         +
-        buildPlatform(4.5, isBackward and function(i, lc, rc) return mus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s}) end or nil)(
+        buildPlatform(fitModels.step.central, isBackward and function(i, lc, rc) return mus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s}) end or nil)(
             pos,
             models.stair.back,
             arcs.blockCoords.stairs.inner.lc[pos],
             arcs.blockCoords.stairs.inner.rc[pos]
         )
         +
-        buildPlatform(0.25,
+        buildPlatform(fitModels.step.wall,
             function(i, loc, lic, roc, ric) return isBackward and mus.assembleSize({s = roc.i, i = roc.s}, {s = ric.i, i = ric.s}) or mus.assembleSize(loc, lic) end)(
             pos,
             models.stair.left,
@@ -358,7 +375,7 @@ mus.downstairsModels = function(config, arcs, pos, isBackward)
             arcs.blockCoords.stairs.inner.rc[pos]
         )
         +
-        buildPlatform(0.25,
+        buildPlatform(fitModels.step.wall,
             function(i, loc, lic, roc, ric) return isBackward and mus.assembleSize({s = lic.i, i = lic.s}, {s = loc.i, i = loc.s}) or mus.assembleSize(ric, roc) end)(
             pos,
             models.stair.right,
@@ -368,77 +385,77 @@ mus.downstairsModels = function(config, arcs, pos, isBackward)
             arcs.blockCoords.stairs.inner.rc[pos]
     )
     local platforms = pipe.new
-        + buildPlatform(1.7)(
+        + buildPlatform(fitModels.platform.side)(
             pos,
             models.platform.left,
             arcs.blockCoords.platform.central.lc[pos],
             arcs.blockCoords.stairs.outer.lc[pos]
         )
-        + buildPlatform(1.7)(
+        + buildPlatform(fitModels.platform.side)(
             pos,
             models.platform.right,
             arcs.blockCoords.stairs.outer.rc[pos],
             arcs.blockCoords.platform.central.rc[pos]
         )
-        + buildPlatform(0.8)(
+        + buildPlatform(fitModels.platform.edge)(
             pos,
             models.platform.edgeLeft,
             arcs.blockCoords.platform.edge.lc[pos],
             arcs.blockCoords.platform.central.lc[pos]
         )
-        + buildPlatform(0.8)(
+        + buildPlatform(fitModels.platform.edge)(
             pos,
             models.platform.edgeRight,
             arcs.blockCoords.platform.central.rc[pos],
             arcs.blockCoords.platform.edge.rc[pos]
     )
     local ceils = pipe.new +
-        buildCeil(5)(
+        buildCeil(fitModels.ceil.central)(
             pos,
             models.ceil.central,
             arcs.blockCoords.stairs.outer.lc[pos],
             arcs.blockCoords.stairs.outer.rc[pos]
         )
-        + buildCeil(1.7)(
+        + buildCeil(fitModels.ceil.side)(
             pos,
             models.ceil.left,
             arcs.blockCoords.ceil.central.lc[pos],
             arcs.blockCoords.stairs.outer.lc[pos]
         )
-        + buildCeil(1.7)(
+        + buildCeil(fitModels.ceil.side)(
             pos,
             models.ceil.right,
             arcs.blockCoords.stairs.outer.rc[pos],
             arcs.blockCoords.ceil.central.rc[pos]
         )
-        + buildCeil(0.8)(
+        + buildCeil(fitModels.ceil.edge)(
             pos,
             models.ceil.edge,
             arcs.blockCoords.ceil.edge.lc[pos],
             arcs.blockCoords.ceil.central.lc[pos]
         )
-        + buildCeil(0.8, function(i, lc, rc) return mus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s}) end)(
+        + buildCeil(fitModels.ceil.edge, function(i, lc, rc) return mus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s}) end)(
             pos,
             models.ceil.edge,
             arcs.blockCoords.ceil.central.rc[pos],
             arcs.blockCoords.ceil.edge.rc[pos]
     )
     local tops = pipe.new +
-        buildCeil(5)(
+        buildCeil(fitModels.top.central)(
             pos,
             models.top.central,
             arcs.blockCoords.stairs.outer.lc[pos],
             arcs.blockCoords.stairs.outer.rc[pos]
         )
         +
-        buildCeil(2.5)(
+        buildCeil(fitModels.top.side)(
             pos,
             models.top.left,
             arcs.blockCoords.ceil.edge.lc[pos],
             arcs.blockCoords.stairs.outer.lc[pos]
         )
         +
-        buildCeil(2.5)(
+        buildCeil(fitModels.top.side)(
             pos,
             models.top.right,
             arcs.blockCoords.stairs.outer.rc[pos],
@@ -452,8 +469,8 @@ end
 mus.platformModels = function(config, arcs)
     local tZ = coor.transZ(config.hPlatform - 1.4)-- model height = 1.93 - 1.4 -> 0.53 -> adjust model level to rail level
     
-    local buildPlatform = mus.buildSurface(config, tZ)
-    local buildCeil = mus.buildSurface(config, coor.I())
+    local buildPlatform = config.build.platform
+    local buildCeil = config.build.ceil
     
     local c = arcs.count
     local cModels = 2 * c - 2
@@ -487,27 +504,27 @@ mus.platformModels = function(config, arcs)
             indices,
             models.platform.central,
             arcs.blockCoords.stairs.outer.lc, arcs.blockCoords.stairs.outer.rc
-        )(buildPlatform(5))
+        )(buildPlatform(fitModels.platform.central))
         + pipe.mapn(
             indices,
             models.platform.left,
             arcs.blockCoords.platform.central.lc, arcs.blockCoords.stairs.outer.lc
-        )(buildPlatform(1.7))
+        )(buildPlatform(fitModels.platform.side))
         + pipe.mapn(
             indices,
             models.platform.right,
             arcs.blockCoords.stairs.outer.rc, arcs.blockCoords.platform.central.rc
-        )(buildPlatform(1.7))
+        )(buildPlatform(fitModels.platform.side))
         + pipe.mapn(
             indices,
             models.platform.edgeLeft,
             arcs.blockCoords.platform.edge.lc, arcs.blockCoords.platform.central.lc
-        )(buildPlatform(0.8))
+        )(buildPlatform(fitModels.platform.edge))
         + pipe.mapn(
             indices,
             models.platform.edgeRight,
             arcs.blockCoords.platform.central.rc, arcs.blockCoords.platform.edge.rc
-        )(buildPlatform(0.8))
+        )(buildPlatform(fitModels.platform.edge))
     
     local ceils =
         pipe.new
@@ -515,44 +532,44 @@ mus.platformModels = function(config, arcs)
             indices,
             models.ceil.central,
             arcs.blockCoords.stairs.outer.lc, arcs.blockCoords.stairs.outer.rc
-        )(buildCeil(5))
+        )(buildCeil(fitModels.ceil.central))
         + pipe.mapn(
             indices,
             models.ceil.left,
             arcs.blockCoords.ceil.central.lc, arcs.blockCoords.stairs.outer.lc
-        )(buildCeil(1.8))
+        )(buildCeil(fitModels.ceil.side))
         + pipe.mapn(
             indices,
             models.ceil.right,
             arcs.blockCoords.stairs.outer.rc, arcs.blockCoords.ceil.central.rc
-        )(buildCeil(1.8))
+        )(buildCeil(fitModels.ceil.side))
         + pipe.mapn(
             indices,
             models.ceil.edge,
             arcs.blockCoords.ceil.edge.lc, arcs.blockCoords.ceil.central.lc
-        )(buildCeil(0.7))
+        )(buildCeil(fitModels.ceil.edge))
         + pipe.mapn(
             indices,
             models.ceil.edge,
             arcs.blockCoords.ceil.central.rc, arcs.blockCoords.ceil.edge.rc
-        )(buildCeil(0.7), function(i, lc, rc) return mus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s}) end)
+        )(buildCeil(fitModels.ceil.edge), function(i, lc, rc) return mus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s}) end)
     
     local tops = pipe.new
         + pipe.mapn(
             indices,
             models.top.central,
             arcs.blockCoords.stairs.outer.lc, arcs.blockCoords.stairs.outer.rc
-        )(buildCeil(5))
+        )(buildCeil(fitModels.top.central))
         + pipe.mapn(
             indices,
             models.top.left,
             arcs.blockCoords.ceil.edge.lc, arcs.blockCoords.stairs.outer.lc
-        )(buildCeil(2.5))
+        )(buildCeil(fitModels.top.side))
         + pipe.mapn(
             indices,
             models.top.right,
             arcs.blockCoords.stairs.outer.rc, arcs.blockCoords.ceil.edge.rc
-        )(buildCeil(2.5))
+        )(buildCeil(fitModels.top.side))
     
     local extremity = pipe.mapn(
         {

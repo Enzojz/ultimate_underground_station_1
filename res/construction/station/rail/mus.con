@@ -145,12 +145,13 @@ local makeConfig = function(params, transf)
     local modelType = mus.models({platform = params.floor + 1, wall = params.wall + 1})
     
     local trans, mr, _ = coor.decomposite(transf)
+    local refZ = hPlatform + 0.53
     return {
         isFinalized = params.isFinalized == 1,
-        fitModel = slope == 0 and mus.fitModel2D(depth + trans.z) or mus.fitModel,
+        fitModel = mus.fitModel,
         hPlatform = hPlatform,
         radius = radius,
-        refZ = hPlatform + 0.53,
+        refZ = refZ,
         slope = slope,
         models = modelType,
         depth = depth,
@@ -158,6 +159,11 @@ local makeConfig = function(params, transf)
         transf = {
             pt = transf * coor.transZ(depth),
             vec = mr
+        },
+        build = {
+            platform = mus.buildSurface(coor.transZ(-1.93)),
+            ceil = mus.buildSurface(coor.transZ(-refZ)),
+            wall = mus.buildSurface(coor.scaleZ(5 - refZ))
         }
     }
 end
@@ -223,7 +229,7 @@ local upgradeFn = function(params)
                 elseif params.modules[slotId].name == to then
                     table.insert(modules, {slotId, from})
                 else
-                    SwapModule(slotId, ...)
+                    SwapModule(...)
                 end
             end
         end
