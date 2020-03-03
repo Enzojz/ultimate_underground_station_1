@@ -3,7 +3,7 @@ local coor = require "entry/coor"
 local quat = require "entry/quaternion"
 local pipe = require "entry/pipe"
 local general = require "entry/general"
-
+local dump = require "luadump"
 local mus = require "mus"
 
 local math = math
@@ -13,7 +13,7 @@ local floor = math.floor
 
 mus.trackArcs = function(trackWidth)
     return function(config, arcRef)
-        local baseL, baseR, c = mus.biLatCoords(5)(arcRef(config.refZ)()(-trackWidth * 0.5), arcRef(config.refZ)()(trackWidth * 0.5))
+        local baseL, baseR, c = mus.biLatCoords(5)(arcRef()()(-trackWidth * 0.5), arcRef()()(trackWidth * 0.5))
         
         local coords = {
             ceil = {lc = {}, rc = {}, mc = {}, c = c},
@@ -39,9 +39,9 @@ mus.trackArcs = function(trackWidth)
             offset(0, coords.wall)
             offset(2, coords.terrain.low)
             
-            coords.terrain.high.lc[i] = coords.terrain.low.lc[i] + coor.xyz(0, 0, 8)
-            coords.terrain.high.rc[i] = coords.terrain.low.rc[i] + coor.xyz(0, 0, 8)
-            coords.terrain.high.mc[i] = coords.terrain.low.mc[i] + coor.xyz(0, 0, 8)
+            coords.terrain.high.lc[i] = coords.terrain.low.lc[i] + coor.xyz(0, 0, 9)
+            coords.terrain.high.rc[i] = coords.terrain.low.rc[i] + coor.xyz(0, 0, 9)
+            coords.terrain.high.mc[i] = coords.terrain.low.mc[i] + coor.xyz(0, 0, 9)
         end
         
         local function interlaceCoords(coords)
@@ -75,31 +75,25 @@ end
 
 
 mus.trackModels = function(config, arcs)
-    local fitModelCeil = config.fitModel(5, 5, 1.93, true, true)
-
-    local buildCeil = mus.buildSurface(coor.transZ(-config.refZ))
-    local ceilTop = pipe.rep(arcs.blockCount)(config.models.top.track.central)
-    
     return pipe.new
         * pipe.mapn(
             func.seq(1, arcs.blockCount),
-            ceilTop,
+            pipe.rep(arcs.blockCount)(config.models.top.track.central),
             arcs.blockCoords.ceil.lc, arcs.blockCoords.ceil.rc
-        )(buildCeil(fitModelCeil))
+        )(config.build.ceil(config.fitModels.track.top))
         * pipe.flatten()
 end
 
 mus.trackSideWallModels = function(config, arcRef, isLeft)
-    return func.map(
-        isLeft and arcRef.blockCoords.wall.lc or arcRef.blockCoords.wall.rc,
-        function(ic)
-            local vec = ic.i - ic.s
-            return general.newModel(config.models.wallTrack .. ".mdl",
-                coor.rotZ(isLeft and -0.5 * pi or 0.5 * pi),
-                coor.scaleX(vec:length() / 5),
-                quat.byVec(coor.xyz(5, 0, 0), vec):mRot(),
-                coor.trans(ic.s:avg(ic.i) + coor.xyz(0, 0, -config.refZ)))
-        end)
+    return pipe.mapn(
+        func.seq(1, arcRef.blockCount),
+        arcRef.blockCoords.wall.lc,
+        arcRef.blockCoords.wall.rc
+        )(
+        function(i, lc, rc)
+            local size = isLeft and mus.assembleSize(lc, rc) or mus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s})
+            return func.with(general.newModel(config.models.wallTrack .. ".mdl", coor.rotZ(pi), coor.transY(-2.5), config.fitModels.track.wall(size, true)), {pos = i})
+    end)
 end
 
 mus.trackSigns = function(config, arcs, isLeftmost, isRightmost)
@@ -128,8 +122,8 @@ mus.trackSigns = function(config, arcs, isLeftmost, isRightmost)
                 arcs.blockCoords.wall.rc
             )(function(i, lc, rc)
                 if (indicesN * pipe.contains(i)) then
-                    local transL = quat.byVec(coor.xyz(-1, 0, 0), lc.i - lc.s):mRot() * coor.trans((i < arcs.count and lc.s or lc.i) + transZ)
-                    local transR = quat.byVec(coor.xyz(1, 0, 0), rc.i - rc.s):mRot() * coor.trans((i < arcs.count and rc.s or rc.i) + transZ)
+                    local transL = quat.byVec(coor.xyz(-1, 0, 0), (lc.i - lc.s):withZ(0)):mRot() * coor.trans((i < arcs.count and lc.s or lc.i) + transZ)
+                    local transR = quat.byVec(coor.xyz(1, 0, 0), (rc.i - rc.s):withZ(0)):mRot() * coor.trans((i < arcs.count and rc.s or rc.i) + transZ)
                     return
                         pipe.new
                         / (isLeftmost and func.with(general.newModel("mus/signs/platform_signs_2.mdl", transL), {pos = i}) or nil)

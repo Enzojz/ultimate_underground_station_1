@@ -171,14 +171,51 @@ mus.assembleSize = function(lc, rc)
     }
 end
 
-mus.fitModel2D = function(zOffset)
-    return function(w, h, _, size, fitTop, fitLeft)
-        local s = {
-            coor.xyz(0, 0),
-            coor.xyz(fitLeft and w or -w, 0),
-            coor.xyz(0, fitTop and -h or h),
+local function mul(m1, m2)
+    local m = function(line, col)
+        local l = (line - 1) * 3
+        return m1[l + 1] * m2[col + 0] + m1[l + 2] * m2[col + 3] + m1[l + 3] * m2[col + 6]
+    end
+    return {
+        m(1, 1), m(1, 2), m(1, 3),
+        m(2, 1), m(2, 2), m(2, 3),
+        m(3, 1), m(3, 2), m(3, 3),
+    }
+end
+
+mus.fitModel2D = function(w, h, zOffset, fitTop, fitLeft)
+    local s = {
+        {
+            coor.xy(0, 0),
+            coor.xy(fitLeft and w or -w, 0),
+            coor.xy(0, fitTop and -h or h),
+        },
+        {
+            coor.xy(0, 0),
+            coor.xy(fitLeft and -w or w, 0),
+            coor.xy(0, fitTop and h or -h),
         }
-        
+    }
+    
+    local mX = func.map(s,
+        function(s) return {
+            {s[1].x, s[1].y, 1},
+            {s[2].x, s[2].y, 1},
+            {s[3].x, s[3].y, 1},
+        }
+        end)
+    
+    local mXI = func.map(mX, coor.inv3)
+    
+    local fitTop = {fitTop, not fitTop}
+    local fitLeft = {fitLeft, not fitLeft}
+
+    return function(size, mode)
+        local mXI = mXI[mode and 1 or 2]
+        local fitTop = fitTop[mode and 1 or 2]
+        local fitLeft = fitLeft[mode and 1 or 2]
+        local refZ = size.lt.z
+
         local t = fitTop and
             {
                 fitLeft and size.lt or size.rt,
@@ -190,39 +227,11 @@ mus.fitModel2D = function(zOffset)
                 fitLeft and size.lt or size.rt,
             }
         
-        local mX = {
-            {s[1].x, s[1].y, 1},
-            {s[2].x, s[2].y, 1},
-            {s[3].x, s[3].y, 1},
-        }
-        
         local mU = {
             t[1].x, t[1].y, 1,
             t[2].x, t[2].y, 1,
             t[3].x, t[3].y, 1,
         }
-        
-        local dX = coor.det(mX)
-        
-        local miX = coor.minor(mX)
-        local mXI = func.mapFlatten(func.seq(1, 3),
-            function(l)
-                return func.seqMap({1, 3}, function(c)
-                    return ((l + c) % 2 == 0 and 1 or -1) * coor.det(miX(c, l)) / dX
-                end)
-            end)
-        
-        local function mul(m1, m2)
-            local m = function(line, col)
-                local l = (line - 1) * 3
-                return m1[l + 1] * m2[col + 0] + m1[l + 2] * m2[col + 3] + m1[l + 3] * m2[col + 6]
-            end
-            return {
-                m(1, 1), m(1, 2), m(1, 3),
-                m(2, 1), m(2, 2), m(2, 3),
-                m(3, 1), m(3, 2), m(3, 3),
-            }
-        end
         
         local mXi = mul(mXI, mU)
         
@@ -231,7 +240,7 @@ mus.fitModel2D = function(zOffset)
             mXi[4], mXi[5], 0, mXi[6],
             0, 0, 1, 0,
             mXi[7], mXi[8], 0, mXi[9]
-        } * coor.transZ(zOffset)
+        } * coor.transZ(refZ)
     end
 end
 
@@ -265,7 +274,8 @@ mus.fitModel = function(w, h, d, fitTop, fitLeft)
     local fitTop = {fitTop, not fitTop}
     local fitLeft = {fitLeft, not fitLeft}
     
-    return function(size, mode)
+    return function(size, mode, z)
+        local z = z or d
         local mXI = mXI[mode and 1 or 2]
         local fitTop = fitTop[mode and 1 or 2]
         local fitLeft = fitLeft[mode and 1 or 2]
@@ -283,7 +293,7 @@ mus.fitModel = function(w, h, d, fitTop, fitLeft)
             t[1].x, t[1].y, t[1].z, 1,
             t[2].x, t[2].y, t[2].z, 1,
             t[3].x, t[3].y, t[3].z, 1,
-            t[1].x, t[1].y, t[1].z + d, 1
+            t[1].x, t[1].y, t[1].z + z, 1
         }
         
         return mXI * mU
@@ -301,8 +311,8 @@ mus.buildSurface = function(tZ)
             local sizeS = fnSize(i, ...)
             return s
                 and pipe.new
-                / func.with(general.newModel(s .. "_tl.mdl", tZ, fitModel(sizeS, true)), {pos = i})
-                / func.with(general.newModel(s .. "_br.mdl", tZ, fitModel(sizeS, false)), {pos = i})
+                / func.with(general.newModel(s .. "_tl.mdl", tZ and (tZ * fitModel(sizeS, true)) or fitModel(sizeS, true)), {pos = i})
+                / func.with(general.newModel(s .. "_br.mdl", tZ and (tZ * fitModel(sizeS, false)) or fitModel(sizeS, false)), {pos = i})
                 or pipe.new * {}
         end
     end

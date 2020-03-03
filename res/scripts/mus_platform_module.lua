@@ -82,9 +82,9 @@ local function fn(platformWidth, stairsWidth, desc, order, fakeTracks)
                             + withTag(linkings)
                             + (group.config.isFinalized and {} or withTag({general.newModel("mus/remove_helper.mdl", coor.rotX(math.pi * 0.5) * coor.scale(coor.xyz(3, 3, 1)) * coor.transZ(25) * transform)}))
                         
-                        if (group.config.isFinalized) then
+                        -- if (group.config.isFinalized) then
                             result.edgeLists = result.edgeLists / edges
-                        end
+                        -- end
                     end)
                 
                 group.terminalInfo[info.pos.x] = {

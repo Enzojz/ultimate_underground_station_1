@@ -146,9 +146,10 @@ local makeConfig = function(params, transf)
     
     local trans, mr, _ = coor.decomposite(transf)
     local refZ = hPlatform + 0.53
+    local fitModel = mus.fitModel
     return {
         isFinalized = params.isFinalized == 1,
-        fitModel = mus.fitModel,
+        fitModel = fitModel,
         hPlatform = hPlatform,
         radius = radius,
         refZ = refZ,
@@ -162,8 +163,33 @@ local makeConfig = function(params, transf)
         },
         build = {
             platform = mus.buildSurface(coor.transZ(-1.93)),
-            ceil = mus.buildSurface(coor.transZ(-refZ)),
+            ceil = mus.buildSurface(),
             wall = mus.buildSurface(coor.scaleZ(5 - refZ))
+        },
+        fitModels = {
+            platform = {
+                central = fitModel(5, 5, 1.93, true, true),
+                side = fitModel(1.7, 5, 1.93, true, true),
+                edge = fitModel(0.8, 5, 1.93, true, true),
+                wall = fitModel(5, 5, 1, true, true),
+            },
+            ceil = {
+                central = fitModel(5, 5, 5.4, true, true),
+                side = fitModel(1.8, 5, 5.4, true, true),
+                edge = fitModel(0.7, 5, 5.4, true, true)
+            },
+            top = {
+                central = fitModel(5, 5, 5.4, true, true),
+                side = fitModel(2.5, 5, 7.5, true, true)
+            },
+            step = {
+                central = fitModel(4.5, 5, 1.93, true, true),
+                wall = fitModel(0.25, 5, 1.93, true, true),
+            },
+            track = {
+                wall = fitModel(5, 5, 7.5, true, true),
+                top = fitModel(5, 5, 7.5, true, true)
+            }
         }
     }
 end
