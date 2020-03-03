@@ -146,7 +146,7 @@ local makeConfig = function(params, transf)
     
     local trans, mr, _ = coor.decomposite(transf)
     local refZ = hPlatform + 0.53
-    local fitModel = mus.fitModel
+    local fitModel = slope == 0 and mus.fitModel2D or mus.fitModel
     return {
         isFinalized = params.isFinalized == 1,
         fitModel = fitModel,

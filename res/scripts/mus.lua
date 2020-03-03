@@ -183,7 +183,7 @@ local function mul(m1, m2)
     }
 end
 
-mus.fitModel2D = function(w, h, zOffset, fitTop, fitLeft)
+mus.fitModel2D = function(w, h, d, fitTop, fitLeft)
     local s = {
         {
             coor.xy(0, 0),
@@ -210,7 +210,7 @@ mus.fitModel2D = function(w, h, zOffset, fitTop, fitLeft)
     local fitTop = {fitTop, not fitTop}
     local fitLeft = {fitLeft, not fitLeft}
 
-    return function(size, mode)
+    return function(size, mode, z)
         local mXI = mXI[mode and 1 or 2]
         local fitTop = fitTop[mode and 1 or 2]
         local fitLeft = fitLeft[mode and 1 or 2]
@@ -240,7 +240,7 @@ mus.fitModel2D = function(w, h, zOffset, fitTop, fitLeft)
             mXi[4], mXi[5], 0, mXi[6],
             0, 0, 1, 0,
             mXi[7], mXi[8], 0, mXi[9]
-        } * coor.transZ(refZ)
+        } * coor.scaleZ(z and (z / d) or 1) * coor.transZ(refZ)
     end
 end
 

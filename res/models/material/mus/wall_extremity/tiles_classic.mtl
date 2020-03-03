@@ -44,15 +44,15 @@ function data()
                 wrapT = "REPEAT"
             },
             map_op_1 = {
-                fileName = "models/mus/op/nz.dds",
+                fileName = "models/mus/op/uz.dds",
                 magFilter = "LINEAR",
                 minFilter = "LINEAR_MIPMAP_LINEAR"
             },
             operation_1 = {
                 mode = "NORMAL",
                 op = "MULTIPLICATION",
-                opacity = -512,
-                scale = { 0.5, 0.5 }
+                opacity = -256,
+                scale = { 2.5, 0.5 }
             },
             polygon_offset = { factor = 0, units = 0 },
             two_sided = { twoSided = false }
