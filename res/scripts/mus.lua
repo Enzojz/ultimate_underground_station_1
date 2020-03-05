@@ -304,6 +304,25 @@ mus.interlace = pipe.interlace({"s", "i"})
 
 mus.unitLane = function(f, t) return ((t - f):length2() > 1e-2 and (t - f):length2() < 562500) and general.newModel("mus/person_lane.mdl", general.mRot(t - f), coor.trans(f)) or nil end
 
+mus.stepLane = function(f, t)
+    local vec = t -f
+    local length = vec:length()
+    if (length > 750 or length < 0.1) then return {} end
+    local dZ = abs((f - t).z)
+    if (length > dZ * 3 or length < 5) then
+        return {general.newModel("mus/person_lane.mdl", general.mRot(vec), coor.trans(f))}
+    else
+        local hVec = vec:withZ(0) / 3
+        local fi = f + hVec
+        local ti = t - hVec
+        return {
+            general.newModel("mus/person_lane.mdl", general.mRot(fi - f), coor.trans(f)),
+            general.newModel("mus/person_lane.mdl", general.mRot(ti - fi), coor.trans(fi)),
+            general.newModel("mus/person_lane.mdl", general.mRot(t - ti), coor.trans(ti))
+        }
+    end
+end
+
 mus.buildSurface = function(tZ)
     return function(fitModel, fnSize)
         local fnSize = fnSize or function(_, lc, rc) return mus.assembleSize(lc, rc) end

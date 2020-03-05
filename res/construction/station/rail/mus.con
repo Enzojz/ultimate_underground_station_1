@@ -133,7 +133,7 @@ local function connectionNetwork(allConns)
     end
     
     local result = closestConnection(pipe.new / {index = 1}, measure, unpack(func.seq(2, #allConns)))
-    return result * pipe.filter(pipe.select("measure")) * pipe.map(function(r) return mus.unitLane(unpack(r.measure.pt)) end)
+    return result * pipe.filter(pipe.select("measure")) * pipe.map(function(r) return mus.stepLane(unpack(r.measure.pt)) end) * pipe.flatten()
 end
 
 local makeConfig = function(params, transf)
@@ -577,25 +577,25 @@ local updateFn = function(params)
                     * pipe.map(function(u)
                         local vec = result.entryConnectors[i][u] - allUpConn[j]
                         return {
-                            conn = mus.unitLane(result.entryConnectors[i][u], allUpConn[j]),
+                            conn = mus.stepLane(result.entryConnectors[i][u], allUpConn[j]),
                             distance = vec:length2(),
                             vec = vec:normalized(),
                             info = {i, u}
                         }
                     end)
+                    * pipe.filter(function(c) return #c.conn > 0 end)
                     * pipe.min(function(l, r) return l.distance < r.distance end)
             end
             dist = func.sort(dist, function(l, r) return l.distance < r.distance end)
             if (#dist == 1) then
-                table.insert(result.models, dist[1].conn)
+                result.models = result.models + dist[1].conn 
             elseif (#dist > 1) then
                 local vecl = dist[1].vec
                 local vecr = dist[2].vec
                 if (vecl:cross(vecr).z > 0.5) then
-                    table.insert(result.models, dist[1].conn)
-                    table.insert(result.models, dist[2].conn)
+                    result.models = result.models + dist[2].conn + dist[2].conn
                 else
-                    table.insert(result.models, dist[1].conn)
+                    result.models = result.models + dist[1].conn 
                 end
             end
         end

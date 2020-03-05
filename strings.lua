@@ -4,10 +4,16 @@ This mod requires the following mods to work:
 * Shader Enhancement mod
 * Underpass mod
 
-To build a station, you need follow three steps
+To build a station:
 1. Build at least one underground level
 2. Build an entry nearby
 3. Follow the instruction on the screen to finish the construction
+
+To add new parts to a built station:
+1. Place an entry or a new underground level
+2. Select the underground station you want to modify
+3. Check the checkbox before the built station
+4. Follow the instruction on the screen to finish the construction
 
 This mod is a total reworked mod of Transport Fever Ultimate Underground Station, with generally the same resource the main new features are:
 - It's modular, though not in vanilla mode, you can place different tracks and different platforms as modules, as well as stairs. I didn't choose the vanilla way since in real life, underground station are always regular.
@@ -25,6 +31,7 @@ Changelog:
 - Correction of UV mapping
 - Ability to add new platform levels or entry on finished station (Underpass 1.3)
 - Remastered icons
+- Improved the way to generate internal connection 
 1.3
 - Fixed a potential crash bug on game loading
 1.2
@@ -65,6 +72,12 @@ local descCN = [[本MOD提供建造形式丰富的地下车站的可能。
 2. 建造至少一个车站入口
 3. 按照屏幕上的指示完成车站的建造
 
+如果想在已建造完成的地下车站上添加新的入口和站台层：
+1. 选择已经建造好的车站
+2. 在地图上放置新的入口和站台层
+3. 在建造对话框中勾选已建造好的车站
+4. 按照屏幕上的指示完成车站的建造
+
 本MOD是使用原Transport Fever的终极地下车站MOD的资源重新制作，有以下新特性：
 - 模块化建造，因为现实中地下车站的结构都比较规整的原因，没有采用原装车站式的模块化，但是玩家可以以模块化的方式布置站台和股道结构，并且以零件的方式在站台上设置楼梯。
 - 有一个互动式的窗口指引你完成车站的建造
@@ -74,11 +87,17 @@ local descCN = [[本MOD提供建造形式丰富的地下车站的可能。
 本MOD目前可能还有很多Bug，有一些功能还在完善中，之后还会陆续有更新完善功能和修正错误。
 
 武汉加油！
-湖北加油！
-中国加油！
-人类一定可以战胜病魔！
+愿人类战胜病毒！
 
 更新日志:
+1.4
+- 优化多边形生成算法
+- 纠正了楼梯附近站台天花板的多边形生成错误
+- 纠正了坡道站台上的墙面倾斜的错误
+- 纠正了一些UV映射
+- 增加了在已经完成的车站上新增站厅和入口的功能（需要将过街地道升级为1.3版本）
+- 重制了图标
+- 改进了内部连接道路的生成方式
 1.3
 - 修正了一可能的奔溃
 1.2
@@ -96,9 +115,9 @@ local descCN = [[本MOD提供建造形式丰富的地下车站的可能。
 - 实现了轨道升级功能
 ]]
 
-local descTC = [[本模組提供建造形式豐富的地下車站之可能。
+local descTC = [[本MOD提供建造形式豐富的地下車站的可能。
 
-本模組需要以下模組之支援方可正常使用：
+本MOD需要以下MOD的支援才能正常使用：
 * 著色器增強
 * 人行地道
 
@@ -107,23 +126,32 @@ local descTC = [[本模組提供建造形式豐富的地下車站之可能。
 2. 建造至少一個車站入口
 3. 按照螢幕上的指示完成車站的建造
 
-本模組是使用原Transport Fever的“終極地下車站”模組的資源重新製作，有以下新特性：
+如果想在已建造完成的地下車站上添加新的入口和月臺層：
+1. 選擇已經建造好的車站
+2. 在地圖上放置新的入口和月臺層
+3. 在建造對話方塊中勾選已建造好的車站
+4. 按照螢幕上的指示完成車站的建造
+
+本MOD是使用原Transport Fever的終極地下車站MOD的資源重新製作，有以下新特性：
 - 模組化建造，因為現實中地下車站的結構都比較規整的原因，沒有採用原裝車站式的模組化，但是玩家可以以模組化的方式佈置月臺和股道結構，並且以零件的方式在月臺上設置樓梯。
-- 有一個互動式的視窗指引你完成車站之建造
+- 有一個互動式的視窗指引你完成車站的建造
 - 更豐富的半徑和月臺數量組合
 - 使用了新版遊戲下的月臺文字系統
 
-本模組目前可能還有很多Bug，有一些功能還在完善中，之後還會陸續有更新完善功能和修正錯誤。
+本MOD目前可能還有很多Bug，有一些功能還在完善中，之後還會陸續有更新完善功能和修正錯誤。
 
 武漢加油！
-湖北加油！
-中國加油！
-人類一定可以戰勝病魔！
-
-致臺港澳同胞，所有華人：
-不管您政治立場如何，都改變不了我們是炎黃子孫之事實。瘟疫無邊界，覆巢之下，焉有完卵？值此寒冬，願唯齊心協力，共同與病毒抗爭！
+願人類戰勝病毒！
 
 更新日誌:
+1.4
+- 優化多邊形生成演算法
+- 糾正了樓梯附近月臺天花板的多邊形生成錯誤
+- 糾正了坡道月臺上的牆面傾斜的錯誤
+- 糾正了一些UV映射
+- 增加了在已經完成的車站上新增站廳和入口的功能（需要將過街地道升級為1.3版本）
+- 重制了圖示
+- 改進了內部連接道路的生成方式
 1.3
 - 修正了一可能的奔潰
 1.2
@@ -226,19 +254,19 @@ you will not be able to build up station and get correct rendering without eithe
         },
         zh_TW = {
             ["name"] = "地下車站",
-            ["desc"] = descTC,            
+            ["desc"] = descTC,
             ["MENU_FLOOR_STYLE"] = "月臺地面花紋",
             ["MENU_WALL"] = "側牆花紋",
             ["MENU_RADIUS"] = "曲線半徑(米)",
             ["MENU_PLATFORM_LENGTH"] = "月臺長度(米)",
             ["MENU_PLATFORM_HEIGHT"] = "月臺高度(毫米)",
             ["MENU_SLOPE"] = "月臺坡度(‰)",
-            ["MENU_TRACK_NR"] = "股道數",            
+            ["MENU_TRACK_NR"] = "股道數",
             ["MENU_TRACK_CAT"] = "電氣化股道",
             ["MENU_TRACK_HS"] = "高速鐵路",
             ["MENU_PLATFORM_LEFT"] = "最左側有月臺",
             ["MENU_PLATFORM_RIGHT"] = "最右側有月臺",
-            ["MENU_FORCE_USE"] = "直接使用",            
+            ["MENU_FORCE_USE"] = "直接使用",
             ["MENU_PLATFORM_WIDTH"] = "月臺寬度(米)",
             ["MENU_PLATFORM_5_NAME"] = "5米寬月臺",
             ["MENU_PLATFORM_5_DESC"] = "5米寬的地下車站月臺",
@@ -260,7 +288,7 @@ you will not be able to build up station and get correct rendering without eithe
             ["MENU_UPSTAIRS_DESC"] = "通往上層或車站入口的樓梯",
             ["MENU_DOWNSTAIRS_NAME"] = "降梯", 
             ["MENU_DOWNSTAIRS_DESC"] = "通往下層的樓梯",
-            ["UNDERPASS_WARNING"] = [["地下車站模組需要“人行地道”和“著色器增強”模組方可使用，否則將無法正確渲染和建造車站。]],
+            ["UNDERPASS_WARNING"] = [["地下車站模組需要“人行地道”和“著色器增強”模組方可使用，否則將無法正確渲染和建造車站。]]
         }
     }
     return profile
