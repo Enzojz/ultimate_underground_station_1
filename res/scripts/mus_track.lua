@@ -3,7 +3,7 @@ local coor = require "entry/coor"
 local quat = require "entry/quaternion"
 local pipe = require "entry/pipe"
 local general = require "entry/general"
-local dump = require "luadump"
+-- local dump = require "luadump"
 local mus = require "mus"
 
 local math = math

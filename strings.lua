@@ -18,6 +18,13 @@ This mod is a total reworked mod of Transport Fever Ultimate Underground Station
 This mod is still in evolution, maybe with some bugs, I will do some updates and bugfixes after the release.
 
 Changelog:
+1.4
+- Optimization of polygon calculation algorithm
+- Correction of polygon calculation of the ceil near to upstairs
+- Correction of inclined walls on sloped platforms
+- Correction of UV mapping
+- Ability to add new platform levels or entry on finished station (Underpass 1.3)
+- Remastered icons
 1.3
 - Fixed a potential crash bug on game loading
 1.2
