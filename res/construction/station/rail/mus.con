@@ -593,7 +593,7 @@ local updateFn = function(params)
                 local vecl = dist[1].vec
                 local vecr = dist[2].vec
                 if (vecl:cross(vecr).z > 0.5) then
-                    result.models = result.models + dist[2].conn + dist[2].conn
+                    result.models = result.models + dist[1].conn + dist[2].conn
                 else
                     result.models = result.models + dist[1].conn 
                 end
