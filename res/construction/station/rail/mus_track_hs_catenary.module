@@ -1,9 +1,0 @@
-local fn = require "mus_track_module"
-local desc = {
-    name = _("MENU_TR_HS_CAT_NAME"),
-    description = _("MENU_TR_HS_CAT_DESC"),
-    icon = "ui/construction/station/rail/modular_station/high_speed_catenary.tga"
-}
-
-local trackWidth = 5
-data = fn(trackWidth, "high_speed.lua", true, desc, 4)

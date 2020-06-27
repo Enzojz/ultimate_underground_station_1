@@ -217,6 +217,8 @@ you will not be able to build up station and get correct rendering without eithe
         zh_CN = {
             ["name"] = "地下车站",
             ["desc"] = descCN,
+            ["MENU_NAME"] = "地下车站",
+            ["MENU_DESC"] = "可以修改站台宽度和半径的单层地下车站站厅",
             ["MENU_FLOOR_STYLE"] = "站台地面花纹",
             ["MENU_WALL"] = "侧墙花纹",
             ["MENU_RADIUS"] = "曲线半径(米)",
@@ -254,7 +256,9 @@ you will not be able to build up station and get correct rendering without eithe
         },
         zh_TW = {
             ["name"] = "地下車站",
-            ["desc"] = descTC,
+            ["desc"] = descTC,           
+            ["MENU_NAME"] = "地下車站",
+            ["MENU_DESC"] = "可以修改月臺寬度和半徑的單層地下車站站廳",
             ["MENU_FLOOR_STYLE"] = "月臺地面花紋",
             ["MENU_WALL"] = "側牆花紋",
             ["MENU_RADIUS"] = "曲線半徑(米)",

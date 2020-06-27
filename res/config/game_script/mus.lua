@@ -33,13 +33,13 @@ end
 
 local script = {
     guiHandleEvent = function(id, name, param)
+        entryWarning()
         if name == "builder.apply" then
             local toAdd = param.proposal.toAdd
             if toAdd and #toAdd > 0 then
                 for i = 1, #toAdd do
                     local con = toAdd[i]
                     if (con.fileName == [[station/rail/mus.con]]) then
-                        entryWarning()
                         if(con.params.isFinalized == 0) then
                             game.interface.sendScriptEvent("__underpassEvent__", "new", {id = param.result[1], isStation = true})
                         end
