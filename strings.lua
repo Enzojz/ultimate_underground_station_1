@@ -24,6 +24,12 @@ This mod is a total reworked mod of Transport Fever Ultimate Underground Station
 This mod is still in evolution, maybe with some bugs, I will do some updates and bugfixes after the release.
 
 Changelog:
+1.5
+- Adaptation to new API
+- Support to mod tracks
+- Support to cargo station merge
+- Support to 3rd party entry
+- Improved GUI (c.f Underpass)
 1.4
 - Optimization of polygon calculation algorithm
 - Correction of polygon calculation of the ceil near to upstairs
@@ -48,18 +54,7 @@ Changelog:
 - Possible to modify station parameter after finish building for case of only one platform level
 - Implementation of track upgrade function
 
-----------------------------------------------------------------------
-
-I am Chinese, living in Europe. My motherland is suffering the pandemic caused by the "Novel Coronavirus" 2019-nCov, several tens of thousands of people are contaminated in weeks and hundreds of people died. We are fighting against the virus and we believe that we will win. I pay my highest respect to these who are working hard to save the people. I pay also my highest respect to all the people, healthy or ill, who is confining themselves at home to avoid the propagation of virus. 
-
-However, we are NOT virus ourselves, and the virus is NOT called "Chinese virus", these attacks on Chinese just because of our face or because we have masks on the face -- are not justified.
-We are on the same earth, we are on the same boat, if you want to protect yourself and protect others, you should put the mask on, wash your hand frequently, but never attack on innocent people, the virus doesn't hold a nationality, and the violence does not contribute to killing virus.
-
-Keep fighting, Wuhan!
-Keep fighting, Hubei!
-Keep fighting, China!
-Keep fighting, all suffered from Novel Coronavirus!
-]]
+Stay strong and united before COVID-19!]]
 
 local descCN = [[本MOD提供建造形式丰富的地下车站的可能。
 
@@ -86,10 +81,13 @@ local descCN = [[本MOD提供建造形式丰富的地下车站的可能。
 
 本MOD目前可能还有很多Bug，有一些功能还在完善中，之后还会陆续有更新完善功能和修正错误。
 
-武汉加油！
-愿人类战胜病毒！
-
 更新日志:
+1.5
+- 适配新API
+- 支持模组轨道
+- 支持和货运地下车站合并
+- 支持模组入口
+- 改进了用户界面 (见过街地道)
 1.4
 - 优化多边形生成算法
 - 纠正了楼梯附近站台天花板的多边形生成错误
@@ -140,10 +138,13 @@ local descTC = [[本MOD提供建造形式豐富的地下車站的可能。
 
 本MOD目前可能還有很多Bug，有一些功能還在完善中，之後還會陸續有更新完善功能和修正錯誤。
 
-武漢加油！
-願人類戰勝病毒！
-
 更新日誌:
+1.5
+- 適配新API
+- 支持模組軌道
+- 支持和貨運地下車站合併
+- 支持模組入口
+- 改進了使用者介面 (見過街地道)
 1.4
 - 優化多邊形生成演算法
 - 糾正了樓梯附近月臺天花板的多邊形生成錯誤

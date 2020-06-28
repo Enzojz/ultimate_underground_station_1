@@ -3,6 +3,8 @@ local coor = require "entry/coor"
 local arc = require "mus/coorarc"
 local general = require "entry/general"
 local pipe = require "entry/pipe"
+local musm = require "mus_menu"
+-- local dump = require "luadump"
 
 local mus = {}
 
@@ -12,6 +14,7 @@ local abs = math.abs
 local ceil = math.ceil
 local floor = math.floor
 local unpack = table.unpack
+local min = math.min
 
 local segmentLength = 20
 
@@ -459,6 +462,58 @@ mus.terrain = function(config, ref)
         return pipe.new / size.lt / size.lb / size.rb / size.rt * pipe.map(coor.vec2Tuple)
     end)
 end
+
+
+local makeLayout = function(totalTracks, ignoreFst, ignoreLst)
+    local function makeLayout(nbTracks, result)
+        local p = false
+        local t = true
+        if (nbTracks == 0) then
+            local result = ignoreLst and result or (result[#result] and (result / p) or result)
+            return result
+        elseif (nbTracks == totalTracks and ignoreFst) then
+            return makeLayout(nbTracks - 1, result / t)
+        elseif (nbTracks == totalTracks and not ignoreFst) then
+            return makeLayout(nbTracks - 1, result / p / t)
+        elseif (nbTracks == 1 and ignoreLst) then
+            return makeLayout(nbTracks - 1, ((not result) or result[#result]) and (result / p / t) or (result / t))
+        elseif (nbTracks == 1 and not ignoreLst) then
+            return makeLayout(nbTracks - 1, result / t / p)
+        elseif (result[#result] == t) then
+            return makeLayout(nbTracks - 2, result / t / p / t)
+        else
+            return makeLayout(nbTracks - 1, result / t)
+        end
+    end
+    return makeLayout(totalTracks, pipe.new)
+end
+
+mus.createTemplateFn = function(params)
+    local radius = musm.rList[params.radius + 1] * 1000
+    local length = min(musm.trackLengths[params.lPlatform + 1], abs(radius * pi * 1.5))
+    
+    local nbTracks = musm.trackNumberList[params.trackNb + 1]
+    local layout = makeLayout(nbTracks, params.platformLeft == 0, params.platformRight == 0)
+    local midPos = ceil(#layout / 2)
+    local nSeg = length / 5
+    local stair = floor(nSeg / 4)
+    local result = {}
+    local trackType = musm.trackTypeList[(params.catenary) + (params.highspeed) * 2 + 1]
+    local platformType = musm.platformWidthList[(params.platformWidth) + 1]
+    for i, t in ipairs(layout) do
+        if t then
+            result[(i - midPos >= 0 and i or 1000 + i) - midPos] = trackType
+        else
+            local slot = (i - midPos >= 0 and i or 1000 + i) + 1000 - midPos
+            result[slot] = platformType
+            result[slot + 2000 + stair * 100000] = "station/rail/mus_platform_upstair.module"
+            result[slot + 2000 + (stair + 1) * 100000] = "station/rail/mus_platform_upstair.module"
+        end
+    end
+    
+    return result
+end
+
 
 mus.safeBuild = function(params, updateFn)
     local defaultParams = mus.defaultParams(params)

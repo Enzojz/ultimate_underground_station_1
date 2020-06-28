@@ -34,14 +34,27 @@ end
 local script = {
     guiHandleEvent = function(id, name, param)
         entryWarning()
-        if name == "builder.apply" then
-            local toAdd = param.proposal.toAdd
-            if toAdd and #toAdd > 0 then
-                for i = 1, #toAdd do
-                    local con = toAdd[i]
-                    if (con.fileName == [[station/rail/mus.con]]) then
-                        if(con.params.isFinalized == 0) then
-                            game.interface.sendScriptEvent("__underpassEvent__", "new", {id = param.result[1], isStation = true})
+        if id == "constructionBuilder" then
+            -- if name == "builder.proposalCreate" then
+            --     local toAdd = param.proposal.toAdd
+            --     if toAdd and #toAdd == 1 then
+            --         local con = toAdd[1]
+            --         if (con.fileName == [[station/rail/mus.con]]) then
+            --             local menu = api.gui.util.getById("menu.construction.rail.settings")
+            --             local menuLayout = menu:getLayout()
+            --             local tr = menuLayout:getItem(8)
+            --         end
+            --     end
+            -- else
+            if name == "builder.apply" then
+                local toAdd = param.proposal.toAdd
+                if toAdd and #toAdd > 0 then
+                    for i = 1, #toAdd do
+                        local con = toAdd[i]
+                        if (con.fileName == [[station/rail/mus.con]]) then
+                            if (con.params.isFinalized == 0) then
+                                game.interface.sendScriptEvent("__underpassEvent__", "new", {id = param.result[1], isStation = true})
+                            end
                         end
                     end
                 end

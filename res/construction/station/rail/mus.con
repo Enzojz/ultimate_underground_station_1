@@ -4,6 +4,7 @@ local pipe = require "entry/pipe"
 local mus = require "mus"
 local musm = require "mus_menu"
 -- local dump = require "luadump"
+
 local ma = math
 local abs = ma.abs
 local ceil = ma.ceil
@@ -192,56 +193,6 @@ local makeConfig = function(params, transf)
             }
         }
     }
-end
-
-local makeLayout = function(totalTracks, ignoreFst, ignoreLst)
-    local function makeLayout(nbTracks, result)
-        local p = false
-        local t = true
-        if (nbTracks == 0) then
-            local result = ignoreLst and result or (result[#result] and (result / p) or result)
-            return result
-        elseif (nbTracks == totalTracks and ignoreFst) then
-            return makeLayout(nbTracks - 1, result / t)
-        elseif (nbTracks == totalTracks and not ignoreFst) then
-            return makeLayout(nbTracks - 1, result / p / t)
-        elseif (nbTracks == 1 and ignoreLst) then
-            return makeLayout(nbTracks - 1, ((not result) or result[#result]) and (result / p / t) or (result / t))
-        elseif (nbTracks == 1 and not ignoreLst) then
-            return makeLayout(nbTracks - 1, result / t / p)
-        elseif (result[#result] == t) then
-            return makeLayout(nbTracks - 2, result / t / p / t)
-        else
-            return makeLayout(nbTracks - 1, result / t)
-        end
-    end
-    return makeLayout(totalTracks, pipe.new)
-end
-
-local createTemplateFn = function(params)
-    local radius = musm.rList[params.radius + 1] * 1000
-    local length = min(musm.trackLengths[params.lPlatform + 1], abs(radius * pi * 1.5))
-    
-    local nbTracks = musm.trackNumberList[params.trackNb + 1]
-    local layout = makeLayout(nbTracks, params.platformLeft == 0, params.platformRight == 0)
-    local midPos = ceil(#layout / 2)
-    local nSeg = length / 5
-    local stair = floor(nSeg / 4)
-    local result = {}
-    local trackType = musm.trackTypeList[(params.catenary) + (params.highspeed) * 2 + 1]
-    local platformType = musm.platformWidthList[(params.platformWidth) + 1]
-    for i, t in ipairs(layout) do
-        if t then
-            result[(i - midPos >= 0 and i or 1000 + i) - midPos] = trackType
-        else
-            local slot = (i - midPos >= 0 and i or 1000 + i) + 1000 - midPos
-            result[slot] = platformType
-            result[slot + 2000 + stair * 100000] = "station/rail/mus_platform_upstair.module"
-            result[slot + 2000 + (stair + 1) * 100000] = "station/rail/mus_platform_upstair.module"
-        end
-    end
-    
-    return result
 end
 
 local upgradeFn = function(params)
@@ -474,6 +425,7 @@ local updateFn = function(params)
         
         local connectors = pipe.new * {}
         
+        local terminalTypes = {}
         for _, g in pairs(result.group) do
             local modules = g.modules
             local posSeq = pipe.new * func.seq(func.min(g.allPos), func.max(g.allPos))
@@ -487,6 +439,7 @@ local updateFn = function(params)
                             function()
                                 if (modules[pos - 1] and modules[pos - 1].metadata.isPlatform) then
                                     local node = g.terminalInfo[pos] + 7
+                                    local tType = g.terminalInfo[pos - 1][2][3]
                                     result.terminalGroups[#result.terminalGroups + 1] = {
                                         callbacks = {},
                                         terminals = func.seqMap(g.terminalInfo[pos - 1][2], function(t) return {t, 0} end),
@@ -494,6 +447,8 @@ local updateFn = function(params)
                                         vehicleNodeOverrideList = {node},
                                         vehicleNodeOverrideListCenter = {node + 3}
                                     }
+                                    if not terminalTypes[tType] then terminalTypes[tType] = {} end
+                                    table.insert(terminalTypes[tType], #result.terminalGroups - 1)
                                     if signNrList[pos - 1] then
                                         local nr = tostring(#result.terminalGroups)
                                         for _, s in ipairs(signNrList[pos - 1].right) do
@@ -505,6 +460,7 @@ local updateFn = function(params)
                             function()
                                 if (modules[pos + 1] and modules[pos + 1].metadata.isPlatform) then
                                     local node = g.terminalInfo[pos] + 1
+                                    local tType = g.terminalInfo[pos + 1][1][3]
                                     result.terminalGroups[#result.terminalGroups + 1] = {
                                         callbacks = {},
                                         terminals = func.seqMap(g.terminalInfo[pos + 1][1], function(t) return {t, 0} end),
@@ -512,6 +468,8 @@ local updateFn = function(params)
                                         vehicleNodeOverrideList = {node},
                                         vehicleNodeOverrideListCenter = {node + 3}
                                     }
+                                    if not terminalTypes[tType] then terminalTypes[tType] = {} end
+                                    table.insert(terminalTypes[tType], #result.terminalGroups - 1)
                                     if signNrList[pos + 1] then
                                         local nr = tostring(#result.terminalGroups)
                                         for _, s in ipairs(signNrList[pos + 1].left) do
@@ -542,7 +500,15 @@ local updateFn = function(params)
                     end
                 end
             end
-            
+
+            result.stations = {}
+            for _, t in pairs(terminalTypes) do
+                result.stations[#result.stations + 1] = {
+                    terminals = t,
+                    tag = #result.stations + 1
+                }
+            end
+
             result.models = result.models * pipe.filter(function(m) return (not m.isNrLeft and not m.isNrRight) or m.nr end)
             
             for i, m in ipairs(result.models) do
@@ -568,6 +534,7 @@ local updateFn = function(params)
         
         local allUpConn = connectors * pipe.flatten() * pipe.filter(function(c) return c.up end)
         local entrySide = {}
+        result.entryConnectors = func.map(result.entryConnectors, pipe.map(function(c) return coor.xyz(c.x, c.y, c.z) end))
         for i = 1, #result.entryConnectors do
             entrySide[i] = {false, false}
             local dist = {}
@@ -684,7 +651,7 @@ function data()
         },
         order = 1000,
         constructionTemplates = constructionTemplates,
-        createTemplateFn = createTemplateFn,
+        createTemplateFn = mus.createTemplateFn,
         params = params(),
         upgradeFn = upgradeFn,
         updateFn = updateFn

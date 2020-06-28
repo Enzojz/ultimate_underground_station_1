@@ -88,8 +88,8 @@ local function fn(platformWidth, stairsWidth, desc, order, fakeTracks)
                     end)
                 
                 group.terminalInfo[info.pos.x] = {
-                    {#result.models, #result.models + terminalCounts - 1},
-                    {#result.models + terminalCounts, #result.models + terminalCounts + terminalCounts - 1},
+                    {#result.models, #result.models + terminalCounts - 1, "passenger"},
+                    {#result.models + terminalCounts, #result.models + terminalCounts + terminalCounts - 1, "passenger"},
                 }
                 
                 result.models = result.models

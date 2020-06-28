@@ -1,4 +1,6 @@
-﻿local trackIndices = {
+﻿-- local dump = require "luadump"
+
+local trackIndices = {
     ["standard.lua"] = "mus_track_std",
     ["high_speed.lua"] = "mus_track_hs",
 }
@@ -6,7 +8,7 @@
 function data()
     return {
         info = {
-            minorVersion = 4,
+            minorVersion = 5,
             severityAdd = "NONE",
             severityRemove = "CRITICAL",
             name = _("name"),
@@ -63,11 +65,12 @@ function data()
                     api.res.moduleRep.add(mod.fileName, mod, true)
                 end
             end
-            
+
+            -- con.createTemplateScript.params[#con.createTemplateScript.params + 1] = newParams
             -- local streets = api.res.streetTypeRep.getAll()
             -- for __, streetName in pairs(streets) do
             --     local street = api.res.streetTypeRep.get(api.res.streetTypeRep.find(streetName))
-            --     if (#street.categories > 0 and not streetName:match("street_depot/") and not streetName:match("street_station/")) then
+            --     if (street.sidewalkWidth == 0 and #street.categories > 0 and not streetName:match("street_depot/") and not streetName:match("street_station/")) then
             --         local nBackward = 0
             --         for i = 1, #street.laneConfigs do
             --             if (street.laneConfigs[i].forward == false) then nBackward = nBackward + 1 end
