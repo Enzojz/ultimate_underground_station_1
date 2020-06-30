@@ -2,6 +2,8 @@ local state = {
     warningShaderMod = false
 }
 
+local dump = require "luadump"
+
 local entryWarning = function()
     if (not (game.config.underpassMod and game.config.shaderMod)) then
         if not state.warningShaderMod then
@@ -35,18 +37,28 @@ local script = {
     guiHandleEvent = function(id, name, param)
         entryWarning()
         if id == "constructionBuilder" then
-            -- if name == "builder.proposalCreate" then
-            --     local toAdd = param.proposal.toAdd
-            --     if toAdd and #toAdd == 1 then
-            --         local con = toAdd[1]
-            --         if (con.fileName == [[station/rail/mus.con]]) then
-            --             local menu = api.gui.util.getById("menu.construction.rail.settings")
-            --             local menuLayout = menu:getLayout()
-            --             local tr = menuLayout:getItem(8)
-            --         end
-            --     end
-            -- else
-            if name == "builder.apply" then
+            if name == "builder.proposalCreate" then
+                local toAdd = param.proposal.toAdd
+                if toAdd and #toAdd == 1 then
+                    local con = toAdd[1]
+                    if (con.fileName == [[station/rail/mus.con]]) then
+                        if not api.gui.util.getById("mus.menu.img") then
+                            local trackIconList = api.res.constructionRep.get(api.res.constructionRep.find("station/rail/mus.con_a")).createTemplateScript.params.trackIconList
+                            local menu = api.gui.util.getById("menu.construction.rail.settings")
+                            local menuLayout = menu:getLayout()
+                            local tr = menuLayout:getItem(8)
+                            local layout = tr:getLayout()
+                            local cbox = layout:getItem(1)
+                            local img = api.gui.comp.ImageView.new(trackIconList[cbox:getCurrentIndex() + 1])
+                            img:setId("mus.menu.img")
+                            layout:addItem(img)
+                            layout:removeItem(cbox)
+                            layout:addItem(cbox)
+                            cbox:onIndexChanged(function(i) img:setImage(trackIconList[i + 1], false) end)
+                        end
+                    end
+                end
+            elseif name == "builder.apply" then
                 local toAdd = param.proposal.toAdd
                 if toAdd and #toAdd > 0 then
                     for i = 1, #toAdd do
