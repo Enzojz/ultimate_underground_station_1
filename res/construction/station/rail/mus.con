@@ -198,27 +198,27 @@ end
 local upgradeFn = function(params)
     local modules = {}
     local slotId = params.slotId
-    if params.modules[slotId] then
-        local function SwapModule(from, to, ...)
-            if (from and to) then
-                if params.modules[slotId].name == from then
-                    table.insert(modules, {slotId, to})
-                elseif params.modules[slotId].name == to then
-                    table.insert(modules, {slotId, from})
-                else
-                    SwapModule(...)
+    if params.modules[slotId] and params.modules[slotId].metadata.isTrack then
+        if (params.catenaryToggle == 1) then
+            local full = params.modules[slotId].name:match("(.+).module")
+            local cat = full:match("(.+)_catenary")
+            if cat then
+                table.insert(modules, {slotId, string.format("%s.module", cat)})
+            else
+                table.insert(modules, {slotId, string.format("%s_catenary.module", full)})
+            end
+        elseif (params.trackTypeToggle == 1) then
+            local function SwapModule(from, to, ...)
+                if (from and to) then
+                    if params.modules[slotId].name == from then
+                        table.insert(modules, {slotId, to})
+                    elseif params.modules[slotId].name == to then
+                        table.insert(modules, {slotId, from})
+                    else
+                        SwapModule(...)
+                    end
                 end
             end
-        end
-        
-        if (params.catenaryToggle == 1) then
-            SwapModule(
-                "station/rail/mus_track_hs.module",
-                "station/rail/mus_track_hs_catenary.module",
-                "station/rail/mus_track_std.module",
-                "station/rail/mus_track_std_catenary.module"
-        )
-        elseif (params.trackTypeToggle == 1) then
             SwapModule(
                 "station/rail/mus_track_std.module",
                 "station/rail/mus_track_hs.module",
@@ -241,7 +241,6 @@ local updateFn = function(params)
             terrainAlignmentLists = {{type = "EQUAL", faces = {}}}
         }
     end
-    
     local result = {
         group = {},
         allArcs = {},
@@ -288,7 +287,7 @@ local updateFn = function(params)
                     id = slotId,
                     transf = m.transf,
                     type = "entry",
-                    spacing = {0, 0, 0, 0}
+                    spacing = {2.5, 2.5, 2.5, 2.5}
                 }
         )
         end
@@ -500,7 +499,7 @@ local updateFn = function(params)
                     end
                 end
             end
-
+            
             result.stations = {}
             for _, t in pairs(terminalTypes) do
                 result.stations[#result.stations + 1] = {
@@ -508,7 +507,7 @@ local updateFn = function(params)
                     tag = #result.stations + 1
                 }
             end
-
+            
             result.models = result.models * pipe.filter(function(m) return (not m.isNrLeft and not m.isNrRight) or m.nr end)
             
             for i, m in ipairs(result.models) do
@@ -555,20 +554,29 @@ local updateFn = function(params)
             end
             dist = func.sort(dist, function(l, r) return l.distance < r.distance end)
             if (#dist == 1) then
-                result.models = result.models + dist[1].conn 
+                result.models = result.models + dist[1].conn
             elseif (#dist > 1) then
                 local vecl = dist[1].vec
                 local vecr = dist[2].vec
                 if (vecl:cross(vecr).z > 0.5) then
                     result.models = result.models + dist[1].conn + dist[2].conn
                 else
-                    result.models = result.models + dist[1].conn 
+                    result.models = result.models + dist[1].conn
                 end
             end
         end
     end
     
     return result
+end
+
+local preProcessFn = function(modules, change)
+    if change.added then
+        modules[change.slotId] = change.module
+    else
+        modules[change.slotId] = nil
+    end
+    return modules
 end
 
 function data()
@@ -654,6 +662,7 @@ function data()
         createTemplateFn = mus.createTemplateFn,
         params = params(),
         upgradeFn = upgradeFn,
-        updateFn = updateFn
+        updateFn = updateFn,
+        preProcessFn = preProcessFn
     }
 end
