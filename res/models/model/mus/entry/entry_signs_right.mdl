@@ -10,7 +10,7 @@ function data()
                     children = {
                         {
                             materials = {
-                                "mus/entry_fence.mtl"
+                                "entry/entry_fence.mtl"
                             },
                             mesh = "mus/signs/platform_signs_right.msh",
                             transf = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 }

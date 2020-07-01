@@ -4,7 +4,7 @@ function data()
             fade_out_range = { fadeOutEndDist = 20000, fadeOutStartDist = 10000 },
             map_albedo = {
                 compressionAllowed = true,
-                fileName = "models/mus/albedo/chair.dds",
+                fileName = "models/entry/albedo/chair.dds",
                 magFilter = "LINEAR",
                 minFilter = "LINEAR_MIPMAP_LINEAR",
                 mipmapAlphaScale = 0,
@@ -34,7 +34,7 @@ function data()
                 wrapT = "REPEAT"
             },
             map_op_1 = {
-                fileName = "models/mus/op/uv.dds",
+                fileName = "models/entry/op/uv.dds",
                 magFilter = "LINEAR",
                 minFilter = "LINEAR_MIPMAP_LINEAR"
             },

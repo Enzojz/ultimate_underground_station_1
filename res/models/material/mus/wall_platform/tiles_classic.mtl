@@ -4,7 +4,7 @@ function data()
             fade_out_range = { fadeOutEndDist = 20000, fadeOutStartDist = 10000 },
             map_albedo = {
                 compressionAllowed = true,
-                fileName = "models/mus/albedo/tiles_classic.dds",
+                fileName = "models/entry/albedo/tiles_classic.dds",
                 magFilter = "LINEAR",
                 minFilter = "LINEAR_MIPMAP_LINEAR",
                 mipmapAlphaScale = 0,
@@ -14,7 +14,7 @@ function data()
             },
             map_ao = {
                 compressionAllowed = true,
-                fileName = "models/mus/uv1/wall_platform.dds",
+                fileName = "models/entry/uv1/wall_platform.dds",
                 magFilter = "LINEAR",
                 minFilter = "LINEAR_MIPMAP_LINEAR",
                 mipmapAlphaScale = 0,
@@ -24,7 +24,7 @@ function data()
             },
             map_metal_gloss_ao = {
                 compressionAllowed = true,
-                fileName = "models/mus/gloss_ao/tiles_classic.dds",
+                fileName = "models/entry/gloss_ao/tiles_classic.dds",
                 magFilter = "LINEAR",
                 minFilter = "LINEAR_MIPMAP_LINEAR",
                 mipmapAlphaScale = 0,
@@ -34,7 +34,7 @@ function data()
             },
             map_normal = {
                 compressionAllowed = true,
-                fileName = "models/mus/normal/tiles_classic.dds",
+                fileName = "models/entry/normal/tiles_classic.dds",
                 magFilter = "LINEAR",
                 minFilter = "LINEAR_MIPMAP_LINEAR",
                 mipmapAlphaScale = 0,
@@ -44,7 +44,7 @@ function data()
                 wrapT = "REPEAT"
             },
             map_op_1 = {
-                fileName = "models/mus/op/uz.dds",
+                fileName = "models/entry/op/uz.dds",
                 magFilter = "LINEAR",
                 minFilter = "LINEAR_MIPMAP_LINEAR"
             },

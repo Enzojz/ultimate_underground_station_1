@@ -10,11 +10,11 @@ function data()
                     children = {
                         {
                             materials = {
-                                "mus/entry_armrest.mtl",
-                                "mus/entry_marble.mtl",
-                                "mus/entry_concrete.mtl",
-                                "mus/entry_fence.mtl",
-                                "mus/entry_glass.mtl"
+                                "entry/entry_armrest.mtl",
+                                "entry/entry_marble.mtl",
+                                "entry/entry_concrete.mtl",
+                                "entry/entry_fence.mtl",
+                                "entry/entry_glass.mtl"
                             },
                             mesh = "mus/entry/entry_glass_left.msh",
                             transf = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 }
