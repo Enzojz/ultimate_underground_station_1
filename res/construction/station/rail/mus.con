@@ -20,7 +20,6 @@ local log = ma.log
 local log10 = log(10)
 local unpack = table.unpack
 
-local depth = -12
 local function params()
     return {
         {
@@ -604,15 +603,15 @@ function data()
                             defaultIndex = 1
                         },
                         {
-                            key = "catenary",
-                            name = _("MENU_TRACK_CAT"),
-                            uiType = "CHECKBOX",
-                            values = {"0", "1"},
-                            defaultIndex = 1
+                            key = "trackType",
+                            name = _("MENU_TRACK_TYPE"),
+                            uiType = "COMBOBOX",
+                            values = {_("Standard"), _("High-Speed")},
+                            defaultIndex = 0
                         },
                         {
-                            key = "highspeed",
-                            name = _("MENU_TRACK_HS"),
+                            key = "catenary",
+                            name = _("MENU_TRACK_CAT"),
                             uiType = "CHECKBOX",
                             values = {"0", "1"},
                             defaultIndex = 1
