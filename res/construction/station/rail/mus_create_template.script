@@ -1,0 +1,6 @@
+local mus = require "mus"
+function data()
+    return {
+        fn = mus.createTemplateFn,
+    }
+end

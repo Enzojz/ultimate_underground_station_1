@@ -3,7 +3,7 @@ local coor = require "entry/coor"
 local pipe = require "entry/pipe"
 local mus = require "mus"
 local musm = require "mus_menu"
--- local dump = require "luadump"
+local dump = require "luadump"
 
 local ma = math
 local abs = ma.abs
@@ -136,6 +136,7 @@ local function connectionNetwork(allConns)
     return result * pipe.filter(pipe.select("measure")) * pipe.map(function(r) return mus.stepLane(unpack(r.measure.pt)) end) * pipe.flatten()
 end
 
+local depth = -12
 local makeConfig = function(params, transf)
     local radius = musm.rList[params.radius + 1] * 1000
     local length = min(musm.trackLengths[params.lPlatform + 1], abs(radius * pi * 1.5))
@@ -658,7 +659,7 @@ function data()
         },
         order = 1000,
         constructionTemplates = constructionTemplates,
-        createTemplateFn = mus.createTemplateFn,
+        createTemplateFn = createTemplateFn,
         params = params(),
         upgradeFn = upgradeFn,
         updateFn = updateFn,

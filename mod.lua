@@ -72,36 +72,8 @@ function data()
             end
 
             local con = api.res.constructionRep.get(api.res.constructionRep.find("station/rail/mus.con"))
-            local nCon = api.type.ConstructionDesc.new()
 
-            nCon.fileName = con.fileName
-            nCon.type = con.type
-            nCon.description = con.description
-            nCon.availability.yearFrom = con.availability.yearFrom
-            nCon.availability.yearTo = con.availability.yearTo
-            nCon.buildMode = con.buildMode
-            nCon.categories = con.categories
-            nCon.order = con.order
-            nCon.skipCollision = con.skipCollision
-            nCon.autoRemovable = con.autoRemovable
-
-            for i = 1, #con.params do
-                local p = con.params[i]
-                local param = api.type.ScriptParam.new()
-                param.key = p.key
-                param.name = p.name
-                param.values = p.values
-                param.defaultIndex = p.defaultIndex or 0
-                param.uiType = p.uiType
-                nCon.params[i] = param
-            end
-
-            local temp = api.type.ConstructionTemplate.new()
-            temp.desc.name = con.constructionTemplates[1].desc.name
-            temp.desc.description = con.constructionTemplates[1].desc.description
-            temp.constructionType = api.type.enum.ConstructionType.RAIL_STATION
-
-            local params = api.type.DynamicConstructionTemplate.new()
+            local data = api.type.DynamicConstructionTemplate.new()
             for i = 1, #con.constructionTemplates[1].data.params do
                 local p = con.constructionTemplates[1].data.params[i]
                 local param = api.type.ScriptParam.new()
@@ -114,19 +86,12 @@ function data()
                 end
                 param.defaultIndex = p.defaultIndex or 0
                 param.uiType = p.uiType
-                params.params[i] = param
+                data.params[i] = param
             end
-            temp.data = params
+            con.constructionTemplates[1].data = data
 
-            nCon.constructionTemplates[1] = temp
-            nCon.createTemplateScript.fileName = "construction/station/rail/mus_s.createTemplateFn"
-            nCon.createTemplateScript.params = {moduleList = moduleList, trackIconList = trackIconList}
-            nCon.updateScript.fileName = "construction/station/rail/mus_s.updateFn"
-            nCon.upgradeScript.fileName = "construction/station/rail/mus_s.upgradeFn"
-            nCon.upgradeScript.params = {moduleList = moduleList, trackIconList = trackIconList}
-            nCon.preProcessScript.fileName = "construction/station/rail/mus_s.preProcessFn"
-
-            api.res.constructionRep.add(nCon.fileName .. "_a", nCon, true) -- fileName, resource, visible
+            con.createTemplateScript.fileName = "construction/station/rail/mus_create_template.fn"
+            con.createTemplateScript.params = {moduleList = moduleList, trackIconList = trackIconList}
 
         --
         -- con.createTemplateScript.params[#con.createTemplateScript.params + 1] = newParams
