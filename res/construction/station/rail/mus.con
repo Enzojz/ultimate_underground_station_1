@@ -3,7 +3,7 @@ local coor = require "entry/coor"
 local pipe = require "entry/pipe"
 local mus = require "mus"
 local musm = require "mus_menu"
-local dump = require "luadump"
+-- local dump = require "luadump"
 
 local ma = math
 local abs = ma.abs

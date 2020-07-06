@@ -463,7 +463,6 @@ mus.terrain = function(config, ref)
     end)
 end
 
-
 local makeLayout = function(totalTracks, ignoreFst, ignoreLst)
     local function makeLayout(nbTracks, result)
         local p = false

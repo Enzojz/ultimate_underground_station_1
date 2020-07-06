@@ -10,10 +10,10 @@ To build a station:
 3. Follow the instruction on the screen to finish the construction
 
 To add new parts to a built station:
-1. Place an entry or a new underground level
-2. Select the underground station you want to modify
-3. Check the checkbox before the built station
-4. Follow the instruction on the screen to finish the construction
+1. Click on the underground station
+2. In the station property window click on "Add Entry/Level"
+3. Check the station in the construction window
+4. Do as build
 
 This mod is a total reworked mod of Transport Fever Ultimate Underground Station, with generally the same resource the main new features are:
 - It's modular, though not in vanilla mode, you can place different tracks and different platforms as modules, as well as stairs. I didn't choose the vanilla way since in real life, underground station are always regular.
@@ -24,6 +24,10 @@ This mod is a total reworked mod of Transport Fever Ultimate Underground Station
 This mod is still in evolution, maybe with some bugs, I will do some updates and bugfixes after the release.
 
 Changelog:
+1.6
+- Mod track selection in the construction menu
+- UI improvement for extending station
+- Resource optimization
 1.5
 - Adaptation to new API
 - Support to mod tracks
@@ -82,6 +86,10 @@ local descCN = [[本MOD提供建造形式丰富的地下车站的可能。
 本MOD目前可能还有很多Bug，有一些功能还在完善中，之后还会陆续有更新完善功能和修正错误。
 
 更新日志:
+1.6
+- 建造菜单中增加了第三方轨道的选项
+- 改进了车站扩展的界面逻辑
+- 资源文件优化
 1.5
 - 适配新API
 - 支持模组轨道
@@ -139,6 +147,10 @@ local descTC = [[本MOD提供建造形式豐富的地下車站的可能。
 本MOD目前可能還有很多Bug，有一些功能還在完善中，之後還會陸續有更新完善功能和修正錯誤。
 
 更新日誌:
+1.6
+- 建造功能表中增加了協力廠商軌道的選項
+- 改進了車站擴展的介面邏輯
+- 資源檔優化
 1.5
 - 適配新API
 - 支持模組軌道
