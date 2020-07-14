@@ -14,7 +14,7 @@ function data()
             },
             map_ao = {
                 compressionAllowed = true,
-                fileName = "models/entry/uv1/top_center.dds",
+                fileName = "models/mus/uv1/top_center.dds",
                 magFilter = "LINEAR",
                 minFilter = "LINEAR_MIPMAP_LINEAR",
                 mipmapAlphaScale = 0,
