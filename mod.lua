@@ -2,6 +2,7 @@
     ["standard.lua"] = "mus_track_std",
     ["high_speed.lua"] = "mus_track_hs",
 }
+-- local dump = require "luadump"
 
 function data()
     return {
@@ -26,11 +27,20 @@ function data()
             game.config.undergroundStationMod = true
         end,
         postRunFn = function(settings, params)
-            local tracks = api.res.trackTypeRep.getAll()
+            local tracks = {}
+            for __, trackName in pairs(api.res.trackTypeRep.getAll()) do
+                if trackName == "standard.lua" then
+                    table.insert(tracks, 1, trackName)
+                elseif trackName == "high_speed.lua" then
+                    table.insert(tracks, tracks[1] == "standard.lua" and 2 or 1, trackName)
+                else
+                    table.insert(tracks, trackName)
+                end
+            end
             local moduleList = {}
             local trackIconList = {}
             local trackNames = {}
-            for __, trackName in pairs(tracks) do
+            for __, trackName in ipairs(tracks) do
                 local track = api.res.trackTypeRep.get(api.res.trackTypeRep.find(trackName))
                 local baseFileName = ("station/rail/%s"):format(trackIndices[trackName] or trackName)
                 for __, catenary in pairs({false, true}) do
@@ -72,7 +82,6 @@ function data()
             end
 
             local con = api.res.constructionRep.get(api.res.constructionRep.find("station/rail/mus.con"))
-
             local data = api.type.DynamicConstructionTemplate.new()
             for i = 1, #con.constructionTemplates[1].data.params do
                 local p = con.constructionTemplates[1].data.params[i]
