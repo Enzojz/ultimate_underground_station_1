@@ -1,8 +1,11 @@
 function data()
     return {
         collider = {
-            params = {  },
-            type = "MESH"
+            params = {
+                center = { 0, 0, -5000 },
+                halfExtents = { 0, 0, 0 }
+            },
+            type = "BOX"
         },
         lods = {
             {

@@ -312,7 +312,7 @@ mus.stepLane = function(f, t)
     local length = vec:length()
     if (length > 750 or length < 0.1) then return {} end
     local dZ = abs((f - t).z)
-    if (length > dZ * 3 or length < 5) then
+    if (length > dZ * 3 or length < 5 or abs(length - dZ) < 1e-3) then
         return {general.newModel("mus/person_lane.mdl", general.mRot(vec), coor.trans(f))}
     else
         local hVec = vec:withZ(0) / 3

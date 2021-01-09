@@ -3,7 +3,7 @@ local coor = require "entry/coor"
 local pipe = require "entry/pipe"
 local mus = require "mus"
 local musm = require "mus_menu"
--- local dump = require "luadump"
+local dump = require "luadump"
 
 local ma = math
 local abs = ma.abs
@@ -103,8 +103,8 @@ local function connectionLevel(lhs, rhs)
                     end)
             end)
         * pipe.flatten()
+        
         * pipe.sort(function(l, r) return l.distance < r.distance end)
-    
     return result[1]
 end
 
@@ -131,7 +131,6 @@ local function connectionNetwork(allConns)
             measure[j][i] = measure[i][j]
         end
     end
-    
     local result = closestConnection(pipe.new / {index = 1}, measure, unpack(func.seq(2, #allConns)))
     return result * pipe.filter(pipe.select("measure")) * pipe.map(function(r) return mus.stepLane(unpack(r.measure.pt)) end) * pipe.flatten()
 end
@@ -529,6 +528,7 @@ local updateFn = function(params)
         end
         
         local conn = connectionNetwork(connectors)
+        dump()(conn)
         result.models = result.models + conn
         
         local allUpConn = connectors * pipe.flatten() * pipe.filter(function(c) return c.up end)
