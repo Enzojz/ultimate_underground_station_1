@@ -24,6 +24,11 @@ This mod is a total reworked mod of Transport Fever Ultimate Underground Station
 This mod is still in evolution, maybe with some bugs, I will do some updates and bugfixes after the release.
 
 Changelog:
+1.7
+- Fixed crash when finishing staked station
+- Fixed collision error on connecting the station to tracks or on modifying the station
+- Removed remove helper collider
+- Lightmap remastered
 1.6
 - Mod track selection in the construction menu
 - UI improvement for extending station
@@ -86,6 +91,11 @@ local descCN = [[本MOD提供建造形式丰富的地下车站的可能。
 本MOD目前可能还有很多Bug，有一些功能还在完善中，之后还会陆续有更新完善功能和修正错误。
 
 更新日志:
+1.7
+- 修复了堆叠车站时的游戏崩溃
+- 修复了车站捕捉轨道或者升级时的冲突错误
+- 修复了移除助手的碰撞模型
+- 重新制作了光照贴图
 1.6
 - 建造菜单中增加了第三方轨道的选项
 - 改进了车站扩展的界面逻辑
@@ -147,6 +157,11 @@ local descTC = [[本MOD提供建造形式豐富的地下車站的可能。
 本MOD目前可能還有很多Bug，有一些功能還在完善中，之後還會陸續有更新完善功能和修正錯誤。
 
 更新日誌:
+1.7
+- 修復了堆疊車站時的遊戲崩潰
+- 修復了車站捕捉軌道或者升級時的衝突錯誤
+- 修復了移除助手的碰撞模型
+- 重新製作了光照貼圖
 1.6
 - 建造功能表中增加了協力廠商軌道的選項
 - 改進了車站擴展的介面邏輯

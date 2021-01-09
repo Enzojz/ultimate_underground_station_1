@@ -3,7 +3,7 @@ local coor = require "entry/coor"
 local pipe = require "entry/pipe"
 local mus = require "mus"
 local musm = require "mus_menu"
-local dump = require "luadump"
+-- local dump = require "luadump"
 
 local ma = math
 local abs = ma.abs
@@ -528,7 +528,6 @@ local updateFn = function(params)
         end
         
         local conn = connectionNetwork(connectors)
-        dump()(conn)
         result.models = result.models + conn
         
         local allUpConn = connectors * pipe.flatten() * pipe.filter(function(c) return c.up end)

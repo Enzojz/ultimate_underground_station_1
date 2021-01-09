@@ -34,7 +34,7 @@ mus.trackArcs = function(trackWidth)
                 ls.rc[i] = ptR - transL * o
                 ls.mc[i] = (ptL + ptR) * 0.5
             end
-
+            
             offset(0, coords.ceil)
             offset(0, coords.wall)
             offset(2, coords.terrain.low)
@@ -94,6 +94,42 @@ mus.trackSideWallModels = function(config, arcRef, isLeft)
             local size = isLeft and mus.assembleSize(lc, rc) or mus.assembleSize({s = rc.i, i = rc.s}, {s = lc.i, i = lc.s})
             return func.with(general.newModel(config.models.wallTrack .. ".mdl", coor.rotZ(pi), coor.transY(-2.5), config.fitModels.track.wall(size, true)), {pos = i})
     end)
+end
+
+mus.trackSideWallColliders = function(arcRef, isLeft)
+    return {
+        type = "POINT_CLOUD",
+        params = {
+            points = pipe.new * pipe.mapn(
+                arcRef.blockCoords.wall.lc,
+                arcRef.blockCoords.wall.rc
+                )(
+                function(lc, rc)
+                    local ref = isLeft and lc.i:avg(lc.s) or rc.i:avg(rc.s)
+                    return {ref, ref + coor.xyz(0, 0, 7.5)}
+                end)
+            * pipe.flatten()
+            * pipe.map(coor.vec2Tuple)
+        }
+    
+    }
+end
+
+mus.trackColliders = function(arcRef)
+    return {
+        type = "POINT_CLOUD",
+        params = {
+            points = pipe.new * func.map(
+                arcRef.blockCoords.ceil.mc,
+                function(mc)
+                    local ref = mc.i:avg(mc.s)
+                    return {ref, ref + coor.xyz(0, 0, 7.5)}
+                end)
+            * pipe.flatten()
+            * pipe.map(coor.vec2Tuple)
+        }
+    
+    }
 end
 
 mus.trackSigns = function(config, arcs, isLeftmost, isRightmost)

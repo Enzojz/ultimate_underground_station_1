@@ -38,7 +38,17 @@ local function fn(platformWidth, stairsWidth, desc, order, fakeTracks)
                 local allArcs = platformArcs(group.config, group.arcs[info.pos.x])
                 
                 result.allArcs[slotId] = allArcs
+                    
+                if group.modules[info.pos.x - 1] then
+                    table.insert(result.colliders, mus.platformSideWallColliders(allArcs, true))
+                end
                 
+                if group.modules[info.pos.x + 1] then
+                    table.insert(result.colliders, mus.platformSideWallColliders(allArcs, false))
+                end
+                
+                table.insert(result.colliders, mus.platformColliders(allArcs))
+
                 local leftSideWall = group.modules[info.pos.x - 1] and {} or mus.platformSideWallModels(group.config, allArcs, true)
                 local rightSideWall = group.modules[info.pos.x + 1] and {} or mus.platformSideWallModels(group.config, allArcs, false)
                 

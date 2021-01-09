@@ -3,6 +3,7 @@ local coor = require "entry/coor"
 local pipe = require "entry/pipe"
 local general = require "entry/general"
 local mus = require "mus_track"
+-- local dump = require "luadump"
 
 function data()
     return {
@@ -40,6 +41,16 @@ function data()
                 }
             }
             
+            if group.modules[info.pos.x - 1] then
+                table.insert(result.colliders, mus.trackSideWallColliders(allArcs, true))
+            end
+            
+            if group.modules[info.pos.x + 1] then
+                table.insert(result.colliders, mus.trackSideWallColliders(allArcs, false))
+            end
+            
+            table.insert(result.colliders, mus.trackColliders(allArcs))
+
             local leftSideWall = group.modules[info.pos.x - 1] and {} or mus.trackSideWallModels(group.config, allArcs, true)
             local rightSideWall = group.modules[info.pos.x + 1] and {} or mus.trackSideWallModels(group.config, allArcs, false)
             
@@ -56,7 +67,6 @@ function data()
                 end)
             
             result.edgeLists = result.edgeLists / edges
-            
             
             local terrainFaces = mus.terrain(group.config, allArcs.blockCoords.terrain.high)
             table.insert(result.terrainAlignmentLists, {type = "GREATER", faces = terrainFaces})

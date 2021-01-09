@@ -135,6 +135,43 @@ mus.platformSideWallModels = function(config, arcRef, isLeft)
 end
 
 
+mus.platformSideWallColliders = function(arcRef, isLeft)
+    return {
+        type = "POINT_CLOUD",
+        params = {
+            points = pipe.new * pipe.mapn(
+                arcRef.blockCoords.stairs.inner.lc,
+                arcRef.blockCoords.stairs.inner.rc
+                )(
+                function(lc, rc)
+                    local ref = isLeft and lc.i:avg(lc.s) or rc.i:avg(rc.s)
+                    return {ref, ref + coor.xyz(0, 0, 7.5)}
+                end)
+            * pipe.flatten()
+            * pipe.map(coor.vec2Tuple)
+        }
+    
+    }
+end
+
+mus.platformColliders = function(arcRef)
+    return {
+        type = "POINT_CLOUD",
+        params = {
+            points = pipe.new * func.map(
+                arcRef.blockCoords.ceil.central.mc,
+                function(mc)
+                    local ref = mc.i:avg(mc.s)
+                    return {ref, ref + coor.xyz(0, 0, 7.5)}
+                end)
+            * pipe.flatten()
+            * pipe.map(coor.vec2Tuple)
+        }
+    
+    }
+end
+
+
 mus.upstairsModels = function(config, arcs, pos, isBackward)
     local buildPlatform = config.build.platform
     local buildCeil = config.build.ceil
