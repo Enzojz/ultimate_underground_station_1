@@ -63,7 +63,7 @@ function data()
                         type = "mus_track"
                     }
 
-                    mod.category.categories = catenary and {_("TRACK_CAT")} or {_("TRACK")}
+                    mod.category.categories = catenary and {_("MENU_TRACK_CAT")} or {_("MENU_TRACK")}
 
                     mod.updateScript.fileName = "construction/station/rail/mus_track_module.updateFn"
                     mod.updateScript.params = {
