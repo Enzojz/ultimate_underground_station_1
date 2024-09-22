@@ -49,9 +49,9 @@ function data()
                 minFilter = "LINEAR_MIPMAP_LINEAR"
             },
             operation_1 = {
-                mode = "NORMAL",
+                mode = "UV_MODE_REF_NRML",
                 op = "MULTIPLICATION",
-                opacity = -512,
+                opacity = -1,
                 scale = { 1, 1 }
             },
             polygon_offset = { factor = -4, units = -4 },
