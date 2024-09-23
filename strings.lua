@@ -1,7 +1,6 @@
 local descEN = [[This mod gives you ability to create freely underground station with distinct and interconnected parts, and to create freely street entry at any place you like.
 
 This mod requires the following mods to work:
-* Shader Enhancement mod
 * Underpass mod
 
 To build a station:
@@ -68,7 +67,6 @@ Stay strong and united before COVID-19!]]
 local descCN = [[本MOD提供建造形式丰富的地下车站的可能。
 
 本MOD需要以下MOD的支持才能正常使用：
-* 着色器增强
 * 人行地道
 
 请按照以下步骤建造地下车站：
@@ -134,7 +132,6 @@ local descCN = [[本MOD提供建造形式丰富的地下车站的可能。
 local descTC = [[本MOD提供建造形式豐富的地下車站的可能。
 
 本MOD需要以下MOD的支援才能正常使用：
-* 著色器增強
 * 人行地道
 
 請按照以下步驟建造地下車站：
